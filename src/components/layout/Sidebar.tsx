@@ -4,7 +4,6 @@ import {
   RotateCcw,
   Upload,
   BarChart3,
-  Search,
   Wallet,
   User,
   LogOut,
@@ -74,11 +73,6 @@ const vendedorNavItems: NavItem[] = [
     icon: <LayoutDashboard className="w-6 h-6" />,
   },
   {
-    path: "/vendedor/verificar-precios",
-    label: "Verificar Precios",
-    icon: <Search className="w-6 h-6" />,
-  },
-  {
     path: "/vendedor/corte-caja",
     label: "Corte de Caja",
     icon: <Wallet className="w-6 h-6" />,
@@ -95,7 +89,7 @@ export default function Sidebar({ userType }: SidebarProps) {
   };
 
   return (
-    <aside className="w-20 glass-panel border-r-0 border-r-white/5 flex flex-col h-screen flex-shrink-0 z-20 items-center py-4 gap-4 sticky top-0 overflow-visible">
+    <aside className="w-20 glass-panel border-r-0 border-r-white/5 flex flex-col h-screen flex-shrink-0 z-50 items-center py-4 gap-4 sticky top-0 overflow-visible">
       {/* Logo Section */}
       <div className="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 group relative cursor-help border border-transparent hover:bg-white/5">
         <img
@@ -121,16 +115,15 @@ export default function Sidebar({ userType }: SidebarProps) {
               className={({ isActive }) => `
                 flex items-center justify-center w-12 h-12 rounded-xl
                 transition-all duration-300 group relative
-                ${
-                  isActive
-                    ? "bg-blue-600/20 text-blue-400 shadow-lg shadow-blue-900/10 border border-blue-500/30"
-                    : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
+                ${isActive
+                  ? "bg-blue-600/20 text-blue-400 shadow-lg shadow-blue-900/10 border border-blue-500/30"
+                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
                 }
               `}
             >
               {item.icon}
               {isActive && (
-                <div className="absolute inset-0 bg-blue-500/10 blur-md rounded-xl -z-10" />
+                <div className="absolute inset-0 bg-blue-500/10 rounded-xl -z-10" />
               )}
 
               {/* Tooltip */}

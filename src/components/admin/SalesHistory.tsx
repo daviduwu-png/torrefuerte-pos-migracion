@@ -9,8 +9,9 @@ import {
   Loader2,
   RotateCcw,
 } from "lucide-react";
-import Swal from "sweetalert2";
+import { StyledSwal as Swal } from "../../utils/swal";
 import { formatFechaHoraCorta, getFechaHoy } from "../../utils/dateFormat";
+import DatePicker from "../ui/DatePicker";
 
 export default function SalesHistory() {
   const [loading, setLoading] = useState(false);
@@ -72,7 +73,14 @@ export default function SalesHistory() {
         setModalTitle(title);
         setShowResultsModal(true);
       } else {
-        alert(response.message || "No se encontraron tickets.");
+        Swal.fire({
+          icon: "info",
+          title: "Aviso",
+          text: response.message || "No se encontraron tickets.",
+          background: "#1e293b",
+          color: "#fff",
+          confirmButtonColor: "#3b82f6"
+        });
       }
     } catch (error) {
       console.error("Error fetching tickets:", error);
@@ -83,14 +91,37 @@ export default function SalesHistory() {
 
   const handleCustomFilter = () => {
     if (!fechaInicio || !fechaFin) {
-      alert("Seleccione ambas fechas");
+      Swal.fire({
+        icon: "warning",
+        title: "Atención",
+        text: "Seleccione ambas fechas antes de filtrar.",
+        background: "#1e293b",
+        color: "#fff",
+        confirmButtonColor: "#f59e0b"
+      });
       return;
     }
     fetchTickets("custom", fechaInicio, fechaFin);
   };
 
   const handleSearchById = async () => {
-    const id = prompt("Ingrese el ID o Folio del Ticket:");
+    const { value: id } = await Swal.fire({
+      title: "Buscar Ticket",
+      input: "text",
+      inputLabel: "Ingrese el ID o Folio del Ticket:",
+      showCancelButton: true,
+      confirmButtonText: "Buscar",
+      cancelButtonText: "Cancelar",
+      background: "#1e293b",
+      color: "#fff",
+      confirmButtonColor: "#3b82f6",
+      cancelButtonColor: "#64748b",
+      customClass: {
+        input: "bg-slate-800 text-white border-slate-600 focus:ring-blue-500",
+        popup: "rounded-2xl border border-white/10 shadow-2xl glass-panel"
+      }
+    });
+
     if (!id) return;
 
     setLoading(true);
@@ -101,7 +132,14 @@ export default function SalesHistory() {
         setModalTitle(`Resultados para: "${id}"`);
         setShowResultsModal(true);
       } else {
-        alert("Ticket no encontrado");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ticket no encontrado",
+          background: "#1e293b",
+          color: "#fff",
+          confirmButtonColor: "#ef4444"
+        });
       }
     } catch (error) {
       console.error("Error searching ticket:", error);
@@ -132,25 +170,11 @@ export default function SalesHistory() {
       confirmButtonColor: "#ef4444",
       background: "#1e293b",
       color: "#ebe6e6ff",
-      // --- AGREGA ESTE BLOQUE ---
-      didOpen: () => {
-        const select = Swal.getInput();
-        if (select) {
-          // Forzamos el estilo en las opciones hijas
-          const options = select.querySelectorAll("option");
-          options.forEach((op) => {
-            op.style.backgroundColor = "#334155"; // Color slate-700
-            op.style.color = "white";
-          });
-        }
-      },
-      // --------------------------
-
       inputValidator: (value) => {
         return !value ? "Debes seleccionar un motivo" : null;
       },
       customClass: {
-        input: "bg-slate-700 text-white border-slate-600 focus:ring-blue-500",
+        input: "bg-slate-100 text-slate-900 font-semibold border-slate-300 focus:ring-blue-500",
         popup: "rounded-3xl border border-slate-700 shadow-2xl",
         confirmButton: "rounded-xl px-6 py-3",
         cancelButton: "rounded-xl px-6 py-3",
@@ -177,25 +201,11 @@ export default function SalesHistory() {
       background: "#1e293b",
       color: "#ebe6e6ff",
 
-      // --- AGREGA ESTE BLOQUE ---
-      didOpen: () => {
-        const select = Swal.getInput();
-        if (select) {
-          // Forzamos el estilo en las opciones hijas
-          const options = select.querySelectorAll("option");
-          options.forEach((op) => {
-            op.style.backgroundColor = "#334155"; // Color slate-700
-            op.style.color = "white";
-          });
-        }
-      },
-      // --------------------------
-
       inputValidator: (value) => {
         return !value ? "Debes seleccionar un motivo" : null;
       },
       customClass: {
-        input: "bg-slate-700 text-white border-slate-600 focus:ring-blue-500",
+        input: "bg-slate-100 text-slate-900 font-semibold border-slate-300 focus:ring-blue-500",
         popup: "rounded-3xl border border-slate-700 shadow-2xl",
         confirmButton: "rounded-xl px-6 py-3",
         cancelButton: "rounded-xl px-6 py-3",
@@ -278,85 +288,85 @@ export default function SalesHistory() {
 
   return (
     <>
-      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 overflow-hidden h-full flex flex-col">
-        <div className="p-6 space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 mb-2 ml-1">
-                Desde
-              </label>
-              <input
-                type="date"
-                value={fechaInicio}
-                onChange={(e) => setFechaInicio(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700/50 rounded-xl text-sm text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 mb-2 ml-1">
-                Hasta
-              </label>
-              <input
-                type="date"
-                value={fechaFin}
-                onChange={(e) => setFechaFin(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700/50 rounded-xl text-sm text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
-              />
-            </div>
-          </div>
+      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 h-full flex flex-col relative">
+        <div className="p-6">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-2 ml-1">
+                  Desde
+                </label>
+                <DatePicker
+                  value={fechaInicio}
+                  onChange={setFechaInicio}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-2 ml-1">
+                  Hasta
+                </label>
+                <DatePicker
+                  value={fechaFin}
+                  onChange={setFechaFin}
+                  className="w-full"
+                />
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={handleCustomFilter}
-              disabled={loading}
-              className="px-3 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-all shadow-lg shadow-cyan-900/20"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Filter className="w-4 h-4" />
-              )}{" "}
-              Filtrar
-            </button>
-            <button
-              onClick={handleSearchById}
-              disabled={loading}
-              className="px-3 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-all"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Search className="w-4 h-4" />
-              )}{" "}
-              Buscar ID
-            </button>
-          </div>
+              <div className="grid grid-cols-2 gap-3 lg:col-span-2">
+                <button
+                  onClick={handleCustomFilter}
+                  disabled={loading}
+                  className="w-full px-3 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-all shadow-lg shadow-cyan-900/20"
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Filter className="w-4 h-4" />
+                  )}{" "}
+                  Filtrar
+                </button>
+                <button
+                  onClick={handleSearchById}
+                  disabled={loading}
+                  className="w-full px-3 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-all"
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4" />
+                  )}{" "}
+                  Buscar ID
+                </button>
+              </div>
+            </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-4 border-t border-white/5">
-            <button
-              onClick={() => fetchTickets("hoy")}
-              className="px-3 py-2 text-xs font-medium text-cyan-400 border border-cyan-500/20 rounded-lg hover:bg-cyan-500/10 transition-colors bg-cyan-500/5"
-            >
-              Hoy
-            </button>
-            <button
-              onClick={() => fetchTickets("semana")}
-              className="px-3 py-2 text-xs font-medium text-cyan-400 border border-cyan-500/20 rounded-lg hover:bg-cyan-500/10 transition-colors bg-cyan-500/5"
-            >
-              Semana
-            </button>
-            <button
-              onClick={() => fetchTickets("mes")}
-              className="px-3 py-2 text-xs font-medium text-cyan-400 border border-cyan-500/20 rounded-lg hover:bg-cyan-500/10 transition-colors bg-cyan-500/5"
-            >
-              Mes
-            </button>
-            <button
-              onClick={() => fetchTickets("anio")}
-              className="px-3 py-2 text-xs font-medium text-cyan-400 border border-cyan-500/20 rounded-lg hover:bg-cyan-500/10 transition-colors bg-cyan-500/5"
-            >
-              Año
-            </button>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-white/5">
+              <button
+                onClick={() => fetchTickets("hoy")}
+                className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
+              >
+                Hoy
+              </button>
+              <button
+                onClick={() => fetchTickets("semana")}
+                className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
+              >
+                Semana
+              </button>
+              <button
+                onClick={() => fetchTickets("mes")}
+                className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
+              >
+                Mes
+              </button>
+              <button
+                onClick={() => fetchTickets("anio")}
+                className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
+              >
+                Año
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -365,13 +375,13 @@ export default function SalesHistory() {
       {showResultsModal && (
         <div
           onClick={() => setShowResultsModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 "
         >
           <div
             onClick={(e) => e.stopPropagation()}
             className="glass-panel w-full max-w-4xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden max-h-[85vh] flex flex-col animate-in fade-in zoom-in duration-300"
           >
-            <div className="bg-slate-900/50 px-6 py-5 flex items-center justify-between flex-shrink-0 border-b border-white/5 backdrop-blur-xl">
+            <div className="bg-slate-900/50 px-6 py-5 flex items-center justify-between flex-shrink-0 border-b border-white/5 ">
               <h3 className="font-bold text-lg text-white flex items-center gap-2">
                 <div className="p-2 bg-cyan-500/20 rounded-lg border border-cyan-500/20">
                   <FileText className="w-5 h-5 text-cyan-400" />
@@ -468,7 +478,7 @@ export default function SalesHistory() {
       {showTicketDetail && selectedTicket && (
         <div
           onClick={() => setShowTicketDetail(false)}
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 "
         >
           <div
             onClick={(e) => e.stopPropagation()}

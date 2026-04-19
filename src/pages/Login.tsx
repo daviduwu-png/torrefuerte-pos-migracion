@@ -57,12 +57,12 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-4">
       {/* Card Container con Glassmorphism */}
-      <div className="w-full max-w-[1000px] glass-panel rounded-3xl shadow-2xl overflow-hidden">
-        <div className="flex flex-col md:flex-row min-h-[650px]">
+      <div className="w-full max-w-[900px] glass-panel rounded-3xl shadow-2xl overflow-hidden">
+        <div className="flex flex-col md:flex-row min-h-[500px]">
           {/* Left Side - Branding */}
-          <div className="relative md:w-[42%] bg-gradient-to-br from-slate-800/80 to-slate-950/80 backdrop-blur-sm flex items-center justify-center p-12 md:p-14 overflow-hidden">
+          <div className="relative md:w-[42%] bg-gradient-to-br from-slate-800/80 to-slate-950/80 flex items-center justify-center p-8 md:p-10 overflow-hidden">
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15)_0%,transparent_70%)]" />
 
@@ -71,21 +71,21 @@ export default function Login() {
               <img
                 src={torrelogo}
                 alt="Logo Torre Fuerte"
-                className="w-[280px] mx-auto mb-6 drop-shadow-2xl"
+                className="w-[200px] md:w-[220px] mx-auto mb-4 drop-shadow-2xl"
               />
-              <h2 className="text-[28px] font-bold text-white tracking-widest mt-4">
+              <h2 className="text-[24px] font-bold text-white tracking-widest mt-4">
                 Torre Fuerte
               </h2>
-              <p className="text-slate-300 text-[15px] mt-4 px-4 max-w-xs mx-auto leading-relaxed">
+              <p className="text-slate-300 text-[14px] mt-2 px-4 max-w-xs mx-auto leading-relaxed">
                 Sistema de Punto de Venta Profesional para Ferreterías
               </p>
             </div>
           </div>
 
           {/* Right Side - Form */}
-          <div className="flex-1 flex flex-col justify-center p-16 bg-slate-900/30 backdrop-blur-sm">
-            <div className="mb-8">
-              <h4 className="text-[30px] font-bold text-white mb-3">
+          <div className="flex-1 flex flex-col justify-center p-8 md:p-10 lg:p-12 bg-slate-900/30 ">
+            <div className="mb-6">
+              <h4 className="text-[24px] font-bold text-white mb-2">
                 Bienvenido de nuevo
               </h4>
               <p className="text-slate-300 text-[15px]">
@@ -96,7 +96,7 @@ export default function Login() {
             <form onSubmit={handleLogin} className="space-y-6">
               {/* Error Message */}
               {error && (
-                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl backdrop-blur-sm">
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl ">
                   <p className="text-red-300 text-sm text-center">{error}</p>
                 </div>
               )}
@@ -157,7 +157,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-[18px] mt-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-slate-600 disabled:to-slate-600 text-white text-[15px] font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/40 hover:-translate-y-0.5 active:translate-y-0 disabled:shadow-none disabled:translate-y-0 transition-all duration-200 flex items-center justify-center gap-3"
+                className="w-full py-[14px] mt-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-slate-600 disabled:to-slate-600 text-white text-[15px] font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/40 hover:-translate-y-0.5 active:translate-y-0 disabled:shadow-none disabled:translate-y-0 transition-all duration-200 flex items-center justify-center gap-3"
               >
                 {loading ? (
                   <>
@@ -175,9 +175,27 @@ export default function Login() {
 
             {/* Footer */}
             <div className="flex items-center justify-center gap-2 mt-10 pt-8 border-t border-slate-700/50">
-              <span className="text-[12px] text-slate-400">
-                © Copyright TorreFuerte 2026
-              </span>
+              <div className="flex justify-center">
+            <a
+              href="https://insolus.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 group transition-all duration-300 bg-white/[0.02] hover:bg-white/[0.05] px-4 py-2 rounded-xl border border-white/5"
+            >
+              <div className="text-right">
+                <p
+                  className="uppercase tracking-widest text-[10px] text-white/40 group-hover:text-purple-500 transition-colors"
+                >
+                  Powered By
+                </p>
+              </div>
+              <img
+                src="/insolus.png"
+                alt="Insolus"
+                className="h-12 w-auto opacity-60 group-hover:opacity-100 transition-opacity"
+              />
+            </a>
+          </div>
             </div>
           </div>
         </div>

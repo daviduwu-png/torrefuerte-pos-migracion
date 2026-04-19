@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { api, Devolucion } from "../../api/tauri";
-import { Search, Filter, Loader2, RotateCcw, CalendarDays } from "lucide-react";
+import { Search, Filter, Loader2, RotateCcw } from "lucide-react";
 import { StyledSwal as Swal } from "../../utils/swal";
 import { formatFechaHoraCorta, getFechaHoy } from "../../utils/dateFormat";
+import DatePicker from "../../components/ui/DatePicker";
 
 export default function Devoluciones() {
   const [loading, setLoading] = useState(false);
@@ -34,10 +35,12 @@ export default function Devoluciones() {
   const handleSearch = () => {
     if (!fechaInicio || !fechaFin) {
       Swal.fire({
-        icon: "info",
+        icon: "warning",
         title: "Fechas requeridas",
         text: "Por favor seleccione ambas fechas para buscar.",
-        confirmButtonColor: "#3b82f6",
+        background: "#1e293b",
+        color: "#fff",
+        confirmButtonColor: "#f59e0b",
       });
       return;
     }
@@ -75,74 +78,68 @@ export default function Devoluciones() {
 
   return (
     <div className="space-y-6">
-      <div className="glass-panel rounded-2xl p-6 border border-white/10">
-        <h6 className="text-amber-500 font-bold text-xs uppercase mb-6 flex items-center gap-2 tracking-wider">
-          <Filter className="w-4 h-4" /> Filtrar Devoluciones
-        </h6>
+      <div className="glass-panel rounded-2xl p-6 border border-white/10 relative z-20">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <h6 className="text-amber-500 font-bold text-xs uppercase flex items-center gap-2 tracking-wider">
+            <Filter className="w-4 h-4" /> Filtrar Devoluciones
+          </h6>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="relative">
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
-              Desde
-            </label>
-            <div className="relative">
-              <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 h-9" />
-              <input
-                type="date"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
+                Desde
+              </label>
+              <DatePicker
                 value={fechaInicio}
-                onChange={(e) => setFechaInicio(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 outline-none transition-all placeholder:text-slate-600"
+                onChange={setFechaInicio}
+                className="w-full"
               />
             </div>
-          </div>
-          <div className="relative">
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
-              Hasta
-            </label>
-            <div className="relative">
-              <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="date"
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
+                Hasta
+              </label>
+              <DatePicker
                 value={fechaFin}
-                onChange={(e) => setFechaFin(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 outline-none transition-all"
+                onChange={setFechaFin}
+                className="w-full"
               />
             </div>
+            <div className="lg:col-span-2">
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-white/10"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Search className="w-5 h-5" />
+                )}
+                Buscar Registros
+              </button>
+            </div>
           </div>
-          <div className="flex items-end">
-            <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-white/10"
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Search className="w-5 h-5" />
-              )}
-              Buscar Registros
-            </button>
-          </div>
-        </div>
 
-        {/* Quick Buttons */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/5 pt-6">
-          {["hoy", "semana", "mes", "anio"].map((period) => (
-            <button
-              key={period}
-              onClick={() => handleQuickFilter(period as any)}
-              className="py-2.5 px-4 rounded-xl border border-white/5 bg-white/5 hover:bg-amber-500/10 hover:border-amber-500/30 text-slate-300 hover:text-amber-400 text-sm font-medium transition-all capitalize"
-            >
-              {period === "anio"
-                ? "Año Actual"
-                : period.charAt(0).toUpperCase() + period.slice(1)}
-            </button>
-          ))}
+          {/* Quick Buttons */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 border-t border-white/5 pt-4">
+            {["hoy", "semana", "mes", "anio"].map((period) => (
+              <button
+                key={period}
+                onClick={() => handleQuickFilter(period as any)}
+                className="py-2.5 px-4 rounded-xl border border-white/5 bg-white/5 hover:bg-amber-500/10 hover:border-amber-500/30 text-slate-300 hover:text-amber-400 text-sm font-medium transition-all capitalize shadow-sm"
+              >
+                {period === "anio"
+                  ? "Año Actual"
+                  : period.charAt(0).toUpperCase() + period.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Results Table */}
-      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10">
+      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 relative z-10">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px]">
             <thead className="bg-slate-900/50 border-b border-white/5">

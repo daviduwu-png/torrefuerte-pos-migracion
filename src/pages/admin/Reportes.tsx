@@ -11,6 +11,7 @@ import {
 import { StyledSwal as Swal } from "../../utils/swal";
 import { api } from "../../api/tauri";
 import { getFechaHoy } from "../../utils/dateFormat";
+import DatePicker from "../../components/ui/DatePicker";
 
 export default function Reportes() {
   const [loading, setLoading] = useState(false);
@@ -125,7 +126,7 @@ export default function Reportes() {
           <Clock className="w-5 h-5 text-emerald-400" />
           Reportes Rápidos
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {reportesRapidos.map((reporte, idx) => {
             const IconComponent = reporte.icon;
             return (
@@ -189,34 +190,26 @@ export default function Reportes() {
             <li>Devoluciones (Registro de retornos)</li>
           </ul>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 relative">
             <div className="flex-1">
               <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">
                 Fecha Inicio
               </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  type="date"
-                  value={fechaInicio}
-                  onChange={(e) => setFechaInicio(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-3 py-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
+              <DatePicker
+                value={fechaInicio}
+                onChange={(val) => setFechaInicio(val)}
+                className="w-full"
+              />
             </div>
             <div className="flex-1">
               <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">
                 Fecha Fin
               </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  type="date"
-                  value={fechaFin}
-                  onChange={(e) => setFechaFin(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-3 py-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
+              <DatePicker
+                value={fechaFin}
+                onChange={(val) => setFechaFin(val)}
+                className="w-full"
+              />
             </div>
           </div>
 

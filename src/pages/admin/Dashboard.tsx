@@ -17,7 +17,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 
@@ -68,7 +67,6 @@ export default function AdminDashboard() {
       try {
         setLoading(true);
 
-        // Cargar estadísticas generales y gráficas en paralelo
         const [statsRes, diariasRes, semanalesRes, mensualesRes, anualesRes] =
           await Promise.all([
             api.obtenerEstadisticas(),
@@ -89,21 +87,11 @@ export default function AdminDashboard() {
           });
         }
 
-        if (diariasRes.success && diariasRes.data) {
-          setVentasDiarias(diariasRes.data);
-        }
+        if (diariasRes.success && diariasRes.data) setVentasDiarias(diariasRes.data);
+        if (semanalesRes.success && semanalesRes.data) setVentasSemanales(semanalesRes.data);
+        if (mensualesRes.success && mensualesRes.data) setVentasMensuales(mensualesRes.data);
+        if (anualesRes.success && anualesRes.data) setVentasAnuales(anualesRes.data);
 
-        if (semanalesRes.success && semanalesRes.data) {
-          setVentasSemanales(semanalesRes.data);
-        }
-
-        if (mensualesRes.success && mensualesRes.data) {
-          setVentasMensuales(mensualesRes.data);
-        }
-
-        if (anualesRes.success && anualesRes.data) {
-          setVentasAnuales(anualesRes.data);
-        }
       } catch (error) {
         console.error("Error cargando dashboard:", error);
       } finally {
@@ -114,11 +102,10 @@ export default function AdminDashboard() {
     cargarDatos();
   }, []);
 
-  // Construir array de stats para renderizar
   const statsDisplay = [
     {
       label: "Ventas del Día",
-      value: `$${estadisticas.ventas_hoy.toFixed(2)}`,
+      value: `$${estadisticas.ventas_hoy.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: "Hoy",
       icon: DollarSign,
       color: "from-emerald-500 to-emerald-600",
@@ -144,7 +131,7 @@ export default function AdminDashboard() {
       border: "border-amber-500/20",
     },
     {
-      label: "Productos Vendidos",
+      label: "Prods. Vendidos",
       value: estadisticas.productos_vendidos.toString(),
       change: "Hoy",
       icon: Package,
@@ -154,242 +141,171 @@ export default function AdminDashboard() {
     },
   ];
 
-  // Preparar datos para las gráficas
-  const dataDiarias = ventasDiarias.labels.map((label, idx) => ({
-    name: label,
-    ventas: ventasDiarias.ventas[idx],
-  }));
-
-  const dataSemanales = ventasSemanales.labels.map((label, idx) => ({
-    name: label,
-    ventas: ventasSemanales.ventas[idx],
-  }));
-
-  const dataMensuales = ventasMensuales.labels.map((label, idx) => ({
-    name: label,
-    ventas: ventasMensuales.ventas[idx],
-  }));
-
-  const dataAnuales = ventasAnuales.labels.map((label, idx) => ({
-    name: label,
-    ventas: ventasAnuales.ventas[idx],
-  }));
+  const dataDiarias = ventasDiarias.labels.map((label, idx) => ({ name: label, ventas: ventasDiarias.ventas[idx] }));
+  const dataSemanales = ventasSemanales.labels.map((label, idx) => ({ name: label, ventas: ventasSemanales.ventas[idx] }));
+  const dataMensuales = ventasMensuales.labels.map((label, idx) => ({ name: label, ventas: ventasMensuales.ventas[idx] }));
+  const dataAnuales = ventasAnuales.labels.map((label, idx) => ({ name: label, ventas: ventasAnuales.ventas[idx] }));
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-white">Cargando dashboard...</div>
+      <div className="flex h-full items-center justify-center p-8 text-center text-slate-400">
+        <div className="animate-pulse flex flex-col items-center">
+          <TrendingUp className="w-10 h-10 mb-4 opacity-50" />
+          <p>Cargando dashboard...</p>
+        </div>
+      </div>
     );
   }
 
+  // Estilos comunes para los tooltips de recharts
+  const tooltipStyle = {
+    backgroundColor: "#1e293b",
+    border: "1px solid #334155",
+    borderRadius: "8px",
+    color: "#fff",
+    fontSize: "12px"
+  };
+
   return (
-    <div className="space-y-8 pb-12">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+    <div className="space-y-4 pb-6">
+
+      {/* Stats Grid - Tarjetas más compactas */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statsDisplay.map((stat, index) => {
           const IconComponent = stat.icon;
           return (
             <div
               key={index}
-              className={`glass-card p-6 rounded-2xl group border-l-4 ${stat.border}`}
+              className={`glass-card p-4 rounded-2xl group border-l-4 ${stat.border} relative overflow-hidden`}
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1 relative z-10">
-                  <p className="text-slate-400 text-xs lg:text-sm font-medium truncate uppercase tracking-wider">
+                  <p className="text-slate-400 text-[10px] md:text-xs font-bold truncate uppercase tracking-wider">
                     {stat.label}
                   </p>
-                  <p className="text-3xl font-bold text-white mt-3 tracking-tight">
+                  <p className="text-xl xl:text-2xl font-black text-white mt-1.5 tracking-tight truncate">
                     {stat.value}
                   </p>
-                  <div className="flex items-center gap-2 mt-3">
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white font-medium border border-white/5">
+                  <div className="mt-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/10 text-white font-bold border border-white/5 uppercase">
                       {stat.change}
                     </span>
                   </div>
                 </div>
                 <div
-                  className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg ${stat.shadow} group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-4`}
+                  className={`w-10 h-10 xl:w-12 xl:h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg ${stat.shadow} group-hover:scale-105 transition-transform duration-300 flex-shrink-0`}
                 >
-                  <IconComponent className="w-7 h-7 text-white" />
+                  <IconComponent className="w-5 h-5 xl:w-6 xl:h-6 text-white" />
                 </div>
               </div>
-              {/* Decorative blur behind */}
+              {/* Decorative blur */}
               <div
-                className={`absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-10 blur-3xl rounded-full pointer-events-none group-hover:opacity-20 transition-opacity`}
+                className={`absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-br ${stat.color} opacity-10 rounded-full pointer-events-none group-hover:opacity-20 transition-opacity`}
               />
             </div>
           );
         })}
       </div>
 
-      {/* Gráficas de Ventas */}
-      <div className="grid grid-cols-1 gap-6">
-        {/* Ventas Diarias (Últimos 7 días) */}
-        <div className="glass-card p-6 rounded-2xl">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-blue-400" />
+      {/* Gráficas de Ventas - Grid 2x2 para aprovechar ancho y ahorrar alto */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        {/* Ventas Diarias */}
+        <div className="glass-card p-4 rounded-2xl flex flex-col">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Ventas Diarias</h2>
-              <p className="text-slate-400 text-xs">
-                Últimos 7 días - Ventas netas (con devoluciones)
-              </p>
+              <h2 className="text-sm font-bold text-white">Ventas Diarias</h2>
+              <p className="text-slate-400 text-[10px] uppercase tracking-wide">Últimos 7 días</p>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={dataDiarias}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis
-                dataKey="name"
-                stroke="#94a3b8"
-                style={{ fontSize: "12px" }}
-              />
-              <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1e293b",
-                  border: "1px solid #334155",
-                  borderRadius: "8px",
-                  color: "#fff",
-                }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="ventas"
-                stroke="#3b82f6"
-                strokeWidth={3}
-                dot={{ fill: "#3b82f6", r: 5 }}
-                activeDot={{ r: 7 }}
-                name="Ventas ($)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="flex-1 min-h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dataDiarias}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: "10px" }} tickMargin={8} />
+                <YAxis stroke="#94a3b8" style={{ fontSize: "10px" }} tickFormatter={(val) => `$${val}`} width={60} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(val: number | undefined) => [`$${(val ?? 0).toFixed(2)}`, "Ventas"]} />
+                <Line type="monotone" dataKey="ventas" stroke="#3b82f6" strokeWidth={3} dot={{ fill: "#3b82f6", r: 4 }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* Grid para Semanales, Mensuales y Anuales */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Ventas Semanales */}
-          <div className="glass-card p-6 rounded-2xl">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-emerald-400" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">
-                  Ventas Semanales
-                </h2>
-                <p className="text-slate-400 text-xs">Últimas 4 semanas</p>
-              </div>
+        {/* Ventas Semanales */}
+        <div className="glass-card p-4 rounded-2xl flex flex-col">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-emerald-400" />
             </div>
-            <ResponsiveContainer width="100%" height={250}>
+            <div>
+              <h2 className="text-sm font-bold text-white">Ventas Semanales</h2>
+              <p className="text-slate-400 text-[10px] uppercase tracking-wide">Últimas 4 semanas</p>
+            </div>
+          </div>
+          <div className="flex-1 min-h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dataSemanales}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#94a3b8"
-                  style={{ fontSize: "11px" }}
-                />
-                <YAxis stroke="#94a3b8" style={{ fontSize: "11px" }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1e293b",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                />
-                <Bar
-                  dataKey="ventas"
-                  fill="#10b981"
-                  name="Ventas ($)"
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Ventas Anuales */}
-          <div className="glass-card p-6 rounded-2xl">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-amber-400" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">Ventas Anuales</h2>
-                <p className="text-slate-400 text-xs">Últimos 5 años</p>
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={dataAnuales}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#94a3b8"
-                  style={{ fontSize: "11px" }}
-                />
-                <YAxis stroke="#94a3b8" style={{ fontSize: "11px" }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1e293b",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                />
-                <Bar
-                  dataKey="ventas"
-                  fill="#f59e0b"
-                  name="Ventas ($)"
-                  radius={[8, 8, 0, 0]}
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: "10px" }} tickMargin={8} />
+                <YAxis stroke="#94a3b8" style={{ fontSize: "10px" }} tickFormatter={(val) => `$${val}`} width={60} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#334155', opacity: 0.4 }} formatter={(val: number | undefined) => [`$${(val ?? 0).toFixed(2)}`, "Ventas"]} />
+                <Bar dataKey="ventas" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Ventas Mensuales - Vista completa */}
-        <div className="glass-card p-6 rounded-2xl">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-400" />
+        {/* Ventas Mensuales */}
+        <div className="glass-card p-4 rounded-2xl flex flex-col">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-purple-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Ventas Mensuales</h2>
-              <p className="text-slate-400 text-xs">
-                Últimos 12 meses - Vista completa del año
-              </p>
+              <h2 className="text-sm font-bold text-white">Ventas Mensuales</h2>
+              <p className="text-slate-400 text-[10px] uppercase tracking-wide">Vista anual</p>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={dataMensuales}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis
-                dataKey="name"
-                stroke="#94a3b8"
-                style={{ fontSize: "11px" }}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-              />
-              <YAxis stroke="#94a3b8" style={{ fontSize: "11px" }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1e293b",
-                  border: "1px solid #334155",
-                  borderRadius: "8px",
-                  color: "#fff",
-                }}
-              />
-              <Bar
-                dataKey="ventas"
-                fill="#a855f7"
-                name="Ventas ($)"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="flex-1 min-h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dataMensuales}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: "10px" }} tickMargin={8} angle={-35} textAnchor="end" height={40} />
+                <YAxis stroke="#94a3b8" style={{ fontSize: "10px" }} tickFormatter={(val) => `$${val}`} width={60} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#334155', opacity: 0.4 }} formatter={(val: number | undefined) => [`$${(val ?? 0).toFixed(2)}`, "Ventas"]} />
+                <Bar dataKey="ventas" fill="#a855f7" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
+
+        {/* Ventas Anuales */}
+        <div className="glass-card p-4 rounded-2xl flex flex-col">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white">Ventas Anuales</h2>
+              <p className="text-slate-400 text-[10px] uppercase tracking-wide">Últimos 5 años</p>
+            </div>
+          </div>
+          <div className="flex-1 min-h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dataAnuales}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: "10px" }} tickMargin={8} />
+                <YAxis stroke="#94a3b8" style={{ fontSize: "10px" }} tickFormatter={(val) => `$${val}`} width={60} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#334155', opacity: 0.4 }} formatter={(val: number | undefined) => [`$${(val ?? 0).toFixed(2)}`, "Ventas"]} />
+                <Bar dataKey="ventas" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={50} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ export default function CorteCaja() {
       if (res.success) {
         await Swal.fire({
           icon: "success",
-          title: "Impresa exitosa",
+          title: "Impresión exitosa",
           text: "Corte enviado a impresión correctamente.",
           timer: 2000,
           showConfirmButton: false,
@@ -69,7 +69,7 @@ export default function CorteCaja() {
   return (
     <div className="h-full flex flex-col items-center justify-center p-6 bg-transparent">
       {!corte ? (
-        <div className="w-full max-w-lg glass-panel rounded-3xl p-10 text-center border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="w-full max-w-lg glass-panel rounded-3xl p-6 md:p-10 text-center border border-white/10 shadow-2xl relative overflow-hidden">
           <p className="text-slate-300 mb-8 leading-relaxed text-lg">
             Generar el corte de caja calculará el total de ventas del día actual
             y emitirá el reporte final.
@@ -105,7 +105,7 @@ export default function CorteCaja() {
         </div>
       ) : (
         <div className="w-full max-w-lg glass-panel rounded-3xl border border-white/10 overflow-hidden animate-in fade-in zoom-in duration-300 shadow-2xl">
-          <div className="bg-gradient-to-b from-slate-900/80 to-slate-900/40 p-10 text-white text-center border-b border-white/5 relative">
+          <div className="bg-gradient-to-b from-slate-900/80 to-slate-900/40 p-6 md:p-10 text-white text-center border-b border-white/5 relative">
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
 
             <p className="text-sm text-emerald-400 uppercase font-bold tracking-widest mb-2">
@@ -125,7 +125,7 @@ export default function CorteCaja() {
             </div>
           </div>
 
-          <div className="p-8 space-y-4">
+          <div className="p-6 md:p-8 space-y-4">
             <div className="glass-card p-4 rounded-xl flex items-center justify-between border border-white/5">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
@@ -176,7 +176,7 @@ export default function CorteCaja() {
             <div className="grid grid-cols-2 gap-4 mt-8">
               <button
                 onClick={() => setCorte(null)}
-                className="py-4 flex items-center justify-center border border-white/10 rounded-xl font-bold text-slate-400 hover:bg-white/5 hover:text-white transition-all backdrop-blur-sm"
+                className="py-4 flex items-center justify-center border border-white/10 rounded-xl font-bold text-slate-400 hover:bg-white/5 hover:text-white transition-all "
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Otro Corte

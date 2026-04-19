@@ -10,6 +10,7 @@ pub struct Usuario {
 }
 
 /// Credenciales de login
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct LoginCredentials {
     pub username: String,
@@ -33,7 +34,7 @@ pub struct Categoria {
 
 /// Tipos de medida válidos
 pub const TIPOS_MEDIDA: &[&str] = &[
-    "UNIDAD", "ROLLO", "METRO", "KILO", "JUEGO", "SET", "LITRO", "GALON", "CAJA", "TRAMO"
+    "UNIDAD", "ROLLO", "METRO", "KILO", "JUEGO", "SET", "LITRO", "GALON", "CAJA", "TRAMO",
 ];
 
 /// Producto
@@ -207,6 +208,7 @@ pub struct VentasDiarias {
 }
 
 /// Estadísticas del dashboard
+#[allow(dead_code)] // Reservada para el endpoint obtener_estadisticas
 #[derive(Debug, Serialize)]
 pub struct Estadisticas {
     pub ventas_hoy: f64,

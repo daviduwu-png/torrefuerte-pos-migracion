@@ -15,13 +15,9 @@ pub struct AppState {
 
 /// Login de usuario (busca por nombre o email)
 #[tauri::command]
-pub fn login(
-    username: String,
-    password: String,
-    state: State<AppState>,
-) -> LoginResponse {
+pub fn login(username: String, password: String, state: State<AppState>) -> LoginResponse {
     let conn = state.db.conn.lock().unwrap();
-    
+
     let result = conn.query_row(
         "SELECT id, nombre, email, contraseña, rol FROM usuario WHERE nombre = ? OR email = ?",
         params![&username, &username],
@@ -47,10 +43,10 @@ pub fn login(
                         email,
                         rol: rol.clone(),
                     };
-                    
+
                     // Guardar usuario en estado
                     *state.current_user.lock().unwrap() = Some(user.clone());
-                    
+
                     LoginResponse {
                         success: true,
                         message: "Inicio de sesión exitoso.".to_string(),
@@ -87,62 +83,91 @@ pub fn get_current_user(state: State<AppState>) -> Option<Usuario> {
 
 // ==================== PRODUCTOS ====================
 
-/// Buscar productos por código o nombre
+/// Buscar productos por código de barras, código interno o nombre.
+///
+/// Prioridad:
+///   1. Código de barras (exacto)
+///   2. Código interno   (exacto)
+///   3. Nombre           (todas las palabras del query deben aparecer en el nombre,
+///                        en cualquier orden — p.ej. "malla negra" encuentra
+///                        "ROLLO DE MALLA MOSQUITERA NEGRA")
 #[tauri::command]
 pub fn buscar_producto(query: String, state: State<AppState>) -> ApiResponse<Vec<Producto>> {
     let conn = state.db.conn.lock().unwrap();
-    let like_query = format!("%{}%", query);
-    
-    // Intentar parsear query como ID numérico para optimización
-    let id_val = query.parse::<i64>().ok();
-    
-    let sql = if id_val.is_some() {
-        r#"SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor, 
-                  tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo, 
-                  precio_distribuidor, facturable, stock 
-           FROM producto 
-           WHERE id = ?1
-              OR codigo_barras = ?2 
-              OR codigo_interno = ?2 
-              OR nombre LIKE ?3
-           ORDER BY 
-               CASE 
-                   WHEN id = ?1 THEN 1
-                   WHEN codigo_barras = ?2 THEN 2
-                   WHEN codigo_interno = ?2 THEN 3
-                   ELSE 4
-               END, nombre
-           LIMIT 50"#
-    } else {
-        r#"SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor, 
-                  tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo, 
-                  precio_distribuidor, facturable, stock 
-           FROM producto 
-           WHERE codigo_barras = ?1 
-              OR codigo_interno = ?1 
-              OR nombre LIKE ?2
-           ORDER BY 
-               CASE 
-                   WHEN codigo_barras = ?1 THEN 1
-                   WHEN codigo_interno = ?1 THEN 2
-                   ELSE 3
-               END, nombre
-           LIMIT 50"#
-    };
 
-    let mut stmt = conn.prepare(sql).unwrap();
-    
-    let productos: Vec<Producto> = if let Some(id) = id_val {
-        stmt.query_map(params![id, &query, &like_query], |row| parse_producto_row(row))
-            .unwrap()
-            .filter_map(|r| r.ok())
-            .collect()
-    } else {
-        stmt.query_map(params![&query, &like_query], |row| parse_producto_row(row))
-            .unwrap()
-            .filter_map(|r| r.ok())
-            .collect()
-    };
+    // --- Búsqueda exacta por códigos ---
+    // Primero intentamos match exacto en código de barras o código interno.
+    // Si hay resultado, lo devolvemos de inmediato (caso escaneo de pistola).
+    let sql_exacto = r#"
+        SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor,
+               tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo,
+               precio_distribuidor, facturable, stock
+        FROM producto
+        WHERE codigo_barras = ?1
+           OR codigo_interno = ?1
+        ORDER BY
+            CASE
+                WHEN codigo_barras = ?1 THEN 1
+                WHEN codigo_interno = ?1 THEN 2
+                ELSE 3
+            END
+        LIMIT 10
+    "#;
+
+    let mut stmt_exacto = conn.prepare(sql_exacto).unwrap();
+    let exactos: Vec<Producto> = stmt_exacto
+        .query_map(params![&query], |row| parse_producto_row(row))
+        .unwrap()
+        .filter_map(|r| r.ok())
+        .collect();
+
+    if !exactos.is_empty() {
+        return ApiResponse::success("Productos encontrados", exactos);
+    }
+
+    // --- Búsqueda por nombre con tokens ---
+    // Dividimos el query en palabras y exigimos que TODAS aparezcan en el nombre
+    // (en cualquier orden). Esto permite que "malla negra" encuentre
+    // "ROLLO DE MALLA MOSQUITERA NEGRA".
+    let tokens: Vec<String> = query
+        .split_whitespace()
+        .filter(|t| !t.is_empty())
+        .map(|t| format!("%{}%", t))
+        .collect();
+
+    if tokens.is_empty() {
+        return ApiResponse::error("No se encontraron productos.");
+    }
+
+    // Construimos dinámicamente las condiciones AND LIKE para cada token
+    let conditions: String = (0..tokens.len())
+        .map(|i| format!("nombre LIKE ?{}", i + 1))
+        .collect::<Vec<_>>()
+        .join(" AND ");
+
+    let sql_nombre = format!(
+        r#"SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor,
+                  tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo,
+                  precio_distribuidor, facturable, stock
+           FROM producto
+           WHERE {conditions}
+           ORDER BY nombre
+           LIMIT 50"#
+    );
+
+    let mut stmt_nombre = conn.prepare(&sql_nombre).unwrap();
+
+    // rusqlite requiere pasar los params como slice de referencias a dyn ToSql
+    let params_refs: Vec<&dyn rusqlite::types::ToSql> = tokens
+        .iter()
+        .map(|t| t as &dyn rusqlite::types::ToSql)
+        .collect();
+
+    let productos: Vec<Producto> = stmt_nombre
+        .query_map(params_refs.as_slice(), |row| parse_producto_row(row))
+        .unwrap()
+        .filter_map(|r| r.ok())
+        .collect();
 
     if productos.is_empty() {
         ApiResponse::error("No se encontraron productos.")
@@ -172,7 +197,6 @@ fn parse_producto_row(row: &rusqlite::Row) -> rusqlite::Result<Producto> {
     })
 }
 
-
 /// Consultar todos los productos con filtros opcionales
 #[tauri::command]
 pub fn consultar_productos(
@@ -181,47 +205,53 @@ pub fn consultar_productos(
 ) -> ApiResponse<Vec<Producto>> {
     let conn = state.db.conn.lock().unwrap();
     let filtros = filtros.unwrap_or_default();
-    
+
     let mut sql = String::from(
         r#"SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor, 
                   tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo, 
                   precio_distribuidor, facturable, stock 
-           FROM producto WHERE 1=1"#
+           FROM producto WHERE 1=1"#,
     );
-    
 
-    
     if let Some(ref categoria) = filtros.categoria {
         // Buscar ID de categoría
-        let cat_id: Option<i64> = conn.query_row(
-            "SELECT id FROM categoria WHERE nombre = ? COLLATE NOCASE",
-            params![categoria],
-            |row| row.get(0)
-        ).ok();
-        
+        let cat_id: Option<i64> = conn
+            .query_row(
+                "SELECT id FROM categoria WHERE nombre = ? COLLATE NOCASE",
+                params![categoria],
+                |row| row.get(0),
+            )
+            .ok();
+
         if let Some(id) = cat_id {
             sql.push_str(&format!(" AND categoria_id = {}", id));
         }
     }
-    
+
     if let Some(ref marca) = filtros.marca {
-        sql.push_str(&format!(" AND marca = '{}' COLLATE NOCASE", marca.replace("'", "''")));
+        sql.push_str(&format!(
+            " AND marca = '{}' COLLATE NOCASE",
+            marca.replace("'", "''")
+        ));
     }
-    
+
     if let Some(ref proveedor) = filtros.proveedor {
-        sql.push_str(&format!(" AND proveedor = '{}' COLLATE NOCASE", proveedor.replace("'", "''")));
+        sql.push_str(&format!(
+            " AND proveedor = '{}' COLLATE NOCASE",
+            proveedor.replace("'", "''")
+        ));
     }
-    
+
     sql.push_str(" ORDER BY nombre ASC");
-    
+
     if let Some(limit) = filtros.limit {
         if limit > 0 {
             sql.push_str(&format!(" LIMIT {}", limit));
         }
     }
-    
+
     let mut stmt = conn.prepare(&sql).unwrap();
-    
+
     let productos: Vec<Producto> = stmt
         .query_map([], |row| {
             Ok(Producto {
@@ -246,14 +276,17 @@ pub fn consultar_productos(
         .filter_map(|r| r.ok())
         .collect();
 
-    ApiResponse::success(&format!("{} productos encontrados", productos.len()), productos)
+    ApiResponse::success(
+        &format!("{} productos encontrados", productos.len()),
+        productos,
+    )
 }
 
 /// Obtener un producto por ID
 #[tauri::command]
 pub fn obtener_producto(id: i64, state: State<AppState>) -> ApiResponse<Producto> {
     let conn = state.db.conn.lock().unwrap();
-    
+
     let result = conn.query_row(
         r#"SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor, 
                   tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo, 
@@ -291,7 +324,7 @@ pub fn obtener_producto(id: i64, state: State<AppState>) -> ApiResponse<Producto
 #[tauri::command]
 pub fn ingresar_producto(producto: ProductoInput, state: State<AppState>) -> ApiResponse<i64> {
     let conn = state.db.conn.lock().unwrap();
-    
+
     // Validar tipo_medida
     if !TIPOS_MEDIDA.contains(&producto.tipo_medida.as_str()) {
         return ApiResponse::error(&format!(
@@ -299,42 +332,47 @@ pub fn ingresar_producto(producto: ProductoInput, state: State<AppState>) -> Api
             TIPOS_MEDIDA.join(", ")
         ));
     }
-    
+
     // Verificar código de barras único
     if let Some(ref codigo) = producto.codigo_barras {
         if !codigo.is_empty() {
-            let exists: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM producto WHERE codigo_barras = ?",
-                params![codigo],
-                |row| row.get(0)
-            ).unwrap_or(0);
-            
+            let exists: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM producto WHERE codigo_barras = ?",
+                    params![codigo],
+                    |row| row.get(0),
+                )
+                .unwrap_or(0);
+
             if exists > 0 {
                 return ApiResponse::error("El código de barras ya existe");
             }
         }
     }
-    
+
     // Verificar código interno único
     if let Some(ref codigo) = producto.codigo_interno {
         if !codigo.is_empty() {
-            let exists: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM producto WHERE codigo_interno = ?",
-                params![codigo],
-                |row| row.get(0)
-            ).unwrap_or(0);
-            
+            let exists: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM producto WHERE codigo_interno = ?",
+                    params![codigo],
+                    |row| row.get(0),
+                )
+                .unwrap_or(0);
+
             if exists > 0 {
                 return ApiResponse::error("El código interno ya existe");
             }
         }
     }
-    
+
     let marca = producto.marca.map(|m| m.to_uppercase());
-    let proveedor = producto.proveedor
+    let proveedor = producto
+        .proveedor
         .map(|p| p.to_uppercase())
         .unwrap_or_else(|| "MANUAL".to_string());
-    
+
     let result = conn.execute(
         r#"INSERT INTO producto (codigo_barras, codigo_interno, nombre, descripcion, marca, 
                                   proveedor, tipo_medida, categoria_id, precio_compra, precio_venta, 
@@ -357,7 +395,7 @@ pub fn ingresar_producto(producto: ProductoInput, state: State<AppState>) -> Api
             producto.stock
         ]
     );
-    
+
     match result {
         Ok(_) => {
             let id = conn.last_insert_rowid();
@@ -371,12 +409,12 @@ pub fn ingresar_producto(producto: ProductoInput, state: State<AppState>) -> Api
 #[tauri::command]
 pub fn guardar_producto(producto: ProductoInput, state: State<AppState>) -> ApiResponse<()> {
     let conn = state.db.conn.lock().unwrap();
-    
+
     let id = match producto.id {
         Some(id) => id,
         None => return ApiResponse::error("ID de producto requerido"),
     };
-    
+
     // Validar tipo_medida
     if !TIPOS_MEDIDA.contains(&producto.tipo_medida.as_str()) {
         return ApiResponse::error(&format!(
@@ -384,27 +422,30 @@ pub fn guardar_producto(producto: ProductoInput, state: State<AppState>) -> ApiR
             TIPOS_MEDIDA.join(", ")
         ));
     }
-    
+
     // Verificar código de barras único (excluyendo el actual)
     if let Some(ref codigo) = producto.codigo_barras {
         if !codigo.is_empty() {
-            let exists: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM producto WHERE codigo_barras = ? AND id != ?",
-                params![codigo, id],
-                |row| row.get(0)
-            ).unwrap_or(0);
-            
+            let exists: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM producto WHERE codigo_barras = ? AND id != ?",
+                    params![codigo, id],
+                    |row| row.get(0),
+                )
+                .unwrap_or(0);
+
             if exists > 0 {
                 return ApiResponse::error("El código de barras ya está asignado a otro producto");
             }
         }
     }
-    
+
     let marca = producto.marca.map(|m| m.to_uppercase());
-    let proveedor = producto.proveedor
+    let proveedor = producto
+        .proveedor
         .map(|p| p.to_uppercase())
         .unwrap_or_else(|| "MANUAL".to_string());
-    
+
     let result = conn.execute(
         r#"UPDATE producto SET 
                codigo_barras = ?, codigo_interno = ?, nombre = ?, descripcion = ?, 
@@ -428,9 +469,9 @@ pub fn guardar_producto(producto: ProductoInput, state: State<AppState>) -> ApiR
             if producto.facturable { 1 } else { 0 },
             producto.stock,
             id
-        ]
+        ],
     );
-    
+
     match result {
         Ok(_) => ApiResponse::success("Producto actualizado correctamente", ()),
         Err(e) => ApiResponse::error(&format!("Error al actualizar: {}", e)),
@@ -441,31 +482,35 @@ pub fn guardar_producto(producto: ProductoInput, state: State<AppState>) -> ApiR
 #[tauri::command]
 pub fn eliminar_producto(id: i64, state: State<AppState>) -> ApiResponse<()> {
     let conn = state.db.conn.lock().unwrap();
-    
+
     // Verificar que el producto existe
-    let exists: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM producto WHERE id = ?",
-        params![id],
-        |row| row.get(0)
-    ).unwrap_or(0);
-    
+    let exists: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM producto WHERE id = ?",
+            params![id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
     if exists == 0 {
         return ApiResponse::error("El producto no existe");
     }
-    
+
     // Verificar que no tenga ventas asociadas
-    let ventas: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM ticket_producto WHERE producto_id = ?",
-        params![id],
-        |row| row.get(0)
-    ).unwrap_or(0);
-    
+    let ventas: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM ticket_producto WHERE producto_id = ?",
+            params![id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
     if ventas > 0 {
         return ApiResponse::error("No se puede eliminar: el producto tiene ventas asociadas");
     }
-    
+
     let result = conn.execute("DELETE FROM producto WHERE id = ?", params![id]);
-    
+
     match result {
         Ok(_) => ApiResponse::success("Producto eliminado correctamente", ()),
         Err(e) => ApiResponse::error(&format!("Error al eliminar: {}", e)),
@@ -478,9 +523,11 @@ pub fn eliminar_producto(id: i64, state: State<AppState>) -> ApiResponse<()> {
 #[tauri::command]
 pub fn obtener_categorias(state: State<AppState>) -> ApiResponse<Vec<Categoria>> {
     let conn = state.db.conn.lock().unwrap();
-    
-    let mut stmt = conn.prepare("SELECT id, nombre FROM categoria ORDER BY nombre").unwrap();
-    
+
+    let mut stmt = conn
+        .prepare("SELECT id, nombre FROM categoria ORDER BY nombre")
+        .unwrap();
+
     let categorias: Vec<Categoria> = stmt
         .query_map([], |row| {
             Ok(Categoria {
@@ -499,14 +546,14 @@ pub fn obtener_categorias(state: State<AppState>) -> ApiResponse<Vec<Categoria>>
 #[tauri::command]
 pub fn crear_categoria(nombre: String, state: State<AppState>) -> ApiResponse<i64> {
     let conn = state.db.conn.lock().unwrap();
-    
+
     let nombre_upper = nombre.to_uppercase();
-    
+
     let result = conn.execute(
         "INSERT INTO categoria (nombre) VALUES (?)",
-        params![nombre_upper]
+        params![nombre_upper],
     );
-    
+
     match result {
         Ok(_) => {
             let id = conn.last_insert_rowid();
@@ -526,11 +573,11 @@ pub fn crear_categoria(nombre: String, state: State<AppState>) -> ApiResponse<i6
 #[tauri::command]
 pub fn obtener_marcas(state: State<AppState>) -> ApiResponse<Vec<String>> {
     let conn = state.db.conn.lock().unwrap();
-    
+
     let mut stmt = conn.prepare(
         "SELECT DISTINCT marca FROM producto WHERE marca IS NOT NULL AND marca != '' ORDER BY marca"
     ).unwrap();
-    
+
     let marcas: Vec<String> = stmt
         .query_map([], |row| row.get(0))
         .unwrap()
@@ -544,11 +591,11 @@ pub fn obtener_marcas(state: State<AppState>) -> ApiResponse<Vec<String>> {
 #[tauri::command]
 pub fn obtener_proveedores(state: State<AppState>) -> ApiResponse<Vec<String>> {
     let conn = state.db.conn.lock().unwrap();
-    
+
     let mut stmt = conn.prepare(
         "SELECT DISTINCT proveedor FROM producto WHERE proveedor IS NOT NULL AND proveedor != '' ORDER BY proveedor"
     ).unwrap();
-    
+
     let proveedores: Vec<String> = stmt
         .query_map([], |row| row.get(0))
         .unwrap()
@@ -565,7 +612,7 @@ pub fn importar_productos_truper(
     state: State<AppState>,
 ) -> ApiResponse<String> {
     let mut conn = state.db.conn.lock().unwrap();
-    
+
     // Iniciar transacción para mejorar rendimiento y consistencia
     let tx = match conn.transaction() {
         Ok(tx) => tx,
@@ -574,85 +621,100 @@ pub fn importar_productos_truper(
 
     let mut inserted = 0;
     let mut updated = 0;
-    let mut skipped = 0; 
+    let mut skipped = 0;
 
     {
         // Preparar statements
-        let mut check_stmt = tx.prepare("SELECT id, proveedor FROM producto WHERE codigo_interno = ?").unwrap();
-        
+        let mut check_stmt = tx
+            .prepare("SELECT id, proveedor FROM producto WHERE codigo_interno = ?")
+            .unwrap();
+
         // Nota: Asumimos que los parametros coinciden con los del execute
-        let mut insert_stmt = tx.prepare(
-            r#"INSERT INTO producto (
+        let mut insert_stmt = tx
+            .prepare(
+                r#"INSERT INTO producto (
                 codigo_barras, codigo_interno, nombre, descripcion, marca, 
                 proveedor, tipo_medida, categoria_id, precio_compra, precio_venta, 
                 precio_mayoreo, precio_distribuidor, facturable, stock
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#
-        ).unwrap();
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+            )
+            .unwrap();
 
-        let mut update_stmt = tx.prepare(
-            r#"UPDATE producto SET 
+        let mut update_stmt = tx
+            .prepare(
+                r#"UPDATE producto SET 
                 codigo_barras = ?, nombre = ?, descripcion = ?, marca = ?, 
                 tipo_medida = ?, precio_compra = ?, precio_venta = ?, 
                 precio_mayoreo = ?, precio_distribuidor = ?
-               WHERE id = ?"#
-        ).unwrap();
+               WHERE id = ?"#,
+            )
+            .unwrap();
 
         for p in productos {
             let codigo_interno = match &p.codigo_interno {
                 Some(c) if !c.is_empty() => c,
-                _ => continue, 
+                _ => continue,
             };
 
             // Verificar si existe
-            let existing: Option<(i64, String)> = check_stmt.query_row(
-                params![codigo_interno],
-                |row| Ok((row.get(0)?, row.get(1)?))
-            ).ok();
+            let existing: Option<(i64, String)> = check_stmt
+                .query_row(params![codigo_interno], |row| {
+                    Ok((row.get(0)?, row.get(1)?))
+                })
+                .ok();
 
             if let Some((id, proveedor)) = existing {
                 if proveedor.to_uppercase() == "TRUPER" {
                     let marca = p.marca.as_ref().map(|m| m.to_uppercase());
-                    
-                    update_stmt.execute(params![
-                        p.codigo_barras,
-                        p.nombre,
-                        p.descripcion,
-                        marca,
-                        p.tipo_medida,
-                        p.precio_compra,
-                        p.precio_venta,
-                        p.precio_mayoreo,
-                        p.precio_distribuidor,
-                        id
-                    ]).unwrap_or_default();
+
+                    update_stmt
+                        .execute(params![
+                            p.codigo_barras,
+                            p.nombre,
+                            p.descripcion,
+                            marca,
+                            p.tipo_medida,
+                            p.precio_compra,
+                            p.precio_venta,
+                            p.precio_mayoreo,
+                            p.precio_distribuidor,
+                            id
+                        ])
+                        .unwrap_or_default();
                     updated += 1;
                 } else {
                     skipped += 1;
                 }
             } else {
                 let marca = p.marca.as_ref().map(|m| m.to_uppercase());
-                let proveedor = p.proveedor.clone().unwrap_or_else(|| "TRUPER".to_string()).to_uppercase();
+                let proveedor = p
+                    .proveedor
+                    .clone()
+                    .unwrap_or_else(|| "TRUPER".to_string())
+                    .to_uppercase();
 
-                insert_stmt.execute(params![
-                    p.codigo_barras,
-                    p.codigo_interno,
-                    p.nombre,
-                    p.descripcion,
-                    marca,
-                    proveedor,
-                    p.tipo_medida,
-                    p.categoria_id,
-                    p.precio_compra,
-                    p.precio_venta,
-                    p.precio_mayoreo,
-                    p.precio_distribuidor,
-                    if p.facturable { 1 } else { 0 },
-                    p.stock
-                ]).unwrap_or_default();
+                insert_stmt
+                    .execute(params![
+                        p.codigo_barras,
+                        p.codigo_interno,
+                        p.nombre,
+                        p.descripcion,
+                        marca,
+                        proveedor,
+                        p.tipo_medida,
+                        p.categoria_id,
+                        p.precio_compra,
+                        p.precio_venta,
+                        p.precio_mayoreo,
+                        p.precio_distribuidor,
+                        if p.facturable { 1 } else { 0 },
+                        p.stock
+                    ])
+                    .unwrap_or_default();
                 inserted += 1;
             }
         }
-    } 
+    }
 
     match tx.commit() {
         Ok(_) => ApiResponse::success(
@@ -665,16 +727,14 @@ pub fn importar_productos_truper(
 
 /// Rellenar stock masivo (Herramienta de desarrollo)
 #[tauri::command]
-pub fn rellenar_stock_masivo(
-    state: State<AppState>,
-) -> ApiResponse<String> {
+pub fn rellenar_stock_masivo(state: State<AppState>) -> ApiResponse<String> {
     let conn = state.db.conn.lock().unwrap();
-    
+
     // Ejecutar UPDATE masivo
     match conn.execute("UPDATE producto SET stock = 100", []) {
         Ok(rows) => ApiResponse::success(
             &format!("Stock actualizado correctamente en {} productos", rows),
-            format!("Updated: {}", rows)
+            format!("Updated: {}", rows),
         ),
         Err(e) => ApiResponse::error(&format!("Error al actualizar stock: {}", e)),
     }

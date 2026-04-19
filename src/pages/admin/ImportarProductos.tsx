@@ -314,12 +314,11 @@ export default function ImportarProductos() {
         onClick={() => inputRef.current?.click()}
         className={`
           border-2 border-dashed rounded-xl p-8 lg:p-12 text-center cursor-pointer transition-all duration-300
-          ${
-            arrastrando
-              ? "border-amber-500 bg-amber-500/10"
-              : archivo
-                ? "border-emerald-500 bg-emerald-500/10"
-                : "border-slate-700 hover:border-slate-600 bg-slate-900"
+          ${arrastrando
+            ? "border-amber-500 bg-amber-500/10"
+            : archivo
+              ? "border-emerald-500 bg-emerald-500/10"
+              : "border-slate-700 hover:border-slate-600 bg-slate-900"
           }
         `}
       >
@@ -380,7 +379,7 @@ export default function ImportarProductos() {
         <h3 className="text-sm lg:text-lg font-semibold text-white mb-3 lg:mb-4">
           Columnas Excel TRUPER
         </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {[
             {
               col: "Código",

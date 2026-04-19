@@ -83,6 +83,18 @@ pub fn run() {
         .expect("error while running tauri application");
 }
 
+/// Obtiene el directorio HOME del usuario de forma multiplataforma.
+/// - Linux / macOS: variable de entorno HOME  -> /home/usuario
+/// - Windows:       variable de entorno USERPROFILE -> C:\Users\usuario
+/// - Fallback:      directorio actual
+#[allow(dead_code)] // Se usa solo en cfg(not(debug_assertions)) — release build
+fn get_home_dir() -> PathBuf {
+    std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("."))
+}
+
 /// Obtener la ruta de la base de datos
 fn get_database_path() -> PathBuf {
     // En desarrollo, usar la carpeta db del proyecto
@@ -103,14 +115,12 @@ fn get_database_path() -> PathBuf {
         return db_path;
     }
     
-    // En producción, usar la carpeta de datos del usuario
+    // En producción, usar ~/.torrefuerte_data/ (funciona en Windows y Linux)
     #[cfg(not(debug_assertions))]
     {
-        let user_profile = std::env::var("USERPROFILE")
-            .unwrap_or_else(|_| "C:/Users/Default".to_string());
-        let db_path = PathBuf::from(&user_profile)
-            .join("Documents")
-            .join("TorreFuerte")
+        let home = get_home_dir();
+        let db_path = home
+            .join(".torrefuerte_data")
             .join("torrefuerte.db");
         
         // Crear directorio si no existe
