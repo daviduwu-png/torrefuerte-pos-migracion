@@ -65,6 +65,7 @@ export interface Producto {
   precio_distribuidor?: number;
   facturable: boolean;
   stock: number;
+  precio_compra_incluye_iva: boolean;
 }
 
 export interface ProductoInput {
@@ -83,6 +84,7 @@ export interface ProductoInput {
   precio_distribuidor?: number;
   facturable: boolean;
   stock: number;
+  precio_compra_incluye_iva: boolean;
 }
 
 export interface ProductoFiltros {

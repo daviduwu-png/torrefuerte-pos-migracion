@@ -13,7 +13,6 @@ import {
 } from "./pages/admin";
 import {
   VendedorDashboard,
-  VerificarPrecios,
   CorteCaja,
 } from "./pages/vendedor";
 
@@ -42,7 +41,6 @@ function App() {
         <Route path="/vendedor" element={<MainLayout userType="vendedor" />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<VendedorDashboard />} />
-          <Route path="verificar-precios" element={<VerificarPrecios />} />
           <Route path="corte-caja" element={<CorteCaja />} />
         </Route>
       </Routes>

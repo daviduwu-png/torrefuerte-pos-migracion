@@ -47,7 +47,7 @@ pub struct Producto {
     pub descripcion: Option<String>,
     pub marca: Option<String>,
     pub proveedor: String,
-    pub tipo_medida: String, // UNIDAD, ROLLO, METRO, KILO, JUEGO, SET, LITRO, GALON, CAJA, TRAMO
+    pub tipo_medida: String,
     pub categoria_id: i64,
     pub precio_compra: f64,
     pub precio_venta: f64,
@@ -55,6 +55,7 @@ pub struct Producto {
     pub precio_distribuidor: Option<f64>,
     pub facturable: bool,
     pub stock: f64,
+    pub precio_compra_incluye_iva: bool,
 }
 
 /// Datos para crear/actualizar producto
@@ -75,6 +76,8 @@ pub struct ProductoInput {
     pub precio_distribuidor: Option<f64>,
     pub facturable: bool,
     pub stock: f64,
+    #[serde(default)]
+    pub precio_compra_incluye_iva: bool,
 }
 
 /// Filtros para buscar productos

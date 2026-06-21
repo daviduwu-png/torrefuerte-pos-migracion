@@ -156,6 +156,9 @@ impl Database {
         // 1. Agregar costo_historico a ticket_producto
         // Ignoramos error si ya existe (código 1: OperationalError, mensaje "duplicate column name")
         let _ = conn.execute("ALTER TABLE ticket_producto ADD COLUMN costo_historico NUMERIC(10, 2) NOT NULL DEFAULT 0", []);
+
+        // 2. Flag que indica si precio_compra ya incluye IVA (para evitar doble aplicación)
+        let _ = conn.execute("ALTER TABLE producto ADD COLUMN precio_compra_incluye_iva INTEGER NOT NULL DEFAULT 0", []);
         
         Ok(())
     }

@@ -12,6 +12,7 @@ export interface ProductoCardData {
   precio_venta: number;
   precio_mayoreo?: number;
   precio_distribuidor?: number;
+  precio_compra_incluye_iva?: boolean;
 }
 
 interface ProductoCardProps {
@@ -19,6 +20,7 @@ interface ProductoCardProps {
   variant?: "compact" | "detailed" | "search";
   showPriceType?: "venta" | "all";
   className?: string;
+  precioCompraConIva?: boolean;
 }
 
 export default function ProductoCard({
@@ -26,7 +28,10 @@ export default function ProductoCard({
   variant = "detailed",
   showPriceType = "all",
   className = "",
+  precioCompraConIva = false,
 }: ProductoCardProps) {
+  // Usa el flag del objeto producto si existe, o el prop externo
+  const tieneIva = producto.precio_compra_incluye_iva ?? precioCompraConIva;
 
   // ─── VARIANTE SEARCH ────────────────────────────────────────────────────────
   if (variant === "search") {
@@ -111,6 +116,9 @@ export default function ProductoCard({
               <div className="flex items-center gap-1 mb-0.5">
                 <TrendingUp className="w-3 h-3 text-amber-400" />
                 <span className="text-[9px] text-amber-400 uppercase font-bold tracking-wide opacity-90">Compra</span>
+                {tieneIva && (
+                  <span className="text-[8px] bg-amber-500/30 text-amber-300 px-1 py-0.5 rounded font-bold">+IVA</span>
+                )}
               </div>
               <p className="text-[15px] font-black text-amber-400 w-full truncate">
                 ${producto.precio_compra.toFixed(2)}
@@ -304,6 +312,9 @@ export default function ProductoCard({
               <p className="text-[10px] text-amber-400 uppercase font-bold tracking-wide">
                 Compra
               </p>
+              {tieneIva && (
+                <span className="text-[8px] bg-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-bold">+IVA</span>
+              )}
             </div>
             <p className="text-2xl font-black text-amber-400">
               ${producto.precio_compra.toFixed(2)}

@@ -122,14 +122,15 @@ export default function SalesHistory() {
       }
     });
 
-    if (!id) return;
+    if (!id || !id.trim()) return;
 
+    const trimmedId = id.trim();
     setLoading(true);
     try {
-      const response = await api.buscarTicket(id);
+      const response = await api.buscarTicket(trimmedId);
       if (response.success && response.data && response.data.length > 0) {
         setTickets(response.data);
-        setModalTitle(`Resultados para: "${id}"`);
+        setModalTitle(`Resultados para: "${trimmedId}"`);
         setShowResultsModal(true);
       } else {
         Swal.fire({

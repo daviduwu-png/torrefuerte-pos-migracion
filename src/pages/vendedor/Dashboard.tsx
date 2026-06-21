@@ -92,9 +92,9 @@ export default function VendedorDashboard() {
         />
       </div>
 
-      <VerificarPrecios 
-        isOpen={isVerificarPreciosOpen} 
-        onClose={() => setIsVerificarPreciosOpen(false)} 
+      <VerificarPrecios
+        isOpen={isVerificarPreciosOpen}
+        onClose={() => setIsVerificarPreciosOpen(false)}
       />
     </>
   );

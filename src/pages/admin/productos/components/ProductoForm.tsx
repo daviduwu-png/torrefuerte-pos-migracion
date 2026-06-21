@@ -1,7 +1,7 @@
 import { Categoria } from "../../../../api/tauri";
 import { ProductoInput } from "../types";
 import { UNIDADES_MEDIDA } from "../types";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Receipt } from "lucide-react";
 
 interface ProductoFormProps {
     formData: ProductoInput;
@@ -17,7 +17,14 @@ interface ProductoFormProps {
     onToggleCustomProveedor: () => void;
     onNuevaMarcaChange: (v: string) => void;
     onNuevoProveedorChange: (v: string) => void;
+    // IVA checkbox — manejado desde el padre (ProductoModal)
+    calcularIva: boolean;
+    onToggleIva: () => void;
+    precioCompraBase: number;
+    onPrecioCompraBaseChange: (v: number) => void;
 }
+
+const IVA = 0.16;
 
 const inputCls =
     "w-full bg-blue-500/10 border border-blue-500/50 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:border-blue-400 outline-none transition-colors";
@@ -28,12 +35,14 @@ const PriceInput = ({
     onChange,
     required = false,
     highlight = false,
+    readOnly = false,
 }: {
     label: string;
     value: number | undefined;
     onChange: (v: number) => void;
     required?: boolean;
     highlight?: boolean;
+    readOnly?: boolean;
 }) => (
     <div className="space-y-1">
         <label
@@ -53,12 +62,16 @@ const PriceInput = ({
                 type="number"
                 step="0.01"
                 required={required}
+                readOnly={readOnly}
                 value={!value || value === 0 ? "" : value}
                 onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
-                className={`w-full rounded-lg pl-7 pr-3 py-2 outline-none transition-colors ${highlight
-                    ? "bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 font-bold focus:border-emerald-400"
-                    : "bg-blue-500/10 border border-blue-500/50 text-white focus:border-emerald-400"
-                    }`}
+                className={`w-full rounded-lg pl-7 pr-3 py-2 outline-none transition-colors ${
+                    readOnly
+                        ? "bg-slate-700/30 border border-slate-600/40 text-slate-400 cursor-not-allowed"
+                        : highlight
+                            ? "bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 font-bold focus:border-emerald-400"
+                            : "bg-blue-500/10 border border-blue-500/50 text-white focus:border-emerald-400"
+                }`}
             />
         </div>
     </div>
@@ -78,9 +91,18 @@ export function ProductoForm({
     onToggleCustomProveedor,
     onNuevaMarcaChange,
     onNuevoProveedorChange,
+    calcularIva,
+    onToggleIva,
+    precioCompraBase,
+    onPrecioCompraBaseChange,
 }: ProductoFormProps) {
     const set = (partial: Partial<ProductoInput>) =>
         onChange({ ...formData, ...partial });
+
+    // Preview del precio con IVA — solo visual, el cálculo real lo hace ProductoModal
+    const precioCompraEfectivo = calcularIva
+        ? parseFloat((precioCompraBase * (1 + IVA)).toFixed(2))
+        : precioCompraBase;
 
     return (
         <div className="space-y-6">
@@ -281,11 +303,57 @@ export function ProductoForm({
                     Precios e Inventario
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5">
-                    <PriceInput
-                        label="Precio Compra"
-                        value={formData.precio_compra}
-                        onChange={(v) => set({ precio_compra: v })}
-                    />
+
+                    {/* Precio Compra con checkbox IVA */}
+                    <div className="space-y-1">
+                        <div className="flex items-center justify-between h-5">
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                                Precio Compra
+                            </label>
+                            {/* Checkbox IVA */}
+                            <button
+                                type="button"
+                                onClick={onToggleIva}
+                                className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase transition-all ${
+                                    calcularIva
+                                        ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                                        : "bg-slate-700/30 border-slate-600/50 text-slate-500 hover:border-slate-500"
+                                }`}
+                            >
+                                <Receipt className="w-3 h-3" />
+                                IVA 16%
+                                <span className={`w-3 h-3 rounded-sm border flex items-center justify-center ${
+                                    calcularIva ? "bg-amber-500 border-amber-400" : "border-slate-500"
+                                }`}>
+                                    {calcularIva && <span className="text-[8px] text-white font-black leading-none">✓</span>}
+                                </span>
+                            </button>
+                        </div>
+
+                        {/* Input precio base */}
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">$</span>
+                            <input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={precioCompraBase === 0 ? "" : precioCompraBase}
+                                onChange={(e) => onPrecioCompraBaseChange(e.target.value === "" ? 0 : Number(e.target.value))}
+                                className="w-full rounded-lg pl-7 pr-3 py-2 outline-none transition-colors bg-blue-500/10 border border-blue-500/50 text-white focus:border-emerald-400"
+                            />
+                        </div>
+
+                        {/* Preview precio con IVA */}
+                        {calcularIva && (
+                            <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                                <span className="text-[10px] text-amber-400 font-bold uppercase">Con IVA →</span>
+                                <span className="text-sm font-black text-amber-400">
+                                    ${precioCompraEfectivo.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
                     <PriceInput
                         label="Precio Venta"
                         value={formData.precio_venta}
@@ -297,6 +365,13 @@ export function ProductoForm({
                         label="Precio Mayoreo"
                         value={formData.precio_mayoreo}
                         onChange={(v) => set({ precio_mayoreo: v })}
+                    />
+
+                    {/* Precio Distribuidor */}
+                    <PriceInput
+                        label="Precio Distribuidor"
+                        value={formData.precio_distribuidor}
+                        onChange={(v) => set({ precio_distribuidor: v })}
                     />
 
                     {/* Stock */}

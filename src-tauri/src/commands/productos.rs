@@ -101,7 +101,7 @@ pub fn buscar_producto(query: String, state: State<AppState>) -> ApiResponse<Vec
     let sql_exacto = r#"
         SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor,
                tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo,
-               precio_distribuidor, facturable, stock
+               precio_distribuidor, facturable, stock, precio_compra_incluye_iva
         FROM producto
         WHERE codigo_barras = ?1
            OR codigo_interno = ?1
@@ -148,7 +148,7 @@ pub fn buscar_producto(query: String, state: State<AppState>) -> ApiResponse<Vec
     let sql_nombre = format!(
         r#"SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor,
                   tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo,
-                  precio_distribuidor, facturable, stock
+                  precio_distribuidor, facturable, stock, precio_compra_incluye_iva
            FROM producto
            WHERE {conditions}
            ORDER BY nombre
@@ -194,6 +194,7 @@ fn parse_producto_row(row: &rusqlite::Row) -> rusqlite::Result<Producto> {
         precio_distribuidor: row.get(12)?,
         facturable: row.get::<_, i64>(13)? == 1,
         stock: row.get(14)?,
+        precio_compra_incluye_iva: row.get::<_, i64>(15)? == 1,
     })
 }
 
@@ -209,7 +210,7 @@ pub fn consultar_productos(
     let mut sql = String::from(
         r#"SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor, 
                   tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo, 
-                  precio_distribuidor, facturable, stock 
+                  precio_distribuidor, facturable, stock, precio_compra_incluye_iva 
            FROM producto WHERE 1=1"#,
     );
 
@@ -270,6 +271,7 @@ pub fn consultar_productos(
                 precio_distribuidor: row.get(12)?,
                 facturable: row.get::<_, i64>(13)? == 1,
                 stock: row.get(14)?,
+                precio_compra_incluye_iva: row.get::<_, i64>(15)? == 1,
             })
         })
         .unwrap()
@@ -290,7 +292,7 @@ pub fn obtener_producto(id: i64, state: State<AppState>) -> ApiResponse<Producto
     let result = conn.query_row(
         r#"SELECT id, codigo_barras, codigo_interno, nombre, descripcion, marca, proveedor, 
                   tipo_medida, categoria_id, precio_compra, precio_venta, precio_mayoreo, 
-                  precio_distribuidor, facturable, stock 
+                  precio_distribuidor, facturable, stock, precio_compra_incluye_iva 
            FROM producto WHERE id = ?"#,
         params![id],
         |row| {
@@ -310,6 +312,7 @@ pub fn obtener_producto(id: i64, state: State<AppState>) -> ApiResponse<Producto
                 precio_distribuidor: row.get(12)?,
                 facturable: row.get::<_, i64>(13)? == 1,
                 stock: row.get(14)?,
+                precio_compra_incluye_iva: row.get::<_, i64>(15)? == 1,
             })
         },
     );
@@ -376,8 +379,9 @@ pub fn ingresar_producto(producto: ProductoInput, state: State<AppState>) -> Api
     let result = conn.execute(
         r#"INSERT INTO producto (codigo_barras, codigo_interno, nombre, descripcion, marca, 
                                   proveedor, tipo_medida, categoria_id, precio_compra, precio_venta, 
-                                  precio_mayoreo, precio_distribuidor, facturable, stock)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+                                  precio_mayoreo, precio_distribuidor, facturable, stock,
+                                  precio_compra_incluye_iva)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
         params![
             producto.codigo_barras,
             producto.codigo_interno,
@@ -392,7 +396,8 @@ pub fn ingresar_producto(producto: ProductoInput, state: State<AppState>) -> Api
             producto.precio_mayoreo,
             producto.precio_distribuidor,
             if producto.facturable { 1 } else { 0 },
-            producto.stock
+            producto.stock,
+            if producto.precio_compra_incluye_iva { 1 } else { 0 }
         ]
     );
 
@@ -451,7 +456,8 @@ pub fn guardar_producto(producto: ProductoInput, state: State<AppState>) -> ApiR
                codigo_barras = ?, codigo_interno = ?, nombre = ?, descripcion = ?, 
                marca = ?, proveedor = ?, tipo_medida = ?, categoria_id = ?, 
                precio_compra = ?, precio_venta = ?, precio_mayoreo = ?, 
-               precio_distribuidor = ?, facturable = ?, stock = ?
+               precio_distribuidor = ?, facturable = ?, stock = ?,
+               precio_compra_incluye_iva = ?
            WHERE id = ?"#,
         params![
             producto.codigo_barras,
@@ -468,6 +474,7 @@ pub fn guardar_producto(producto: ProductoInput, state: State<AppState>) -> ApiR
             producto.precio_distribuidor,
             if producto.facturable { 1 } else { 0 },
             producto.stock,
+            if producto.precio_compra_incluye_iva { 1 } else { 0 },
             id
         ],
     );

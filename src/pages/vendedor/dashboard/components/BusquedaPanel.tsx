@@ -24,8 +24,8 @@ export function BusquedaPanel({
     return (
         <div className="md:col-span-5 flex flex-col gap-4 h-full min-h-0">
             <div className="glass-panel rounded-3xl flex flex-col h-full overflow-hidden border border-white/10 shadow-2xl">
-                {/* Header */}
-                <div className="p-4 border-b border-white/10 bg-white/5 flex items-center gap-3 justify-between">
+                {/* Header del panel */}
+                <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/10 border border-blue-500/20">
                             <ScanBarcode className="w-5 h-5" />
@@ -39,13 +39,13 @@ export function BusquedaPanel({
                             </p>
                         </div>
                     </div>
-                    {/* Botón para abrir el modal de Verificar Precios */}
+                    
                     <button
                         onClick={onVerificarPrecios}
-                        className="px-3 py-1.5 flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg border border-slate-700 transition-colors shadow-sm"
+                        className="px-3 py-2 flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all duration-200 shadow-lg shadow-blue-900/30 border border-blue-500/50"
                         title="Verificar Precio"
                     >
-                        <ScanBarcode className="w-4 h-4 text-blue-400" />
+                        <ScanBarcode className="w-4 h-4" />
                         Verificar
                     </button>
                 </div>

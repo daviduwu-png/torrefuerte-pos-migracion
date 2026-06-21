@@ -215,6 +215,7 @@ export default function ImportarProductos() {
           precio_distribuidor: precioDistribuidor,
           facturable: true,
           stock: 0, // New products default to 0 stock
+          precio_compra_incluye_iva: false, // Importados sin IVA por default
         };
 
         processedData.push(prod);

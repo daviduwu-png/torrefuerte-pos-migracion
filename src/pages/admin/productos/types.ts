@@ -10,6 +10,7 @@ export const EMPTY_FORM: ProductoInput = {
     precio_venta: 0,
     facturable: true,
     stock: 0,
+    precio_compra_incluye_iva: false,
 };
 
 export const UNIDADES_MEDIDA = [

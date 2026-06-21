@@ -120,6 +120,7 @@ pub fn generar_ticket(
 #[tauri::command]
 pub fn buscar_ticket(query: String, state: State<AppState>) -> ApiResponse<Vec<TicketConProductos>> {
     let conn = state.db.conn.lock().unwrap();
+    let query = query.trim().to_string();
     let like_query = format!("%{}%", query);
     let id_query: i64 = query.parse().unwrap_or(0);
     
@@ -127,13 +128,16 @@ pub fn buscar_ticket(query: String, state: State<AppState>) -> ApiResponse<Vec<T
         r#"SELECT id, folio_fiscal, metodo_pago, total, direccion_local, nombre_local, 
                   dinero_recibido, cambio, usuario_id, fecha
            FROM ticket 
-           WHERE id = ? OR folio_fiscal LIKE ?
-           ORDER BY fecha DESC
-           LIMIT 10"#
+           WHERE id = ?1 OR folio_fiscal LIKE ?2
+           ORDER BY 
+               (id = ?1) DESC, 
+               (folio_fiscal = ?3) DESC, 
+               fecha DESC
+           LIMIT 20"#
     ).unwrap();
     
     let tickets: Vec<Ticket> = stmt
-        .query_map(params![id_query, &like_query], |row| {
+        .query_map(params![id_query, &like_query, &query], |row| {
             Ok(Ticket {
                 id: row.get(0)?,
                 folio_fiscal: row.get(1)?,

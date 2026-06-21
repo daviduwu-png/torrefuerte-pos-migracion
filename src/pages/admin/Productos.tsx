@@ -69,6 +69,7 @@ export default function Productos() {
       precio_distribuidor: producto.precio_distribuidor,
       facturable: producto.facturable,
       stock: producto.stock,
+      precio_compra_incluye_iva: producto.precio_compra_incluye_iva,
     });
     setModalOpen(true);
   };
