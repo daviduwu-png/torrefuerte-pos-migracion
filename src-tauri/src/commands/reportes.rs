@@ -670,7 +670,7 @@ pub fn reporte_ventas_diarias(state: State<AppState>) -> ApiResponse<VentasDiari
     ApiResponse::success("Ventas diarias", VentasDiarias { labels, ventas })
 }
 
-/// Obtener ventas semanales (últimas 4 semanas)
+/// Obtener ventas semanales (últimas 4 semanas de Lunes a Sábado)
 #[tauri::command]
 pub fn reporte_ventas_semanales(state: State<AppState>) -> ApiResponse<VentasDiarias> {
     let conn = state.db.conn.lock().unwrap();
@@ -678,19 +678,40 @@ pub fn reporte_ventas_semanales(state: State<AppState>) -> ApiResponse<VentasDia
     let mut labels = Vec::new();
     let mut ventas = Vec::new();
 
-    for i in (0..4).rev() {
-        let inicio = Local::now().date_naive() - Duration::weeks(i + 1);
-        let fin = Local::now().date_naive() - Duration::weeks(i);
+    let hoy = Local::now().date_naive();
+    let dias_desde_lunes = hoy.weekday().num_days_from_monday() as i64;
+    // Si hoy es domingo (dias_desde_lunes == 6), tomamos el lunes de la semana que terminó ayer.
+    // Si hoy es lunes a sábado (0..=5), tomamos el lunes de esta misma semana.
+    let lunes_actual = if dias_desde_lunes == 6 {
+        hoy - Duration::days(6)
+    } else {
+        hoy - Duration::days(dias_desde_lunes)
+    };
 
-        labels.push(format!("Semana {}", 4 - i));
+    let meses_es = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+    for i in (0..4).rev() {
+        let lunes = lunes_actual - Duration::weeks(i);
+        let sabado = lunes + Duration::days(5); // Lunes + 5 días = Sábado de la semana laboral
+
+        let mes_lunes = meses_es[lunes.month() as usize - 1];
+        let mes_sabado = meses_es[sabado.month() as usize - 1];
+
+        let label = if mes_lunes == mes_sabado {
+            format!("{} al {} {}", lunes.format("%d"), sabado.format("%d"), mes_lunes)
+        } else {
+            format!("{} {} - {} {}", lunes.format("%d"), mes_lunes, sabado.format("%d"), mes_sabado)
+        };
+
+        labels.push(label);
 
         let total: f64 = conn
             .query_row(
                 r#"SELECT COALESCE(SUM(total), 0) FROM ticket 
                WHERE DATE(fecha) BETWEEN ? AND ?"#,
                 params![
-                    inicio.format("%Y-%m-%d").to_string(),
-                    fin.format("%Y-%m-%d").to_string()
+                    lunes.format("%Y-%m-%d").to_string(),
+                    sabado.format("%Y-%m-%d").to_string()
                 ],
                 |row| row.get(0),
             )

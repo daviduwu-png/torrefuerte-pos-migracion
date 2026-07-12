@@ -23,9 +23,9 @@ export function BusquedaPanel({
 }: BusquedaPanelProps) {
     return (
         <div className="md:col-span-5 flex flex-col gap-4 h-full min-h-0">
-            <div className="glass-panel rounded-3xl flex flex-col h-full overflow-hidden border border-white/10 shadow-2xl">
+            <div className="glass-panel rounded-3xl flex-1 flex flex-col min-h-0 overflow-hidden border border-white/10 shadow-2xl">
                 {/* Header del panel */}
-                <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between gap-3">
+                <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/10 border border-blue-500/20">
                             <ScanBarcode className="w-5 h-5" />
@@ -53,7 +53,7 @@ export function BusquedaPanel({
                 {/* Body */}
                 <div className="p-6 flex-1 flex flex-col min-h-0 gap-4">
                     {/* Input */}
-                    <div className="relative group">
+                    <div className="relative group shrink-0">
                         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                             <Search className="text-slate-400 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
                         </div>
@@ -74,7 +74,7 @@ export function BusquedaPanel({
                     </div>
 
                     {/* Resultados */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-3 pr-2">
                         {resultados.map((prod) => (
                             <div
                                 key={prod.id}
@@ -100,9 +100,12 @@ export function BusquedaPanel({
                         )}
 
                         {!busqueda && resultados.length === 0 && (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-500/40 p-8 text-center">
-                                <ScanBarcode className="w-24 h-24 opacity-20 mb-4" />
-                                <p className="text-lg font-medium">Listo para escanear</p>
+                            <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                                <div className="w-20 h-20 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-5">
+                                    <ScanBarcode className="w-10 h-10 text-blue-400" strokeWidth={1.5} />
+                                </div>
+                                <p className="text-xl font-bold text-slate-300">Listo para escanear</p>
+                                <p className="text-sm mt-1 text-slate-400">Escanea un código o busca por nombre</p>
                             </div>
                         )}
                     </div>

@@ -87,11 +87,14 @@ export default function AdminDashboard() {
           });
         }
 
-        if (diariasRes.success && diariasRes.data) setVentasDiarias(diariasRes.data);
-        if (semanalesRes.success && semanalesRes.data) setVentasSemanales(semanalesRes.data);
-        if (mensualesRes.success && mensualesRes.data) setVentasMensuales(mensualesRes.data);
-        if (anualesRes.success && anualesRes.data) setVentasAnuales(anualesRes.data);
-
+        if (diariasRes.success && diariasRes.data)
+          setVentasDiarias(diariasRes.data);
+        if (semanalesRes.success && semanalesRes.data)
+          setVentasSemanales(semanalesRes.data);
+        if (mensualesRes.success && mensualesRes.data)
+          setVentasMensuales(mensualesRes.data);
+        if (anualesRes.success && anualesRes.data)
+          setVentasAnuales(anualesRes.data);
       } catch (error) {
         console.error("Error cargando dashboard:", error);
       } finally {
@@ -105,7 +108,7 @@ export default function AdminDashboard() {
   const statsDisplay = [
     {
       label: "Ventas del Día",
-      value: `$${estadisticas.ventas_hoy.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `$${estadisticas.ventas_hoy.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: "Hoy",
       icon: DollarSign,
       color: "from-emerald-500 to-emerald-600",
@@ -141,10 +144,22 @@ export default function AdminDashboard() {
     },
   ];
 
-  const dataDiarias = ventasDiarias.labels.map((label, idx) => ({ name: label, ventas: ventasDiarias.ventas[idx] }));
-  const dataSemanales = ventasSemanales.labels.map((label, idx) => ({ name: label, ventas: ventasSemanales.ventas[idx] }));
-  const dataMensuales = ventasMensuales.labels.map((label, idx) => ({ name: label, ventas: ventasMensuales.ventas[idx] }));
-  const dataAnuales = ventasAnuales.labels.map((label, idx) => ({ name: label, ventas: ventasAnuales.ventas[idx] }));
+  const dataDiarias = ventasDiarias.labels.map((label, idx) => ({
+    name: label,
+    ventas: ventasDiarias.ventas[idx],
+  }));
+  const dataSemanales = ventasSemanales.labels.map((label, idx) => ({
+    name: label,
+    ventas: ventasSemanales.ventas[idx],
+  }));
+  const dataMensuales = ventasMensuales.labels.map((label, idx) => ({
+    name: label,
+    ventas: ventasMensuales.ventas[idx],
+  }));
+  const dataAnuales = ventasAnuales.labels.map((label, idx) => ({
+    name: label,
+    ventas: ventasAnuales.ventas[idx],
+  }));
 
   if (loading) {
     return (
@@ -163,12 +178,11 @@ export default function AdminDashboard() {
     border: "1px solid #334155",
     borderRadius: "8px",
     color: "#fff",
-    fontSize: "12px"
+    fontSize: "12px",
   };
 
   return (
     <div className="space-y-4 pb-6">
-
       {/* Stats Grid - Tarjetas más compactas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statsDisplay.map((stat, index) => {
@@ -209,7 +223,6 @@ export default function AdminDashboard() {
 
       {/* Gráficas de Ventas - Grid 2x2 para aprovechar ancho y ahorrar alto */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
         {/* Ventas Diarias */}
         <div className="glass-card p-4 rounded-2xl flex flex-col">
           <div className="flex items-center gap-3 mb-4">
@@ -218,17 +231,46 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Ventas Diarias</h2>
-              <p className="text-slate-400 text-[10px] uppercase tracking-wide">Últimos 7 días</p>
+              <p className="text-slate-400 text-[10px] uppercase tracking-wide">
+                Últimos 7 días
+              </p>
             </div>
           </div>
           <div className="flex-1 min-h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dataDiarias}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: "10px" }} tickMargin={8} />
-                <YAxis stroke="#94a3b8" style={{ fontSize: "10px" }} tickFormatter={(val) => `$${val}`} width={60} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(val: number | undefined) => [`$${(val ?? 0).toFixed(2)}`, "Ventas"]} />
-                <Line type="monotone" dataKey="ventas" stroke="#3b82f6" strokeWidth={3} dot={{ fill: "#3b82f6", r: 4 }} activeDot={{ r: 6 }} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#334155"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  stroke="#94a3b8"
+                  style={{ fontSize: "10px" }}
+                  tickMargin={8}
+                />
+                <YAxis
+                  stroke="#94a3b8"
+                  style={{ fontSize: "10px" }}
+                  tickFormatter={(val) => `$${val}`}
+                  width={60}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(val: number | undefined) => [
+                    `$${(val ?? 0).toFixed(2)}`,
+                    "Ventas",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="ventas"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  dot={{ fill: "#3b82f6", r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -242,17 +284,45 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Ventas Semanales</h2>
-              <p className="text-slate-400 text-[10px] uppercase tracking-wide">Últimas 4 semanas</p>
+              <p className="text-slate-400 text-[10px] uppercase tracking-wide">
+                Últimas 4 semanas (Lunes a Sábado)
+              </p>
             </div>
           </div>
           <div className="flex-1 min-h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dataSemanales}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: "10px" }} tickMargin={8} />
-                <YAxis stroke="#94a3b8" style={{ fontSize: "10px" }} tickFormatter={(val) => `$${val}`} width={60} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#334155', opacity: 0.4 }} formatter={(val: number | undefined) => [`$${(val ?? 0).toFixed(2)}`, "Ventas"]} />
-                <Bar dataKey="ventas" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#334155"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  stroke="#94a3b8"
+                  style={{ fontSize: "10px" }}
+                  tickMargin={8}
+                />
+                <YAxis
+                  stroke="#94a3b8"
+                  style={{ fontSize: "10px" }}
+                  tickFormatter={(val) => `$${val}`}
+                  width={60}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  cursor={{ fill: "#334155", opacity: 0.4 }}
+                  formatter={(val: number | undefined) => [
+                    `$${(val ?? 0).toFixed(2)}`,
+                    "Ventas",
+                  ]}
+                />
+                <Bar
+                  dataKey="ventas"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={50}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -266,17 +336,48 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Ventas Mensuales</h2>
-              <p className="text-slate-400 text-[10px] uppercase tracking-wide">Vista anual</p>
+              <p className="text-slate-400 text-[10px] uppercase tracking-wide">
+                Vista anual
+              </p>
             </div>
           </div>
           <div className="flex-1 min-h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dataMensuales}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: "10px" }} tickMargin={8} angle={-35} textAnchor="end" height={40} />
-                <YAxis stroke="#94a3b8" style={{ fontSize: "10px" }} tickFormatter={(val) => `$${val}`} width={60} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#334155', opacity: 0.4 }} formatter={(val: number | undefined) => [`$${(val ?? 0).toFixed(2)}`, "Ventas"]} />
-                <Bar dataKey="ventas" fill="#a855f7" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#334155"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  stroke="#94a3b8"
+                  style={{ fontSize: "10px" }}
+                  tickMargin={8}
+                  angle={-35}
+                  textAnchor="end"
+                  height={40}
+                />
+                <YAxis
+                  stroke="#94a3b8"
+                  style={{ fontSize: "10px" }}
+                  tickFormatter={(val) => `$${val}`}
+                  width={60}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  cursor={{ fill: "#334155", opacity: 0.4 }}
+                  formatter={(val: number | undefined) => [
+                    `$${(val ?? 0).toFixed(2)}`,
+                    "Ventas",
+                  ]}
+                />
+                <Bar
+                  dataKey="ventas"
+                  fill="#a855f7"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={40}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -290,22 +391,49 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Ventas Anuales</h2>
-              <p className="text-slate-400 text-[10px] uppercase tracking-wide">Últimos 5 años</p>
+              <p className="text-slate-400 text-[10px] uppercase tracking-wide">
+                Últimos 5 años
+              </p>
             </div>
           </div>
           <div className="flex-1 min-h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dataAnuales}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: "10px" }} tickMargin={8} />
-                <YAxis stroke="#94a3b8" style={{ fontSize: "10px" }} tickFormatter={(val) => `$${val}`} width={60} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#334155', opacity: 0.4 }} formatter={(val: number | undefined) => [`$${(val ?? 0).toFixed(2)}`, "Ventas"]} />
-                <Bar dataKey="ventas" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#334155"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  stroke="#94a3b8"
+                  style={{ fontSize: "10px" }}
+                  tickMargin={8}
+                />
+                <YAxis
+                  stroke="#94a3b8"
+                  style={{ fontSize: "10px" }}
+                  tickFormatter={(val) => `$${val}`}
+                  width={60}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  cursor={{ fill: "#334155", opacity: 0.4 }}
+                  formatter={(val: number | undefined) => [
+                    `$${(val ?? 0).toFixed(2)}`,
+                    "Ventas",
+                  ]}
+                />
+                <Bar
+                  dataKey="ventas"
+                  fill="#f59e0b"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={50}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-
       </div>
     </div>
   );

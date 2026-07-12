@@ -112,7 +112,7 @@ const getPageInfo = (pathname: string) => {
   };
 };
 
-function DateTimeDisplay() {
+function DateTimeDisplay({ compact = false }: { compact?: boolean }) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -122,15 +122,25 @@ function DateTimeDisplay() {
     return () => clearInterval(tick);
   }, []);
 
-  const hora = now.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const hora = now.toLocaleTimeString("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 
   return (
-    <div className="px-5 py-2.5 rounded-xl bg-slate-950/50 border border-white/5 shadow-inner flex items-center gap-3">
-      <p className="text-xs font-bold text-slate-200 uppercase tracking-[0.2em]">
+    <div
+      className={`rounded-xl bg-slate-950/50 border border-white/5 shadow-inner flex items-center gap-2.5 ${compact ? "px-4 py-2" : "px-5 py-2.5"}`}
+    >
+      <p
+        className={`font-bold text-slate-200 uppercase tracking-wider ${compact ? "text-xs" : "text-xs tracking-[0.2em]"}`}
+      >
         {formatFecha(now)}
       </p>
-      <div className="w-px h-4 bg-white/10" />
-      <p className="text-xs font-bold text-slate-300 font-mono tracking-widest tabular-nums">
+      <div className={`w-px bg-white/10 ${compact ? "h-3.5" : "h-4"}`} />
+      <p
+        className={`font-bold text-slate-300 font-mono tabular-nums ${compact ? "text-xs tracking-wider" : "text-xs tracking-widest"}`}
+      >
         {hora}
       </p>
     </div>
@@ -151,104 +161,113 @@ export default function MainLayout({ userType }: MainLayoutProps) {
   // Let's use a small map for the dynamic parts to be safe.
 
   const colorMap: Record<string, { bg: string; text: string; border: string }> =
-  {
-    blue: {
-      bg: "bg-blue-500/10",
-      text: "text-blue-500",
-      border: "border-blue-500/20",
-    },
-    amber: {
-      bg: "bg-amber-500/10",
-      text: "text-amber-500",
-      border: "border-amber-500/20",
-    },
-    emerald: {
-      bg: "bg-emerald-500/10",
-      text: "text-emerald-500",
-      border: "border-emerald-500/20",
-    },
-    rose: {
-      bg: "bg-rose-500/10",
-      text: "text-rose-500",
-      border: "border-rose-500/20",
-    },
-    cyan: {
-      bg: "bg-cyan-500/10",
-      text: "text-cyan-500",
-      border: "border-cyan-500/20",
-    },
-    violet: {
-      bg: "bg-violet-500/10",
-      text: "text-violet-500",
-      border: "border-violet-500/20",
-    },
-    indigo: {
-      bg: "bg-indigo-500/10",
-      text: "text-indigo-500",
-      border: "border-indigo-500/20",
-    },
-    slate: {
-      bg: "bg-slate-500/10",
-      text: "text-slate-500",
-      border: "border-slate-500/20",
-    },
-    teal: {
-      bg: "bg-teal-500/10",
-      text: "text-teal-500",
-      border: "border-teal-500/20",
-    },
-    pink: {
-      bg: "bg-pink-500/10",
-      text: "text-pink-500",
-      border: "border-pink-500/20",
-    },
-    orange: {
-      bg: "bg-orange-500/10",
-      text: "text-orange-500",
-      border: "border-orange-500/20",
-    },
-  };
+    {
+      blue: {
+        bg: "bg-blue-500/10",
+        text: "text-blue-500",
+        border: "border-blue-500/20",
+      },
+      amber: {
+        bg: "bg-amber-500/10",
+        text: "text-amber-500",
+        border: "border-amber-500/20",
+      },
+      emerald: {
+        bg: "bg-emerald-500/10",
+        text: "text-emerald-500",
+        border: "border-emerald-500/20",
+      },
+      rose: {
+        bg: "bg-rose-500/10",
+        text: "text-rose-500",
+        border: "border-rose-500/20",
+      },
+      cyan: {
+        bg: "bg-cyan-500/10",
+        text: "text-cyan-500",
+        border: "border-cyan-500/20",
+      },
+      violet: {
+        bg: "bg-violet-500/10",
+        text: "text-violet-500",
+        border: "border-violet-500/20",
+      },
+      indigo: {
+        bg: "bg-indigo-500/10",
+        text: "text-indigo-500",
+        border: "border-indigo-500/20",
+      },
+      slate: {
+        bg: "bg-slate-500/10",
+        text: "text-slate-500",
+        border: "border-slate-500/20",
+      },
+      teal: {
+        bg: "bg-teal-500/10",
+        text: "text-teal-500",
+        border: "border-teal-500/20",
+      },
+      pink: {
+        bg: "bg-pink-500/10",
+        text: "text-pink-500",
+        border: "border-pink-500/20",
+      },
+      orange: {
+        bg: "bg-orange-500/10",
+        text: "text-orange-500",
+        border: "border-orange-500/20",
+      },
+    };
 
   const colors = colorMap[color] || colorMap.amber;
+  const isVendedor = userType === "vendedor";
 
   return (
-    <div className="flex min-h-screen">
+    <div
+      className={`flex ${isVendedor ? "h-screen overflow-hidden" : "min-h-screen"}`}
+    >
       {/* Sidebar - Already Glass Panel */}
       <Sidebar userType={userType} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div
+        className={`flex-1 flex flex-col min-w-0 relative ${isVendedor ? "h-full overflow-hidden" : ""}`}
+      >
         {/* Decorative background elements for depth */}
         <div className="absolute top-0 left-0 w-full h-96 bg-blue-600/10 pointer-events-none -z-10" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/10 pointer-events-none -z-10" />
 
-        {/* Header - Card Style */}
-        <header className="w-full px-4 lg:px-8 pt-6 pb-2 z-10 flex-shrink-0">
-          <div className="w-full glass-panel p-4 md:p-5 rounded-2xl flex items-center justify-between border border-white/10 shadow-2xl bg-slate-900/60 ">
-            {/* Page Title & Icon - Left Side */}
-            <div className="flex items-center gap-4 md:gap-5">
+        <header
+          className={`w-full pt-3 pb-1.5 z-10 shrink-0 ${isVendedor ? "px-2.5 lg:px-4" : "px-4 lg:px-8"}`}
+        >
+          <div className="w-full px-4 py-3 rounded-2xl flex items-center justify-between bg-slate-900/60 border border-white/5 shadow-lg">
+            <div className="flex items-center gap-3">
               <div
-                className={`p-3 md:p-3.5 rounded-xl ${colors.bg} ${colors.border} border shadow-inner`}
+                className={`p-2.5 rounded-xl ${colors.bg} ${colors.border} border`}
               >
-                <Icon className={`w-6 h-6 md:w-8 md:h-8 ${colors.text}`} />
+                <Icon className={`w-5 h-5 ${colors.text}`} />
               </div>
-              <div className="flex flex-col gap-0.5">
-                <h1 className="text-2xl font-bold text-white tracking-tight drop-shadow-md">
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-lg font-bold text-white tracking-tight">
                   {title}
                 </h1>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest pl-0.5">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">
                   {subtitle}
-                </p>
+                </span>
               </div>
             </div>
-
-            {/* Date & Time Display - Right Side */}
-            <DateTimeDisplay />
+            <DateTimeDisplay compact />
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 px-4 lg:px-8 pb-8 overflow-y-auto py-4 md:py-6 custom-scrollbar scroll-smooth">
+        <main
+          className={`flex-1 overflow-y-auto custom-scrollbar scroll-smooth ${
+            isVendedor
+              ? "min-h-0 flex flex-col px-2.5 lg:px-4 py-2 pb-2.5"
+              : "px-4 lg:px-8 pb-4 md:pb-6 py-4 md:py-6"
+          }`}
+        >
           <Outlet />
         </main>
 

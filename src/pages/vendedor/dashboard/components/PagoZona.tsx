@@ -53,7 +53,7 @@ export function PagoZona({
     onProcesarVenta,
 }: PagoZonaProps) {
     return (
-        <div className="p-4 border-t border-white/10 bg-slate-900/40 z-20">
+        <div className="p-4 border-t border-white/10 bg-slate-900/40 z-20 shrink-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Método de Pago */}
                 <div>
