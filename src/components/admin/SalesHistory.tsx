@@ -8,6 +8,7 @@ import {
   X,
   Loader2,
   RotateCcw,
+  Printer,
 } from "lucide-react";
 import { StyledSwal as Swal } from "../../utils/swal";
 import { formatFechaHoraCorta, getFechaHoy } from "../../utils/dateFormat";
@@ -27,6 +28,7 @@ export default function SalesHistory() {
   const [showTicketDetail, setShowTicketDetail] = useState(false);
   const [selectedTicket, setSelectedTicket] =
     useState<TicketConProductos | null>(null);
+  const [loadingPrint, setLoadingPrint] = useState(false);
 
   const fetchTickets = async (
     range: "hoy" | "semana" | "mes" | "anio" | "custom",
@@ -79,7 +81,7 @@ export default function SalesHistory() {
           text: response.message || "No se encontraron tickets.",
           background: "#1e293b",
           color: "#fff",
-          confirmButtonColor: "#3b82f6"
+          confirmButtonColor: "#3b82f6",
         });
       }
     } catch (error) {
@@ -97,7 +99,7 @@ export default function SalesHistory() {
         text: "Seleccione ambas fechas antes de filtrar.",
         background: "#1e293b",
         color: "#fff",
-        confirmButtonColor: "#f59e0b"
+        confirmButtonColor: "#f59e0b",
       });
       return;
     }
@@ -118,8 +120,8 @@ export default function SalesHistory() {
       cancelButtonColor: "#64748b",
       customClass: {
         input: "bg-slate-800 text-white border-slate-600 focus:ring-blue-500",
-        popup: "rounded-2xl border border-white/10 shadow-2xl glass-panel"
-      }
+        popup: "rounded-2xl border border-white/10 shadow-2xl glass-panel",
+      },
     });
 
     if (!id || !id.trim()) return;
@@ -139,7 +141,7 @@ export default function SalesHistory() {
           text: "Ticket no encontrado",
           background: "#1e293b",
           color: "#fff",
-          confirmButtonColor: "#ef4444"
+          confirmButtonColor: "#ef4444",
         });
       }
     } catch (error) {
@@ -175,7 +177,8 @@ export default function SalesHistory() {
         return !value ? "Debes seleccionar un motivo" : null;
       },
       customClass: {
-        input: "bg-slate-100 text-slate-900 font-semibold border-slate-300 focus:ring-blue-500",
+        input:
+          "bg-slate-100 text-slate-900 font-semibold border-slate-300 focus:ring-blue-500",
         popup: "rounded-3xl border border-slate-700 shadow-2xl",
         confirmButton: "rounded-xl px-6 py-3",
         cancelButton: "rounded-xl px-6 py-3",
@@ -206,7 +209,8 @@ export default function SalesHistory() {
         return !value ? "Debes seleccionar un motivo" : null;
       },
       customClass: {
-        input: "bg-slate-100 text-slate-900 font-semibold border-slate-300 focus:ring-blue-500",
+        input:
+          "bg-slate-100 text-slate-900 font-semibold border-slate-300 focus:ring-blue-500",
         popup: "rounded-3xl border border-slate-700 shadow-2xl",
         confirmButton: "rounded-xl px-6 py-3",
         cancelButton: "rounded-xl px-6 py-3",
@@ -287,12 +291,52 @@ export default function SalesHistory() {
     setShowTicketDetail(true);
   };
 
+  const handleReimprimirTicket = async () => {
+    if (!selectedTicket) return;
+    setLoadingPrint(true);
+    try {
+      const res = await api.imprimirTicket(selectedTicket.ticket.id);
+      if (res.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Reimpresión exitosa",
+          text: "Copia del ticket enviada a la impresora.",
+          timer: 2000,
+          showConfirmButton: false,
+          background: "#1e293b",
+          color: "#fff",
+        });
+      } else {
+        await Swal.fire({
+          icon: "error",
+          title: "Error al imprimir",
+          text: res.message,
+          background: "#1e293b",
+          color: "#fff",
+          confirmButtonColor: "#ef4444",
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      await Swal.fire({
+        icon: "error",
+        title: "Error de conexión",
+        text: "No se pudo conectar con la impresora.",
+        background: "#1e293b",
+        color: "#fff",
+        confirmButtonColor: "#ef4444",
+      });
+    } finally {
+      setLoadingPrint(false);
+    }
+  };
+
   return (
     <>
       <div className="glass-panel rounded-2xl shadow-lg border border-white/10 h-full flex flex-col relative">
-        <div className="p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div className="p-4 sm:p-6">
+          <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 items-end">
               <div>
                 <label className="block text-xs font-bold text-slate-400 mb-2 ml-1">
                   Desde
@@ -314,7 +358,7 @@ export default function SalesHistory() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3 lg:col-span-2">
+              <div className="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-2">
                 <button
                   onClick={handleCustomFilter}
                   disabled={loading}
@@ -342,7 +386,7 @@ export default function SalesHistory() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-white/5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-white/5">
               <button
                 onClick={() => fetchTickets("hoy")}
                 className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
@@ -372,104 +416,106 @@ export default function SalesHistory() {
         </div>
       </div>
 
-      {/* Results Modal */}
       {showResultsModal && (
         <div
           onClick={() => setShowResultsModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 "
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/80"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="glass-panel w-full max-w-4xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden max-h-[85vh] flex flex-col animate-in fade-in zoom-in duration-300"
+            className="glass-panel w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/10 overflow-hidden max-h-[90vh] sm:max-h-[85vh] flex flex-col animate-in fade-in zoom-in duration-300"
           >
-            <div className="bg-slate-900/50 px-6 py-5 flex items-center justify-between flex-shrink-0 border-b border-white/5 ">
-              <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                <div className="p-2 bg-cyan-500/20 rounded-lg border border-cyan-500/20">
-                  <FileText className="w-5 h-5 text-cyan-400" />
+            <div className="bg-slate-900/50 px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between flex-shrink-0 border-b border-white/5">
+              <h3 className="font-bold text-base sm:text-lg text-white flex items-center gap-2 min-w-0">
+                <div className="p-1.5 sm:p-2 bg-cyan-500/20 rounded-lg border border-cyan-500/20 shrink-0">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
                 </div>
-                {modalTitle}
+                <span className="truncate">{modalTitle}</span>
               </h3>
               <button
                 onClick={() => setShowResultsModal(false)}
-                className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full p-2 transition-all"
+                className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full p-2 transition-all shrink-0"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-auto p-0">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-900/50 sticky top-0 z-10 shadow-sm border-b border-white/5">
-                  <tr>
-                    <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      ID
-                    </th>
-                    <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Folio
-                    </th>
-                    <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Fecha
-                    </th>
-                    <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Total
-                    </th>
-                    <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Método
-                    </th>
-                    <th className="p-4 text-xs font-bold text-slate-400 uppercase text-center tracking-wider">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {tickets.length > 0 ? (
-                    tickets.map((t) => (
-                      <tr
-                        key={t.ticket.id}
-                        className="hover:bg-white/5 transition-colors group"
-                      >
-                        <td className="p-4 text-sm font-mono text-slate-400">
-                          {t.ticket.id}
-                        </td>
-                        <td className="p-4 text-sm font-mono text-slate-300 group-hover:text-cyan-300 transition-colors">
-                          {t.ticket.folio_fiscal || (
-                            <span className="text-slate-600 italic">--</span>
-                          )}
-                        </td>
-                        <td className="p-4 text-sm text-slate-400">
-                          {formatFechaHoraCorta(t.ticket.fecha)}
-                        </td>
-                        <td className="p-4 text-sm font-bold text-emerald-400 font-mono">
-                          ${t.ticket.total.toFixed(2)}
-                        </td>
-                        <td className="p-4 text-sm text-slate-300 px-2 py-1">
-                          <span className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-slate-300 font-medium">
-                            {t.ticket.metodo_pago}
-                          </span>
-                        </td>
-                        <td className="p-4 text-center">
-                          <button
-                            onClick={() => openTicketDetail(t)}
-                            className="p-2 text-cyan-400 hover:bg-cyan-500/20 hover:text-cyan-300 rounded-lg transition-all"
-                            title="Ver Detalles"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
+            {/* scroll horizontal en móvil para la tabla */}
+            <div className="flex-1 overflow-auto">
+              <div className="min-w-[500px]">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-slate-900/50 sticky top-0 z-10 shadow-sm border-b border-white/5">
+                    <tr>
+                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider w-12">
+                        ID
+                      </th>
+                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">
+                        Folio
+                      </th>
+                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Fecha
+                      </th>
+                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Total
+                      </th>
+                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">
+                        Método
+                      </th>
+                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase text-center tracking-wider">
+                        Ver
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {tickets.length > 0 ? (
+                      tickets.map((t) => (
+                        <tr
+                          key={t.ticket.id}
+                          className="hover:bg-white/5 transition-colors group"
+                        >
+                          <td className="p-3 sm:p-4 text-sm font-mono text-slate-400">
+                            {t.ticket.id}
+                          </td>
+                          <td className="p-3 sm:p-4 text-sm font-mono text-slate-300 group-hover:text-cyan-300 transition-colors hidden sm:table-cell">
+                            {t.ticket.folio_fiscal || (
+                              <span className="text-slate-600 italic">--</span>
+                            )}
+                          </td>
+                          <td className="p-3 sm:p-4 text-xs sm:text-sm text-slate-400">
+                            {formatFechaHoraCorta(t.ticket.fecha)}
+                          </td>
+                          <td className="p-3 sm:p-4 text-sm font-bold text-emerald-400 font-mono whitespace-nowrap">
+                            ${t.ticket.total.toFixed(2)}
+                          </td>
+                          <td className="p-3 sm:p-4 text-sm text-slate-300 hidden md:table-cell">
+                            <span className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-slate-300 font-medium">
+                              {t.ticket.metodo_pago}
+                            </span>
+                          </td>
+                          <td className="p-3 sm:p-4 text-center">
+                            <button
+                              onClick={() => openTicketDetail(t)}
+                              className="p-2 text-cyan-400 hover:bg-cyan-500/20 hover:text-cyan-300 rounded-lg transition-all"
+                              title="Ver Detalles"
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="p-8 text-center text-slate-500"
+                        >
+                          No se encontraron tickets.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="p-8 text-center text-slate-500"
-                      >
-                        No se encontraron tickets.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -479,23 +525,35 @@ export default function SalesHistory() {
       {showTicketDetail && selectedTicket && (
         <div
           onClick={() => setShowTicketDetail(false)}
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 "
+          className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/80"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white text-slate-900 w-full max-w-xl rounded-xl shadow-2xl overflow-hidden relative"
+            className="bg-white text-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden relative"
           >
-            <div className="absolute top-2 right-2">
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+              <button
+                onClick={handleReimprimirTicket}
+                disabled={loadingPrint}
+                title="Reimprimir ticket"
+                className="bg-slate-100 hover:bg-blue-100 hover:text-blue-600 text-slate-600 rounded-full p-2 transition-colors disabled:opacity-50"
+              >
+                {loadingPrint ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Printer className="w-4 h-4" />
+                )}
+              </button>
               <button
                 onClick={() => setShowTicketDetail(false)}
-                className="bg-slate-200 hover:bg-red-100 hover:text-red-500 rounded-full p-1 transition-colors"
+                className="bg-slate-100 hover:bg-red-100 hover:text-red-500 text-slate-600 rounded-full p-2 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Visual Style: Paper Receipt */}
-            <div className="p-6 max-h-[80vh] overflow-y-auto bg-white">
+            <div className="p-5 sm:p-6 md:p-8 max-h-[85vh] overflow-y-auto bg-white">
               <div className="text-center mb-6">
                 <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-3 text-white">
                   <FileText className="w-6 h-6" />
@@ -509,9 +567,19 @@ export default function SalesHistory() {
                 <p className="text-xs text-slate-400 mt-2">
                   {formatFechaHoraCorta(selectedTicket.ticket.fecha)}
                 </p>
-                <div className="flex flex-col items-center gap-1 mt-2 font-mono text-sm text-slate-600">
-                  <p>ID Interno: #{selectedTicket.ticket.id}</p>
-                  <p>Folio Fiscal: {selectedTicket.ticket.folio_fiscal}</p>
+                <div className="flex flex-col items-center gap-1 mt-3 font-mono text-sm text-slate-600">
+                  <p>
+                    ID Interno:{" "}
+                    <span className="font-bold text-slate-900">
+                      {selectedTicket.ticket.id}
+                    </span>
+                  </p>
+                  <p>
+                    Folio Fiscal:{" "}
+                    <span className="text-slate-700">
+                      {selectedTicket.ticket.folio_fiscal}
+                    </span>
+                  </p>
                 </div>
               </div>
 
@@ -526,16 +594,20 @@ export default function SalesHistory() {
                   return (
                     <div
                       key={idx}
-                      className="flex flex-col gap-1 py-2 border-b border-slate-100 last:border-0"
+                      className="flex flex-col gap-1.5 py-3 border-b border-slate-100 last:border-0"
                     >
-                      <div className="flex justify-between text-sm items-start">
-                        <div className="pr-2">
+                      <div className="flex justify-between text-sm items-start gap-3">
+                        <div className="flex-1 min-w-0">
                           <span className="font-bold text-slate-900">
-                            {originalQty} x{" "}
+                            {originalQty}x{" "}
                           </span>
                           <span className="text-slate-800">{p.nombre}</span>
+                          {/* Código numérico — fondo negro sólido */}
+                          <span className="ml-2 text-[10px] font-mono font-bold text-white bg-black border border-zinc-800 px-1.5 py-0.5 rounded inline-block align-middle">
+                            {p.codigo_interno ?? p.producto_id}
+                          </span>
                         </div>
-                        <span className="font-mono font-medium text-slate-900 whitespace-nowrap">
+                        <span className="font-mono font-semibold text-slate-900 whitespace-nowrap">
                           ${originalSubtotal.toFixed(2)}
                         </span>
                       </div>

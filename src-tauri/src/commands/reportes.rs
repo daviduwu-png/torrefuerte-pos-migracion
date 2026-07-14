@@ -19,12 +19,29 @@ fn get_home_dir() -> PathBuf {
 
 // ==================== CORTE DE CAJA ====================
 
-/// Obtener resumen del día para corte de caja
+/// Obtener resumen del corte de caja para un día específico.
+/// Si `fecha` es None o vacío, se usa el día actual.
+/// `fecha` debe tener formato "YYYY-MM-DD".
 #[tauri::command]
-pub fn obtener_corte_caja(state: State<AppState>) -> ApiResponse<CorteCaja> {
+pub fn obtener_corte_caja(
+    fecha: Option<String>,
+    state: State<AppState>,
+) -> ApiResponse<CorteCaja> {
     let conn = state.db.conn.lock().unwrap();
-    let fecha_hoy = Local::now().format("%Y-%m-%d").to_string();
-    let fecha_hora_actual = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    // Determinar la fecha a consultar
+    let fecha_consulta = match &fecha {
+        Some(f) if !f.trim().is_empty() => f.trim().to_string(),
+        _ => Local::now().format("%Y-%m-%d").to_string(),
+    };
+
+    // Etiqueta de hora para el campo `fecha` del resultado
+    // IMPORTANTE: mantener formato "YYYY-MM-DD HH:MM:SS" para que
+    // parseFechaLocal() del frontend lo interprete correctamente.
+    let fecha_hora_resultado = format!("{} {}",
+        fecha_consulta,
+        Local::now().format("%H:%M:%S")
+    );
 
     let result = conn.query_row(
         r#"SELECT 
@@ -37,7 +54,7 @@ pub fn obtener_corte_caja(state: State<AppState>) -> ApiResponse<CorteCaja> {
                MAX(id) as ticket_final
            FROM ticket 
            WHERE DATE(fecha) = ?"#,
-        params![fecha_hoy],
+        params![fecha_consulta],
         |row| {
             Ok(CorteCaja {
                 total_tickets: row.get(0)?,
@@ -47,7 +64,7 @@ pub fn obtener_corte_caja(state: State<AppState>) -> ApiResponse<CorteCaja> {
                 total_transferencia: row.get(4)?,
                 ticket_inicial: row.get(5)?,
                 ticket_final: row.get(6)?,
-                fecha: fecha_hora_actual.clone(),
+                fecha: fecha_hora_resultado.clone(),
             })
         }
     );
@@ -55,7 +72,10 @@ pub fn obtener_corte_caja(state: State<AppState>) -> ApiResponse<CorteCaja> {
     match result {
         Ok(corte) => {
             if corte.total_tickets == 0 {
-                ApiResponse::error("No hay ventas registradas hoy para el corte")
+                ApiResponse::error(&format!(
+                    "No hay ventas registradas el {} para el corte",
+                    fecha_consulta
+                ))
             } else {
                 ApiResponse::success("Corte de caja obtenido", corte)
             }
@@ -64,11 +84,19 @@ pub fn obtener_corte_caja(state: State<AppState>) -> ApiResponse<CorteCaja> {
     }
 }
 
-/// Generar Excel de corte de caja
+/// Generar Excel de corte de caja para un día específico.
+/// Si `fecha` es None o vacío, usa el día actual.
 #[tauri::command]
-pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
+pub fn exportar_corte_excel(
+    fecha: Option<String>,
+    state: State<AppState>,
+) -> ApiResponse<String> {
     let conn = state.db.conn.lock().unwrap();
-    let fecha_hoy = Local::now().format("%Y-%m-%d").to_string();
+
+    let fecha_consulta = match &fecha {
+        Some(f) if !f.trim().is_empty() => f.trim().to_string(),
+        _ => Local::now().format("%Y-%m-%d").to_string(),
+    };
 
     // Obtener datos del día
     let mut stmt = conn
@@ -76,7 +104,8 @@ pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
             r#"SELECT 
                t.id AS ticket_id, t.folio_fiscal, t.fecha, t.metodo_pago, t.total,
                u.nombre AS usuario_nombre, tp.producto_id, p.nombre AS producto_nombre,
-               p.precio_compra, tp.cantidad, tp.precio_unitario, tp.subtotal
+               p.precio_compra, tp.cantidad, tp.precio_unitario, tp.subtotal,
+               COALESCE(tp.costo_historico, 0) as costo_historico
            FROM ticket t
            LEFT JOIN usuario u ON t.usuario_id = u.id
            JOIN ticket_producto tp ON t.id = tp.ticket_id
@@ -95,12 +124,13 @@ pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
         Option<String>,
         i64,
         String,
-        f64,
-        f64,
-        f64,
-        f64,
+        f64,  
+        f64, 
+        f64, 
+        f64, 
+        f64, 
     )> = stmt
-        .query_map(params![&fecha_hoy], |row| {
+        .query_map(params![&fecha_consulta], |row| {
             Ok((
                 row.get(0)?,
                 row.get(1)?,
@@ -114,6 +144,7 @@ pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
                 row.get(9)?,
                 row.get(10)?,
                 row.get(11)?,
+                row.get(12)?,
             ))
         })
         .unwrap()
@@ -121,15 +152,15 @@ pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
         .collect();
 
     if ventas.is_empty() {
-        return ApiResponse::error("No hay ventas para exportar");
+        return ApiResponse::error(&format!("No hay ventas para exportar el {}", fecha_consulta));
     }
 
-    // Crear directorio de reportes (multiplataforma: ~/TorreFuerte/Reportes/)
-    let reportes_dir = get_home_dir().join("TorreFuerte").join("Reportes");
-    std::fs::create_dir_all(&reportes_dir).ok();
+    // ── Directorio de cortes: ~/TorreFuerte/Cortes/ ──────────────────────────
+    let cortes_dir = get_home_dir().join("TorreFuerte").join("Cortes");
+    std::fs::create_dir_all(&cortes_dir).ok();
 
-    let file_name = format!("Corte_Caja_{}.xlsx", fecha_hoy);
-    let file_path = reportes_dir.join(&file_name);
+    let file_name = format!("Corte_Caja_{}.xlsx", fecha_consulta);
+    let file_path = cortes_dir.join(&file_name);
 
     // Crear workbook
     let mut workbook = Workbook::new();
@@ -152,7 +183,7 @@ pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
         "Cant.",
         "Precio Venta",
         "Subtotal",
-        "Costo Unit.",
+        "Costo Unit. (Hist/Act)",
         "Costo Total",
         "Ganancia",
     ];
@@ -170,8 +201,16 @@ pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
     let mut last_ticket_id = 0i64;
 
     for venta in &ventas {
-        let costo_total = venta.9 * venta.8; // cantidad * precio_compra
-        let ganancia = venta.11 - costo_total; // subtotal - costo_total
+        let precio_compra_actual = venta.8;
+        let cantidad        = venta.9;
+        let precio_venta    = venta.10;
+        let subtotal        = venta.11;
+        let costo_historico = venta.12;
+
+        // Priorizar costo histórico si existe (> 0), si no usar el actual
+        let costo_unit = if costo_historico > 0.0 { costo_historico } else { precio_compra_actual };
+        let costo_total = cantidad * costo_unit;
+        let ganancia    = subtotal - costo_total;
 
         worksheet.write_number(row, 0, venta.0 as f64).ok();
         worksheet.write_string(row, 1, &venta.1).ok();
@@ -183,10 +222,10 @@ pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
             .ok();
         worksheet.write_number(row, 6, venta.6 as f64).ok();
         worksheet.write_string(row, 7, &venta.7).ok();
-        worksheet.write_number(row, 8, venta.9).ok();
-        worksheet.write_number(row, 9, venta.10).ok();
-        worksheet.write_number(row, 10, venta.11).ok();
-        worksheet.write_number(row, 11, venta.8).ok();
+        worksheet.write_number(row, 8, cantidad).ok();
+        worksheet.write_number(row, 9, precio_venta).ok();
+        worksheet.write_number(row, 10, subtotal).ok();
+        worksheet.write_number(row, 11, costo_unit).ok();
         worksheet.write_number(row, 12, costo_total).ok();
         worksheet.write_number(row, 13, ganancia).ok();
 
@@ -217,6 +256,35 @@ pub fn exportar_corte_excel(state: State<AppState>) -> ApiResponse<String> {
     // Guardar archivo
     if let Err(e) = workbook.save(&file_path) {
         return ApiResponse::error(&format!("Error al guardar Excel: {}", e));
+    }
+
+    // ── Rotación: mantener solo los últimos 7 cortes ──────────────────────────
+    // Los nombres tienen formato "Corte_Caja_YYYY-MM-DD.xlsx", por lo que
+    // ordenar alfabéticamente = ordenar cronológicamente.
+    const MAX_CORTES: usize = 7;
+    if let Ok(entries) = std::fs::read_dir(&cortes_dir) {
+        let mut archivos: Vec<PathBuf> = entries
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| {
+                p.extension().and_then(|e| e.to_str()) == Some("xlsx")
+                    && p.file_name()
+                        .and_then(|n| n.to_str())
+                        .map(|n| n.starts_with("Corte_Caja_"))
+                        .unwrap_or(false)
+            })
+            .collect();
+
+        // Orden alfabético ascendente (más viejo primero)
+        archivos.sort();
+
+        // Eliminar los más viejos si hay más de MAX_CORTES
+        if archivos.len() > MAX_CORTES {
+            let a_eliminar = archivos.len() - MAX_CORTES;
+            for viejo in archivos.iter().take(a_eliminar) {
+                let _ = std::fs::remove_file(viejo);
+            }
+        }
     }
 
     ApiResponse::success(

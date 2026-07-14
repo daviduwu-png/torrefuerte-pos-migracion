@@ -124,8 +124,9 @@ export interface Ticket {
 export interface TicketProducto {
   producto_id: number;
   nombre: string;
+  codigo_interno?: string;
   cantidad: number;
-  devuelto?: number; // Optional because legacy API calls might not return it immediately if not updated
+  devuelto?: number;
   precio_unitario: number;
   subtotal: number;
 }
@@ -275,12 +276,12 @@ export const api = {
   },
 
   // --- Reportes ---
-  obtenerCorteCaja: async (): Promise<ApiResponse<CorteCaja>> => {
-    return await invoke("obtener_corte_caja");
+  obtenerCorteCaja: async (fecha?: string): Promise<ApiResponse<CorteCaja>> => {
+    return await invoke("obtener_corte_caja", { fecha: fecha ?? null });
   },
 
-  exportarCorteExcel: async (): Promise<ApiResponse<string>> => {
-    return await invoke("exportar_corte_excel");
+  exportarCorteExcel: async (fecha?: string): Promise<ApiResponse<string>> => {
+    return await invoke("exportar_corte_excel", { fecha: fecha ?? null });
   },
 
   exportarReporteFinanciero: async (
@@ -343,5 +344,9 @@ export const api = {
 
   imprimirCorte: async (corte: CorteCaja): Promise<ApiResponse<void>> => {
     return await invoke("imprimir_corte", { corte });
+  },
+
+  imprimirTest: async (): Promise<ApiResponse<void>> => {
+    return await invoke("imprimir_test");
   },
 };

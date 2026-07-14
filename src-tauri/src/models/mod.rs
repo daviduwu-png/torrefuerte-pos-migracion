@@ -127,8 +127,9 @@ pub struct Ticket {
 pub struct TicketProducto {
     pub producto_id: i64,
     pub nombre: String,
+    pub codigo_interno: Option<String>, 
     pub cantidad: f64,
-    pub devuelto: f64, // Cantidad devuelta
+    pub devuelto: f64, 
     pub precio_unitario: f64,
     pub subtotal: f64,
 }

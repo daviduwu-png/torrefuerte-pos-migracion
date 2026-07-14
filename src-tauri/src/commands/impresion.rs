@@ -57,7 +57,7 @@ impl EscPos {
     }
 
     fn cut(&mut self) {
-        self.buffer.extend_from_slice(&[0x1D, 0x56, 0x41, 0x03]); // GS V A 3
+        self.buffer.extend_from_slice(&[0x1D, 0x56, 0x00]); // GS V 0 (sin letra A)
     }
 
     fn pulse(&mut self) {
@@ -238,14 +238,54 @@ fn send_to_printer(buffer: &[u8]) -> Result<(), String> {
 
     let salida = String::from_utf8_lossy(&lpstat.stdout);
     // lpstat -d devuelve: "system default destination: NombreImpresora"
-    let nombre_impresora = salida
+    let mut nombre_impresora = salida
         .split(':')
         .nth(1)
         .map(|s| s.trim().to_string())
         .unwrap_or_default();
 
     if nombre_impresora.is_empty() {
-        return Err("No hay impresora por defecto configurada en CUPS.\n\
+        // Intento 1: Buscar si hay alguna impresora instalada en CUPS (aunque no sea la por defecto)
+        if let Ok(res_a) = Command::new("lpstat").args(&["-a"]).output() {
+            let salida_a = String::from_utf8_lossy(&res_a.stdout);
+            if let Some(primera) = salida_a
+                .lines()
+                .next()
+                .and_then(|l| l.split_whitespace().next())
+            {
+                nombre_impresora = primera.trim().to_string();
+                let _ = Command::new("lpadmin")
+                    .args(&["-d", &nombre_impresora])
+                    .status();
+            }
+        }
+    }
+
+    if nombre_impresora.is_empty() {
+        // Intento 2: Buscar si CUPS detecta una impresora USB directa y auto-configurarla como cola RAW
+        if let Ok(res_v) = Command::new("lpinfo").args(&["-v"]).output() {
+            let salida_v = String::from_utf8_lossy(&res_v.stdout);
+            for linea in salida_v.lines() {
+                let linea_trim = linea.trim();
+                if linea_trim.starts_with("direct usb://") {
+                    if let Some(uri) = linea_trim.split_whitespace().nth(1) {
+                        let nombre_auto = "POS58";
+                        let _ = Command::new("lpadmin")
+                            .args(&["-p", nombre_auto, "-v", uri, "-E", "-m", "raw"])
+                            .status();
+                        let _ = Command::new("lpadmin")
+                            .args(&["-d", nombre_auto])
+                            .status();
+                        nombre_impresora = nombre_auto.to_string();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if nombre_impresora.is_empty() {
+        return Err("No hay impresora por defecto configurada en CUPS ni detectada por USB.\n\
              Configúrala en: http://localhost:631  o con  system-config-printer"
             .to_string());
     }
@@ -314,7 +354,7 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     // 2. Obtener productos
     let mut stmt = conn
         .prepare(
-            "SELECT p.nombre, tp.cantidad, tp.precio_unitario, tp.subtotal 
+            "SELECT tp.producto_id, p.nombre, p.codigo_interno, tp.cantidad, tp.precio_unitario, tp.subtotal 
          FROM ticket_producto tp 
          JOIN producto p ON tp.producto_id = p.id 
          WHERE tp.ticket_id = ?",
@@ -324,12 +364,13 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     let productos: Vec<TicketProducto> = stmt
         .query_map(params![ticket_id], |row| {
             Ok(TicketProducto {
-                producto_id: 0, // No necesario
-                nombre: row.get(0)?,
-                cantidad: row.get(1)?,
-                devuelto: 0.0, // Default value for printing
-                precio_unitario: row.get(2)?,
-                subtotal: row.get(3)?,
+                producto_id: row.get(0)?,
+                nombre: row.get(1)?,
+                codigo_interno: row.get(2)?,
+                cantidad: row.get(3)?,
+                devuelto: 0.0,
+                precio_unitario: row.get(4)?,
+                subtotal: row.get(5)?,
             })
         })
         .unwrap()
@@ -339,6 +380,10 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     // 3. Generar ESC/POS
     let mut p = EscPos::new();
     p.init();
+    // Padding: la impresora USB descarta los primeros ~50 bytes mientras
+    // inicializa el receptor. Enviamos bytes nulos para absorber esa pérdida.
+    p.buffer.extend_from_slice(&[0u8; 64]);
+    p.feed(1);
 
     // Encabezado
     p.center();
@@ -354,7 +399,22 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     // Datos
     p.left();
     p.text(&format!("Ticket: {}\n", ticket.id));
-    p.text(&format!("Fecha:  {}\n", ticket.fecha));
+    // Formatear fecha de "YYYY-MM-DD HH:MM:SS" a "DD/MM/YYYY HH:MM"
+    let fecha_fmt = {
+        let partes: Vec<&str> = ticket.fecha.split_whitespace().collect();
+        if partes.len() >= 2 {
+            let f: Vec<&str> = partes[0].split('-').collect();
+            let hora = partes[1].get(..8).unwrap_or(partes[1]);
+            if f.len() == 3 {
+                format!("{}/{}/{} {}", f[2], f[1], f[0], hora)
+            } else {
+                ticket.fecha.clone()
+            }
+        } else {
+            ticket.fecha.clone()
+        }
+    };
+    p.text(&format!("Fecha:  {}\n", fecha_fmt));
     p.text_raw("--------------------------------\n");
 
     // Productos
@@ -423,6 +483,10 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
 pub fn imprimir_corte(corte: CorteCaja) -> ApiResponse<()> {
     let mut p = EscPos::new();
     p.init();
+    // Padding: la impresora USB descarta los primeros ~50 bytes mientras
+    // inicializa el receptor. Enviamos bytes nulos para absorber esa pérdida.
+    p.buffer.extend_from_slice(&[0u8; 64]);
+    p.feed(1);
 
     p.center();
     p.double_size(true);
@@ -430,7 +494,22 @@ pub fn imprimir_corte(corte: CorteCaja) -> ApiResponse<()> {
     p.double_size(false);
 
     p.text("TORRE FUERTE\n");
-    p.text(&format!("Fecha: {}\n", corte.fecha));
+    let partes: Vec<&str> = corte.fecha.split_whitespace().collect();
+    let fecha_hora_fmt = if partes.len() >= 2 {
+        let f_str = partes[0];
+        let h_str = partes[1];
+        let f_parts: Vec<&str> = f_str.split('-').collect();
+        let f_fmt = if f_parts.len() == 3 {
+            format!("{}/{}/{}", f_parts[2], f_parts[1], f_parts[0])
+        } else {
+            f_str.to_string()
+        };
+        format!("{} {}", f_fmt, h_str)
+    } else {
+        use chrono::Local;
+        Local::now().format("%d/%m/%Y %H:%M:%S").to_string()
+    };
+    p.text(&format!("Fecha: {}\n", fecha_hora_fmt));
     p.feed(1);
 
     p.left();
@@ -463,6 +542,50 @@ pub fn imprimir_corte(corte: CorteCaja) -> ApiResponse<()> {
 
     match send_to_printer(&p.buffer) {
         Ok(_) => ApiResponse::success("Corte enviado a impresión", ()),
+        Err(e) => ApiResponse::error(&e),
+    }
+}
+
+/// Imprime una página de prueba mínima para verificar que la impresora responde.
+/// No requiere datos de BD: solo imprime un banner, fecha/hora actual y un corte.
+#[command]
+pub fn imprimir_test() -> ApiResponse<()> {
+    use chrono::Local;
+
+    let fecha_hora = Local::now().format("%d/%m/%Y %H:%M:%S").to_string();
+
+    let mut p = EscPos::new();
+    p.init();
+    // Padding: la impresora USB descarta los primeros ~50 bytes mientras
+    // inicializa el receptor. Enviamos bytes nulos para absorber esa perdida.
+    p.buffer.extend_from_slice(&[0u8; 64]);
+    p.feed(1);
+
+    p.center();
+    p.double_size(true);
+    p.text("TEST\n");
+    p.double_size(false);
+    p.feed(1);
+
+    p.text("TORRE FUERTE\n");
+    p.text_raw("--------------------------------\n");
+    p.feed(1);
+
+    p.text("Impresora OK\n");
+    p.feed(1);
+
+    p.left();
+    p.text(&format!("Fecha: {}\n", fecha_hora));
+    p.feed(1);
+
+    p.center();
+    p.text_raw("--------------------------------\n");
+    p.text("** FIN DE PRUEBA **\n");
+    p.feed(4);
+    p.cut();
+
+    match send_to_printer(&p.buffer) {
+        Ok(_) => ApiResponse::success("Prueba enviada a impresión", ()),
         Err(e) => ApiResponse::error(&e),
     }
 }
@@ -519,7 +642,22 @@ pub fn listar_impresoras() -> ApiResponse<String> {
             info.push_str(&format!("\n[Por defecto] {}\n", salida.trim()));
         }
 
-        // 3. Todos los dispositivos de impresora detectados
+        // 3. Hardware detectado por CUPS (lpinfo -v)
+        if let Ok(res) = Command::new("lpinfo").args(&["-v"]).output() {
+            let salida = String::from_utf8_lossy(&res.stdout);
+            let directos: Vec<&str> = salida
+                .lines()
+                .filter(|l| l.trim().starts_with("direct "))
+                .collect();
+            if !directos.is_empty() {
+                info.push_str(&format!(
+                    "\n[Hardware CUPS (lpinfo -v)]\n{}\n",
+                    directos.join("\n")
+                ));
+            }
+        }
+
+        // 4. Todos los dispositivos de impresora detectados
         let rutas_usb_lp = ["/dev/usb/lp0", "/dev/usb/lp1", "/dev/usb/lp2"];
         let rutas_tty_usb = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"];
         let rutas_tty_s = ["/dev/ttyS0", "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3"]; // COM nativos

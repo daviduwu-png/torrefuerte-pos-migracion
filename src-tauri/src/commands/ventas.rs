@@ -164,7 +164,7 @@ pub fn buscar_ticket(query: String, state: State<AppState>) -> ApiResponse<Vec<T
     
     for ticket in tickets {
         let mut prod_stmt = conn.prepare(
-            r#"SELECT tp.producto_id, p.nombre, tp.cantidad, tp.precio_unitario, tp.subtotal,
+            r#"SELECT tp.producto_id, p.nombre, p.codigo_interno, tp.cantidad, tp.precio_unitario, tp.subtotal,
                COALESCE((SELECT SUM(cantidad) FROM devolucion WHERE ticket_id = tp.ticket_id AND producto_id = tp.producto_id), 0) as devuelto
                FROM ticket_producto tp
                JOIN producto p ON tp.producto_id = p.id
@@ -176,10 +176,11 @@ pub fn buscar_ticket(query: String, state: State<AppState>) -> ApiResponse<Vec<T
                 Ok(TicketProducto {
                     producto_id: row.get(0)?,
                     nombre: row.get(1)?,
-                    cantidad: row.get(2)?,
-                    precio_unitario: row.get(3)?,
-                    subtotal: row.get(4)?,
-                    devuelto: row.get::<_, f64>(5).unwrap_or(0.0),
+                    codigo_interno: row.get(2)?,
+                    cantidad: row.get(3)?,
+                    precio_unitario: row.get(4)?,
+                    subtotal: row.get(5)?,
+                    devuelto: row.get::<_, f64>(6).unwrap_or(0.0),
                 })
             })
             .unwrap()
@@ -242,7 +243,7 @@ pub fn listar_tickets(
     
     for ticket in tickets {
         let mut prod_stmt = conn.prepare(
-            r#"SELECT tp.producto_id, p.nombre, tp.cantidad, tp.precio_unitario, tp.subtotal,
+            r#"SELECT tp.producto_id, p.nombre, p.codigo_interno, tp.cantidad, tp.precio_unitario, tp.subtotal,
                COALESCE((SELECT SUM(cantidad) FROM devolucion WHERE ticket_id = tp.ticket_id AND producto_id = tp.producto_id), 0) as devuelto
                FROM ticket_producto tp
                JOIN producto p ON tp.producto_id = p.id
@@ -254,10 +255,11 @@ pub fn listar_tickets(
                 Ok(TicketProducto {
                     producto_id: row.get(0)?,
                     nombre: row.get(1)?,
-                    cantidad: row.get(2)?,
-                    precio_unitario: row.get(3)?,
-                    subtotal: row.get(4)?,
-                    devuelto: row.get::<_, f64>(5).unwrap_or(0.0),
+                    codigo_interno: row.get(2)?,
+                    cantidad: row.get(3)?,
+                    precio_unitario: row.get(4)?,
+                    subtotal: row.get(5)?,
+                    devuelto: row.get::<_, f64>(6).unwrap_or(0.0),
                 })
             })
             .unwrap()

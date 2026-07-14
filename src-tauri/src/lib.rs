@@ -48,6 +48,7 @@ pub fn run() {
             commands::rellenar_stock_masivo,
             commands::imprimir_ticket,
             commands::imprimir_corte,
+            commands::imprimir_test,
             commands::listar_impresoras,
             
             // Categorías y catálogos
