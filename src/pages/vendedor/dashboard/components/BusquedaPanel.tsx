@@ -81,7 +81,7 @@ export function BusquedaPanel({
                                 onClick={() => onSeleccionar(prod)}
                                 className="cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform duration-200"
                             >
-                                <ProductoCard producto={prod} variant="search" showPriceType="all" />
+                                <ProductoCard producto={prod} variant="search" showPriceType="all" size="md" />
                             </div>
                         ))}
 

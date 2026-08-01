@@ -105,7 +105,7 @@ export function ProductosTable({
                                         ${prod.precio_venta.toFixed(2)}
                                     </td>
                                     <td className="py-3 px-4 whitespace-nowrap">
-                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center justify-end gap-1">
                                             <button
                                                 onClick={() => onEdit(prod)}
                                                 className="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg"

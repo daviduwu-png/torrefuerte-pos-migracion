@@ -12,6 +12,7 @@ import {
   RellenarStock,
   BaseDatos,
   Etiquetas,
+  Gestion,
 } from "./pages/admin";
 import { VendedorDashboard, CorteCaja } from "./pages/vendedor";
 
@@ -48,6 +49,7 @@ function App() {
           <Route path="ventas" element={<Ventas />} />
           <Route path="base-datos" element={<BaseDatos />} />
           <Route path="etiquetas" element={<Etiquetas />} />
+          <Route path="gestion" element={<Gestion />} />
         </Route>
 
         {/* Vendedor Routes */}
