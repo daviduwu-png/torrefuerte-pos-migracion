@@ -11,6 +11,7 @@ import {
   Database,
   ShoppingBag,
   Receipt,
+  Tag,
 } from "lucide-react";
 import torreLogo from "../../assets/torre.png";
 interface NavItem {
@@ -64,6 +65,11 @@ const adminNavItems: NavItem[] = [
     label: "Base de Datos",
     icon: <Database className="w-6 h-6" />,
   },
+  {
+    path: "/admin/etiquetas",
+    label: "Etiquetas",
+    icon: <Tag className="w-6 h-6" />,
+  },
 ];
 
 const vendedorNavItems: NavItem[] = [
@@ -89,9 +95,9 @@ export default function Sidebar({ userType }: SidebarProps) {
   };
 
   return (
-    <aside className="w-20 glass-panel border-r-0 border-r-white/5 flex flex-col h-screen flex-shrink-0 z-50 items-center py-4 gap-4 sticky top-0 overflow-visible">
+    <aside className="w-20 glass-panel border-r-0 border-r-white/5 flex flex-col h-screen flex-shrink-0 z-50 items-center py-4 gap-4 [@media(max-height:800px)]:py-2 [@media(max-height:800px)]:gap-1 sticky top-0 overflow-visible">
       {/* Logo Section */}
-      <div className="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 group relative cursor-help border border-transparent hover:bg-white/5">
+      <div className="w-12 h-12 [@media(max-height:800px)]:w-10 [@media(max-height:800px)]:h-10 flex items-center justify-center rounded-xl transition-all duration-300 group relative cursor-help border border-transparent hover:bg-white/5">
         <img
           src={torreLogo}
           alt="TorreFuerte Logo"
@@ -113,7 +119,7 @@ export default function Sidebar({ userType }: SidebarProps) {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
-                flex items-center justify-center w-12 h-12 rounded-xl
+                flex items-center justify-center w-12 h-12 [@media(max-height:800px)]:w-10 [@media(max-height:800px)]:h-10 rounded-xl
                 transition-all duration-300 group relative
                 ${isActive
                   ? "bg-blue-600/20 text-blue-400 shadow-lg shadow-blue-900/10 border border-blue-500/30"
@@ -140,7 +146,7 @@ export default function Sidebar({ userType }: SidebarProps) {
       <div className="flex-1"></div>
 
       {/* User Info Section */}
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-4 [@media(max-height:800px)]:gap-2">
         <button
           onClick={handleLogout}
           className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-slate-800/50 rounded-xl transition-colors group relative"
@@ -152,7 +158,7 @@ export default function Sidebar({ userType }: SidebarProps) {
           </div>
         </button>
 
-        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border border-white/10 group relative cursor-default">
+        <div className="w-10 h-10 [@media(max-height:800px)]:w-8 [@media(max-height:800px)]:h-8 bg-slate-800 rounded-full flex items-center justify-center border border-white/10 group relative cursor-default">
           <User className="w-5 h-5 text-slate-400" />
           {/* Tooltip User */}
           <div className="absolute left-full ml-4 px-4 py-2 bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[100] shadow-xl border border-white/10">

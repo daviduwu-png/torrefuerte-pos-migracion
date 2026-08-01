@@ -177,6 +177,12 @@ export interface ApiResponse<T> {
   data?: T;
 }
 
+export interface ItemEtiqueta {
+  codigo: string;
+  codigo_interno?: string | null;
+  copias?: number;
+}
+
 // ==================== API SERVICE ====================
 
 export const api = {
@@ -348,5 +354,21 @@ export const api = {
 
   imprimirTest: async (): Promise<ApiResponse<void>> => {
     return await invoke("imprimir_test");
+  },
+
+  imprimirCodigosBarras: async (
+    items: ItemEtiqueta[],
+  ): Promise<ApiResponse<void>> => {
+    return await invoke("imprimir_codigos_barras", { items });
+  },
+
+  asignarCodigoBarras: async (
+    productoId: number,
+    codigoBarras: string,
+  ): Promise<ApiResponse<string>> => {
+    return await invoke("asignar_codigo_barras", {
+      productoId,
+      codigoBarras,
+    });
   },
 };

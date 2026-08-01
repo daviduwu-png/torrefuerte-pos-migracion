@@ -16,6 +16,7 @@ import {
   Search,
   Wallet,
   Store,
+  Tag,
 } from "lucide-react";
 
 interface MainLayoutProps {
@@ -79,6 +80,13 @@ const getPageInfo = (pathname: string) => {
       subtitle: "Base de Datos",
       icon: Database,
       color: "slate",
+    };
+  if (pathname.includes("/admin/etiquetas"))
+    return {
+      title: "Etiquetas",
+      subtitle: "Generación de Códigos",
+      icon: Tag,
+      color: "blue",
     };
 
   // Vendedor Routes
@@ -223,16 +231,12 @@ export default function MainLayout({ userType }: MainLayoutProps) {
   const isVendedor = userType === "vendedor";
 
   return (
-    <div
-      className={`flex ${isVendedor ? "h-screen overflow-hidden" : "min-h-screen"}`}
-    >
+    <div className="flex h-screen overflow-hidden">
       {/* Sidebar - Already Glass Panel */}
       <Sidebar userType={userType} />
 
       {/* Main Content Area */}
-      <div
-        className={`flex-1 flex flex-col min-w-0 relative ${isVendedor ? "h-full overflow-hidden" : ""}`}
-      >
+      <div className="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden">
         {/* Decorative background elements for depth */}
         <div className="absolute top-0 left-0 w-full h-96 bg-blue-600/10 pointer-events-none -z-10" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/10 pointer-events-none -z-10" />
