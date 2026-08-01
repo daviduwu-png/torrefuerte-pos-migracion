@@ -30,3 +30,8 @@ dist-ssr
 *.db-wal
 *.sqlite
 *.sqlite3
+
+# Env files
+.env
+.env.*
+!.env.example

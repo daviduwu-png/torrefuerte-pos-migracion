@@ -33,6 +33,7 @@ uuid = { version = "1", features = ["v4"] }
 # Excel para reportes e importación
 rust_xlsxwriter = "0.64"
 base64 = "0.22.1"
+dotenvy = "0.15.7"
 
 # Windows API para impresión
 [target.'cfg(windows)'.dependencies]

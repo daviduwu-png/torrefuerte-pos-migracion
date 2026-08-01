@@ -337,8 +337,8 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
             folio_fiscal: row.get(1)?,
             metodo_pago: row.get(2)?,
             total: row.get(3)?,
-            direccion_local: "TORRE FUERTE".to_string(), // Default
-            nombre_local: "TORRE FUERTE".to_string(),
+            direccion_local: std::env::var("PRINTER_DIR1").unwrap_or_else(|_| "------------".to_string()),
+            nombre_local: std::env::var("PRINTER_LOCAL_NAME").unwrap_or_else(|_| "------------".to_string()),
             dinero_recibido: row.get(4)?,
             cambio: row.get(5)?,
             usuario_id: None, // No necesario para impresión
@@ -386,14 +386,20 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     p.feed(1);
 
     // Encabezado
+    let nombre_local = std::env::var("PRINTER_LOCAL_NAME").unwrap_or_else(|_| "------------".to_string());
+    let rfc = std::env::var("PRINTER_RFC").unwrap_or_else(|_| "------------".to_string());
+    let direccion1 = std::env::var("PRINTER_DIR1").unwrap_or_else(|_| "------------".to_string());
+    let direccion2 = std::env::var("PRINTER_DIR2").unwrap_or_else(|_| "------------".to_string());
+    let direccion3 = std::env::var("PRINTER_DIR3").unwrap_or_else(|_| "------------".to_string());
+
     p.center();
     p.double_size(true);
-    p.text("TORRE FUERTE\n");
+    p.text(&format!("{}\n", nombre_local));
     p.double_size(false);
-    p.text("RFC: ------------\n"); // cambiar rfc al de juan
-    p.text("9 PONIENTE 907,\n");
-    p.text("COL ALVARO OBREGON\n");
-    p.text("ATLIXCO PUEBLA C.P 74260\n");
+    p.text(&format!("RFC: {}\n", rfc));
+    p.text(&format!("{}\n", direccion1));
+    p.text(&format!("{}\n", direccion2));
+    p.text(&format!("{}\n", direccion3));
     p.feed(1);
 
     // Datos
@@ -493,7 +499,8 @@ pub fn imprimir_corte(corte: CorteCaja) -> ApiResponse<()> {
     p.text("CORTE DE CAJA\n");
     p.double_size(false);
 
-    p.text("TORRE FUERTE\n");
+    let nombre_local = std::env::var("PRINTER_LOCAL_NAME").unwrap_or_else(|_| "------------".to_string());
+    p.text(&format!("{}\n", nombre_local));
     let partes: Vec<&str> = corte.fecha.split_whitespace().collect();
     let fecha_hora_fmt = if partes.len() >= 2 {
         let f_str = partes[0];
@@ -567,7 +574,8 @@ pub fn imprimir_test() -> ApiResponse<()> {
     p.double_size(false);
     p.feed(1);
 
-    p.text("TORRE FUERTE\n");
+    let nombre_local = std::env::var("PRINTER_LOCAL_NAME").unwrap_or_else(|_| "------------".to_string());
+    p.text(&format!("{}\n", nombre_local));
     p.text_raw("--------------------------------\n");
     p.feed(1);
 
