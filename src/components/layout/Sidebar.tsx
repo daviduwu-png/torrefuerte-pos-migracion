@@ -12,6 +12,7 @@ import {
   ShoppingBag,
   Receipt,
   Tag,
+  Users,
 } from "lucide-react";
 import torreLogo from "../../assets/torre.png";
 interface NavItem {
@@ -69,6 +70,11 @@ const adminNavItems: NavItem[] = [
     path: "/admin/etiquetas",
     label: "Etiquetas",
     icon: <Tag className="w-6 h-6" />,
+  },
+  {
+    path: "/admin/gestion",
+    label: "Gestión",
+    icon: <Users className="w-6 h-6" />,
   },
 ];
 
