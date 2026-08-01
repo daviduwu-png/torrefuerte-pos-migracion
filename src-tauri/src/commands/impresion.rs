@@ -4,6 +4,13 @@ use rusqlite::params;
 use std::process::Command;
 use tauri::{command, State};
 
+// ── Datos del local ─────────────────────────────────────────────────────────
+const LOCAL_NOMBRE: &str = "TORRE FUERTE";
+const LOCAL_RFC: &str = "NIGA0412116D7";
+const LOCAL_DIR1: &str = "9 PONIENTE 907,";
+const LOCAL_DIR2: &str = "COL ALVARO OBREGON";
+const LOCAL_DIR3: &str = "ATLIXCO PUEBLA C.P 74260";
+
 // Usando sintaxis de dispositivo de Windows para acceder a impresora compartida
 #[allow(dead_code)] // Se usa solo en cfg(windows)
 const PRINTER_NAME: &str = r"\\.\POS-58";
@@ -337,8 +344,8 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
             folio_fiscal: row.get(1)?,
             metodo_pago: row.get(2)?,
             total: row.get(3)?,
-            direccion_local: "TORRE FUERTE".to_string(), // Default
-            nombre_local: "TORRE FUERTE".to_string(),
+            direccion_local: LOCAL_DIR1.to_string(),
+            nombre_local: LOCAL_NOMBRE.to_string(),
             dinero_recibido: row.get(4)?,
             cambio: row.get(5)?,
             usuario_id: None, // No necesario para impresión
@@ -388,12 +395,12 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     // Encabezado
     p.center();
     p.double_size(true);
-    p.text("TORRE FUERTE\n");
+    p.text(&format!("{}\n", LOCAL_NOMBRE));
     p.double_size(false);
-    p.text("RFC: ------------\n"); // cambiar rfc al de juan
-    p.text("9 PONIENTE 907,\n");
-    p.text("COL ALVARO OBREGON\n");
-    p.text("ATLIXCO PUEBLA C.P 74260\n");
+    p.text(&format!("RFC: {}\n", LOCAL_RFC));
+    p.text(&format!("{}\n", LOCAL_DIR1));
+    p.text(&format!("{}\n", LOCAL_DIR2));
+    p.text(&format!("{}\n", LOCAL_DIR3));
     p.feed(1);
 
     // Datos
@@ -493,7 +500,7 @@ pub fn imprimir_corte(corte: CorteCaja) -> ApiResponse<()> {
     p.text("CORTE DE CAJA\n");
     p.double_size(false);
 
-    p.text("TORRE FUERTE\n");
+    p.text(&format!("{}\n", LOCAL_NOMBRE));
     let partes: Vec<&str> = corte.fecha.split_whitespace().collect();
     let fecha_hora_fmt = if partes.len() >= 2 {
         let f_str = partes[0];
@@ -567,7 +574,7 @@ pub fn imprimir_test() -> ApiResponse<()> {
     p.double_size(false);
     p.feed(1);
 
-    p.text("TORRE FUERTE\n");
+    p.text(&format!("{}\n", LOCAL_NOMBRE));
     p.text_raw("--------------------------------\n");
     p.feed(1);
 
