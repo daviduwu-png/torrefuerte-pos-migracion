@@ -8,7 +8,7 @@ import torrelogo from "../assets/torre.png";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [usuario, setUsuario] = useState("");
+  const [usuario, setUsuario] = useState("administrador");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -106,19 +106,29 @@ export default function Login() {
                 <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wide mb-3">
                   Usuario
                 </label>
-                <div className="flex group">
-                  <span className="flex items-center justify-center w-14 bg-slate-800/50 border border-r-0 border-slate-600/50 rounded-l-xl text-slate-400 group-focus-within:bg-slate-700/50 group-focus-within:border-blue-500/50 group-focus-within:text-blue-400 transition-all">
-                    <User className="w-5 h-5" />
-                  </span>
-                  <input
-                    type="text"
-                    value={usuario}
-                    onChange={(e) => setUsuario(e.target.value)}
-                    placeholder="Ingresa tu usuario"
-                    required
-                    autoFocus
-                    className="flex-1 px-5 py-4 bg-slate-800/50 border border-l-0 border-slate-600/50 rounded-r-xl text-white text-[15px] placeholder-slate-400 focus:bg-slate-700 focus:border-blue-500 outline-none transition-all"
-                  />
+                <div className="flex bg-slate-800/50 p-1.5 rounded-xl border border-slate-600/50">
+                  <button
+                    type="button"
+                    onClick={() => setUsuario("administrador")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      usuario === "administrador"
+                        ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/20"
+                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <User className="w-4 h-4" /> Admin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUsuario("vendedor")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      usuario === "vendedor"
+                        ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-900/20"
+                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <User className="w-4 h-4" /> Vendedor
+                  </button>
                 </div>
               </div>
 

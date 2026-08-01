@@ -2,6 +2,15 @@ mod commands;
 mod db;
 mod models;
 
+// Aliases for Tauri's generate_handler! — it needs the exact module path
+// where each #[command] function (and its __cmd__* helper) lives.
+use commands::impresion::ticket::imprimir_ticket;
+use commands::impresion::corte::imprimir_corte;
+use commands::impresion::test_page::imprimir_test;
+use commands::impresion::diagnostico::listar_impresoras;
+use commands::impresion::barcode::imprimir_codigos_barras;
+use commands::impresion::barcode::asignar_codigo_barras;
+
 use commands::AppState;
 use db::Database;
 use std::path::PathBuf;
@@ -46,10 +55,12 @@ pub fn run() {
             commands::eliminar_producto,
             commands::importar_productos_truper,
             commands::rellenar_stock_masivo,
-            commands::imprimir_ticket,
-            commands::imprimir_corte,
-            commands::imprimir_test,
-            commands::listar_impresoras,
+            imprimir_ticket,
+            imprimir_corte,
+            imprimir_test,
+            listar_impresoras,
+            imprimir_codigos_barras,
+            asignar_codigo_barras,
             
             // Categorías y catálogos
             commands::obtener_categorias,
