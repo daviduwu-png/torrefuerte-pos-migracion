@@ -80,7 +80,7 @@ export default function Etiquetas() {
   }
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col gap-4">
+    <div className="flex-1 flex flex-col gap-4 min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>

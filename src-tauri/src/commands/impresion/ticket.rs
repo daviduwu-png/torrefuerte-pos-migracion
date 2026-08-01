@@ -150,7 +150,7 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     p.cut();
     p.pulse();
 
-    match send_to_printer(&p.buffer) {
+    match send_to_printer(&p.buffer, None) {
         Ok(_) => ApiResponse::success("Ticket enviado a impresión", ()),
         Err(e) => ApiResponse::error(&e),
     }

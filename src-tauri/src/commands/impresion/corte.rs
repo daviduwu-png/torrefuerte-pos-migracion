@@ -64,7 +64,7 @@ pub fn imprimir_corte(corte: CorteCaja) -> ApiResponse<()> {
     p.feed(3);
     p.cut();
 
-    match send_to_printer(&p.buffer) {
+    match send_to_printer(&p.buffer, None) {
         Ok(_) => ApiResponse::success("Corte enviado a impresión", ()),
         Err(e) => ApiResponse::error(&e),
     }

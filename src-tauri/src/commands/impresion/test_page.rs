@@ -38,8 +38,8 @@ pub fn imprimir_test() -> ApiResponse<()> {
     p.feed(4);
     p.cut();
 
-    match send_to_printer(&p.buffer) {
-        Ok(_) => ApiResponse::success("Prueba enviada a impresión", ()),
+    match send_to_printer(&p.buffer, None) {
+        Ok(_) => ApiResponse::success("Página de prueba enviada", ()),
         Err(e) => ApiResponse::error(&e),
     }
 }

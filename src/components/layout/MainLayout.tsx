@@ -266,9 +266,9 @@ export default function MainLayout({ userType }: MainLayoutProps) {
 
         {/* Page Content */}
         <main
-          className={`flex-1 overflow-y-auto custom-scrollbar scroll-smooth ${
+          className={`flex-1 overflow-y-auto custom-scrollbar scroll-smooth flex flex-col ${
             isVendedor
-              ? "min-h-0 flex flex-col px-2.5 lg:px-4 py-2 pb-2.5"
+              ? "min-h-0 px-2.5 lg:px-4 py-2 pb-2.5"
               : "px-4 lg:px-8 pb-4 md:pb-6 py-4 md:py-6"
           }`}
         >

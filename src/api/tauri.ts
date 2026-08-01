@@ -358,8 +358,9 @@ export const api = {
 
   imprimirCodigosBarras: async (
     items: ItemEtiqueta[],
+    impresora?: string
   ): Promise<ApiResponse<void>> => {
-    return await invoke("imprimir_codigos_barras", { items });
+    return await invoke("imprimir_codigos_barras", { items, impresora });
   },
 
   asignarCodigoBarras: async (

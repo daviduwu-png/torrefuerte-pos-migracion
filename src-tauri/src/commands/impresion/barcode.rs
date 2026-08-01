@@ -123,7 +123,7 @@ fn default_copias() -> u8 {
 ///
 /// Cada etiqueta ocupa ~30 mm de papel (altura del barcode + texto).
 #[command]
-pub fn imprimir_codigos_barras(items: Vec<ItemEtiqueta>) -> ApiResponse<()> {
+pub fn imprimir_codigos_barras(items: Vec<ItemEtiqueta>, impresora: Option<String>) -> ApiResponse<()> {
     if items.is_empty() {
         return ApiResponse::error("No se proporcionaron ítems para imprimir.");
     }
@@ -145,7 +145,7 @@ pub fn imprimir_codigos_barras(items: Vec<ItemEtiqueta>) -> ApiResponse<()> {
     // Sin corte: las etiquetas suelen imprimirse en rollo continuo.
     // Si se desea corte por etiqueta, mover p.cut() dentro del loop.
 
-    match send_to_printer(&p.buffer) {
+    match send_to_printer(&p.buffer, impresora.as_deref()) {
         Ok(_) => ApiResponse::success("Etiquetas enviadas a impresión", ()),
         Err(e) => ApiResponse::error(&e),
     }

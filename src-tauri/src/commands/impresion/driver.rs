@@ -20,7 +20,7 @@ const PRINTER_NAME: &str = r"\\.\POS-58";
 
 // ── Implementación Windows ─────────────────────────────────────────────────
 #[cfg(windows)]
-pub fn send_to_printer(buffer: &[u8]) -> Result<(), String> {
+pub fn send_to_printer(buffer: &[u8], _impresora_target: Option<&str>) -> Result<(), String> {
     use std::ptr::null_mut;
     use windows::core::PWSTR;
     use windows::Win32::Foundation::HANDLE;
@@ -101,54 +101,71 @@ pub fn send_to_printer(buffer: &[u8]) -> Result<(), String> {
 
 // ── Implementación Linux ───────────────────────────────────────────────────
 #[cfg(target_os = "linux")]
-pub fn send_to_printer(buffer: &[u8]) -> Result<(), String> {
+pub fn send_to_printer(buffer: &[u8], impresora_target: Option<&str>) -> Result<(), String> {
     use std::io::Write;
 
-    // Todos los tipos de interfaz que puede tener una impresora térmica POS.
-    // Se prueban en orden; se usa el primero que exista y al que tengamos permiso.
-    let rutas_candidatas: &[&str] = &[
-        // USB (clase Printing) — lo más común en impresoras modernas
-        "/dev/usb/lp0",
-        "/dev/usb/lp1",
-        "/dev/usb/lp2",
-        // USB → Serial (adaptadores, dongles)
-        "/dev/ttyUSB0",
-        "/dev/ttyUSB1",
-        "/dev/ttyUSB2",
-        // COM nativos (NEC TWINPOS G7 tiene 4 puertos COM en la placa)
-        "/dev/ttyS0",
-        "/dev/ttyS1",
-        "/dev/ttyS2",
-        "/dev/ttyS3",
-        // Puerto paralelo LPT (NEC TWINPOS G7 tiene 1 puerto LPT)
-        "/dev/lp0",
-        "/dev/lp1",
-    ];
+    let mut try_usb = true;
+    let mut rutas_candidatas: Vec<&str> = vec![];
+    let mut cups_target = None;
 
-    for ruta in rutas_candidatas {
-        let path = std::path::Path::new(ruta);
-        if !path.exists() {
-            continue;
+    if let Some(target) = impresora_target {
+        if target == "1" || target == "principal" {
+            rutas_candidatas = vec!["/dev/usb/lp0", "/dev/ttyUSB0", "/dev/ttyS0", "/dev/lp0"];
+            cups_target = Some("POS-58");
+        } else if target == "2" || target == "secundaria" {
+            rutas_candidatas = vec!["/dev/usb/lp1", "/dev/usb/lp2", "/dev/ttyUSB1", "/dev/ttyS1", "/dev/lp1"];
+            cups_target = Some("POS-58-2"); // O el nombre que tenga en CUPS
+        } else if target.starts_with("/dev/") {
+            rutas_candidatas.push(target);
+        } else {
+            try_usb = false;
+            cups_target = Some(target);
         }
-        match std::fs::OpenOptions::new().write(true).open(path) {
-            Ok(mut archivo) => {
-                // Anotación explícita para que rust-analyzer resuelva el tipo
-                // correctamente dentro del loop (sin ella infiere Result<(),()>).
-                let r: Result<(), String> = archivo
-                    .write_all(buffer)
-                    .map_err(|e: std::io::Error| {
-                        format!(
-                            "Error escribiendo a {}: {}.\n\
-                             Si es un error de permisos, ejecuta UNA VEZ:\n\
-                               sudo usermod -aG lp $USER        (para USB/LPT)\n\
-                               sudo usermod -aG dialout $USER   (para COM/Serial)\n\
-                             Y luego cierra e inicia sesión nuevamente.",
-                            ruta, e
-                        )
-                    });
-                return r;
+    } else {
+        rutas_candidatas = vec![
+            // USB (clase Printing) — lo más común en impresoras modernas
+            "/dev/usb/lp0",
+            "/dev/usb/lp1",
+            "/dev/usb/lp2",
+            // USB → Serial (adaptadores, dongles)
+            "/dev/ttyUSB0",
+            "/dev/ttyUSB1",
+            "/dev/ttyUSB2",
+            // COM nativos (NEC TWINPOS G7 tiene 4 puertos COM en la placa)
+            "/dev/ttyS0",
+            "/dev/ttyS1",
+            "/dev/ttyS2",
+            "/dev/ttyS3",
+            // Puerto paralelo LPT (NEC TWINPOS G7 tiene 1 puerto LPT)
+            "/dev/lp0",
+            "/dev/lp1",
+        ];
+    }
+
+    if try_usb {
+        for ruta in rutas_candidatas {
+            let path = std::path::Path::new(ruta);
+            if !path.exists() {
+                continue;
             }
-            Err(_) => continue, // Sin permiso o bloqueado → probar siguiente
+            match std::fs::OpenOptions::new().write(true).open(path) {
+                Ok(mut archivo) => {
+                    let r: Result<(), String> = archivo
+                        .write_all(buffer)
+                        .map_err(|e: std::io::Error| {
+                            format!(
+                                "Error escribiendo a {}: {}.\n\
+                                 Si es un error de permisos, ejecuta UNA VEZ:\n\
+                                   sudo usermod -aG lp $USER        (para USB/LPT)\n\
+                                   sudo usermod -aG dialout $USER   (para COM/Serial)\n\
+                                 Y luego cierra e inicia sesión nuevamente.",
+                                ruta, e
+                            )
+                        });
+                    return r;
+                }
+                Err(_) => continue,
+            }
         }
     }
 
@@ -169,11 +186,15 @@ pub fn send_to_printer(buffer: &[u8]) -> Result<(), String> {
 
     let salida = String::from_utf8_lossy(&lpstat.stdout);
     // lpstat -d devuelve: "system default destination: NombreImpresora"
-    let mut nombre_impresora = salida
-        .split(':')
-        .nth(1)
-        .map(|s| s.trim().to_string())
-        .unwrap_or_default();
+    let mut nombre_impresora = if let Some(target) = cups_target {
+        target.to_string()
+    } else {
+        salida
+            .split(':')
+            .nth(1)
+            .map(|s| s.trim().to_string())
+            .unwrap_or_default()
+    };
 
     if nombre_impresora.is_empty() {
         // Intento 1: Buscar si hay alguna impresora instalada en CUPS (aunque no sea la por defecto)
@@ -251,6 +272,6 @@ pub fn send_to_printer(buffer: &[u8]) -> Result<(), String> {
 
 // ── Fallback para macOS y otros Unix (no Linux) ───────────────────────────
 #[cfg(not(any(windows, target_os = "linux")))]
-pub fn send_to_printer(_buffer: &[u8]) -> Result<(), String> {
+pub fn send_to_printer(_buffer: &[u8], _impresora_target: Option<&str>) -> Result<(), String> {
     Err("Impresión ESC/POS no soportada en este sistema operativo.".to_string())
 }
