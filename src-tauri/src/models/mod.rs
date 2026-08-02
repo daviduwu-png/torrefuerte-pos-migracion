@@ -1,3 +1,4 @@
+#![allow(dead_code)] // Structs son usados por serde (deserialización de Tauri), no por construcción explícita.
 use serde::{Deserialize, Serialize};
 
 /// Usuario del sistema
@@ -221,4 +222,261 @@ pub struct Estadisticas {
     pub stock_bajo: i64,
     pub devoluciones_hoy: i64,
     pub ticket_promedio: f64,
+}
+
+// ============================================================
+// MÓDULO CLIENTES
+// ============================================================
+
+/// Cliente del directorio
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Cliente {
+    pub id: i64,
+    pub nombre: String,
+    pub telefono: Option<String>,
+    pub email: Option<String>,
+    pub direccion: Option<String>,
+    pub rfc: Option<String>,
+    pub notas: Option<String>,
+    pub activo: bool,
+    pub fecha_alta: String,
+}
+
+/// Datos para crear / actualizar un cliente
+#[derive(Debug, Deserialize)]
+pub struct ClienteInput {
+    pub id: Option<i64>,
+    pub nombre: String,
+    pub telefono: Option<String>,
+    pub email: Option<String>,
+    pub direccion: Option<String>,
+    pub rfc: Option<String>,
+    pub notas: Option<String>,
+}
+
+/// Cuenta por cobrar
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CuentaPorCobrar {
+    pub id: i64,
+    pub cliente_id: i64,
+    pub cliente_nombre: String,
+    pub ticket_id: Option<i64>,
+    pub concepto: String,
+    pub monto_original: f64,
+    pub monto_pendiente: f64,
+    pub fecha: String,
+    pub estado: String,
+}
+
+/// Datos para registrar una deuda
+#[derive(Debug, Deserialize)]
+pub struct CuentaInput {
+    pub cliente_id: i64,
+    pub ticket_id: Option<i64>,
+    pub concepto: String,
+    pub monto: f64,
+}
+
+/// Abono aplicado a una cuenta por cobrar
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Abono {
+    pub id: i64,
+    pub cuenta_id: i64,
+    pub monto: f64,
+    pub metodo_pago: String,
+    pub fecha: String,
+    pub notas: Option<String>,
+}
+
+/// Datos para registrar un abono
+#[derive(Debug, Deserialize)]
+pub struct AbonoInput {
+    pub cuenta_id: i64,
+    pub monto: f64,
+    pub metodo_pago: String,
+    pub notas: Option<String>,
+}
+
+/// Resumen total de deudas del sistema
+#[derive(Debug, Serialize)]
+pub struct ResumenDeudas {
+    pub total_pendiente: f64,
+    pub total_cuentas: i64,
+    pub cuentas_saldadas_hoy: i64,
+}
+
+// ============================================================
+// MÓDULO COTIZACIONES
+// ============================================================
+
+/// Cabecera de una cotización persistida
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Cotizacion {
+    pub id: i64,
+    pub cliente_id: Option<i64>,
+    pub cliente_ref: Option<String>,
+    pub total: f64,
+    pub notas: Option<String>,
+    pub estado: String,
+    pub usuario_id: Option<i64>,
+    pub fecha: String,
+}
+
+/// Item individual al crear una cotización
+#[derive(Debug, Deserialize)]
+pub struct ItemCotizacionInput {
+    pub producto_id: i64,
+    pub cantidad: f64,
+    pub precio_unitario: f64,
+}
+
+/// Datos para crear una cotización
+#[derive(Debug, Deserialize)]
+pub struct CotizacionInput {
+    pub cliente_id: Option<i64>,
+    pub cliente_ref: Option<String>,
+    pub items: Vec<ItemCotizacionInput>,
+    pub notas: Option<String>,
+}
+
+/// Producto dentro de una cotización (para respuesta)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CotizacionProducto {
+    pub producto_id: i64,
+    pub nombre: String,
+    pub codigo_interno: Option<String>,
+    pub cantidad: f64,
+    pub precio_unitario: f64,
+    pub subtotal: f64,
+}
+
+/// Cotización con su detalle de productos
+#[derive(Debug, Serialize)]
+pub struct CotizacionConProductos {
+    pub cotizacion: Cotizacion,
+    pub productos: Vec<CotizacionProducto>,
+}
+
+// ============================================================
+// MÓDULO PEDIDOS A PROVEEDOR
+// ============================================================
+
+/// Cabecera de un pedido a proveedor
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PedidoProveedor {
+    pub id: i64,
+    pub proveedor: String,
+    pub marca: Option<String>,
+    pub notas: Option<String>,
+    pub estado: String,
+    pub usuario_id: Option<i64>,
+    pub fecha: String,
+    pub total_items: i64,
+}
+
+/// Item al crear un pedido
+#[derive(Debug, Deserialize)]
+pub struct ItemPedidoInput {
+    pub producto_id: i64,
+    pub cantidad_pedida: f64,
+    pub precio_estimado: Option<f64>,
+}
+
+/// Datos para crear un pedido
+#[derive(Debug, Deserialize)]
+pub struct PedidoInput {
+    pub proveedor: String,
+    pub marca: Option<String>,
+    pub items: Vec<ItemPedidoInput>,
+    pub notas: Option<String>,
+}
+
+/// Item para recepción parcial/total
+#[derive(Debug, Deserialize)]
+pub struct RecepcionItem {
+    pub producto_id: i64,
+    pub cantidad_recibida: f64,
+}
+
+/// Producto dentro de un pedido (para respuesta)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PedidoProducto {
+    pub producto_id: i64,
+    pub nombre: String,
+    pub codigo_interno: Option<String>,
+    pub cantidad_pedida: f64,
+    pub cantidad_recibida: f64,
+    pub precio_estimado: Option<f64>,
+}
+
+/// Pedido con su detalle de productos
+#[derive(Debug, Serialize)]
+pub struct PedidoConProductos {
+    pub pedido: PedidoProveedor,
+    pub productos: Vec<PedidoProducto>,
+}
+
+// ============================================================
+// APARTADOS
+// ============================================================
+
+/// Producto dentro del input de un apartado
+#[derive(Debug, Deserialize)]
+pub struct ItemApartadoInput {
+    pub producto_id: i64,
+    pub cantidad: f64,
+    pub precio_unitario: f64,
+}
+
+/// Input para crear un apartado nuevo
+#[derive(Debug, Deserialize)]
+pub struct ApartadoInput {
+    pub cliente_id: i64,
+    pub items: Vec<ItemApartadoInput>,
+    pub notas: Option<String>,
+}
+
+/// Un apartado tal como se lista (resumen)
+#[derive(Debug, Serialize)]
+pub struct Apartado {
+    pub id: i64,
+    pub cliente_id: i64,
+    pub cliente_nombre: String,
+    pub total: f64,
+    pub monto_pagado: f64,
+    pub monto_pendiente: f64,
+    pub notas: Option<String>,
+    pub estado: String,   // "activo" | "cancelado" | "liquidado"
+    pub fecha: String,
+    pub fecha_liquidado: Option<String>,
+    pub ticket_id: Option<i64>,
+    pub total_productos: i64,
+}
+
+/// Un producto dentro de un apartado (detalle)
+#[derive(Debug, Serialize)]
+pub struct ApartadoProducto {
+    pub producto_id: i64,
+    pub nombre: String,
+    pub codigo_interno: Option<String>,
+    pub cantidad: f64,
+    pub precio_unitario: f64,
+    pub subtotal: f64,
+}
+
+/// Apartado con su detalle de productos
+#[derive(Debug, Serialize)]
+pub struct ApartadoConProductos {
+    pub apartado: Apartado,
+    pub productos: Vec<ApartadoProducto>,
+    pub abonos: Vec<Abono>,
+}
+
+/// Input para registrar un abono a un apartado
+#[derive(Debug, Deserialize)]
+pub struct AbonoApartadoInput {
+    pub apartado_id: i64,
+    pub monto: f64,
+    pub metodo_pago: String,
+    pub notas: Option<String>,
 }

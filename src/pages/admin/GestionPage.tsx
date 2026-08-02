@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Users, Truck, FileText } from "lucide-react";
-import { ClientesTab, PedidosTab, CotizacionesTab } from "./gestion";
+import { Users, FileText, Package } from "lucide-react";
+import { ClientesTab, CotizacionesTab, ApartadosTab } from "./gestion";
 
-type TabMode = "clientes" | "pedidos" | "cotizaciones";
+type TabMode = "clientes" | "cotizaciones" | "apartados";
 
 export default function Gestion() {
   const [activeTab, setActiveTab] = useState<TabMode>("clientes");
@@ -42,16 +42,17 @@ export default function Gestion() {
         <FileText className="w-3.5 h-3.5" />
         Cotizaciones
       </button>
+
       <button
-        onClick={() => handleTabChange("pedidos")}
+        onClick={() => handleTabChange("apartados")}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-          activeTab === "pedidos"
-            ? "bg-emerald-600 text-white shadow-sm shadow-emerald-900/20"
+          activeTab === "apartados"
+            ? "bg-amber-600 text-white shadow-sm shadow-amber-900/20"
             : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
         }`}
       >
-        <Truck className="w-3.5 h-3.5" />
-        Pedidos
+        <Package className="w-3.5 h-3.5" />
+        Apartados
       </button>
     </div>
   );
@@ -61,13 +62,14 @@ export default function Gestion() {
       {portalTarget && createPortal(tabsContent, portalTarget)}
 
       {/* Main Content */}
-      <div className="flex-1 bg-slate-900/40 border border-white/5 rounded-2xl p-2 sm:p-6 relative overflow-hidden flex flex-col min-h-0 backdrop-blur-sm">
+      <div className="flex-1 bg-slate-900/40 border border-white/5 rounded-2xl p-2 sm:p-6 relative overflow-hidden flex flex-col min-h-0 min-w-0 backdrop-blur-sm">
         {/* Decorative elements inside the tab container */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
 
         {activeTab === "clientes" && <ClientesTab />}
-        {activeTab === "pedidos" && <PedidosTab />}
+
         {activeTab === "cotizaciones" && <CotizacionesTab />}
+        {activeTab === "apartados" && <ApartadosTab />}
       </div>
     </div>
   );

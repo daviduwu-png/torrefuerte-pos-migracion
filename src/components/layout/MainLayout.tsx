@@ -18,6 +18,7 @@ import {
   Store,
   Tag,
   Users,
+  Truck,
 } from "lucide-react";
 
 interface MainLayoutProps {
@@ -92,9 +93,16 @@ const getPageInfo = (pathname: string) => {
   if (pathname.includes("/admin/gestion"))
     return {
       title: "Gestión",
-      subtitle: "Clientes y Proveedores",
+      subtitle: "Clientes",
       icon: Users,
       color: "pink",
+    };
+  if (pathname.includes("/admin/pedidos"))
+    return {
+      title: "Pedidos",
+      subtitle: "Órdenes a Proveedor",
+      icon: Truck,
+      color: "emerald",
     };
 
   // Vendedor Routes
@@ -263,7 +271,10 @@ export default function MainLayout({ userType }: MainLayoutProps) {
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">
                   {subtitle}
                 </span>
-                <div id="header-actions-portal" className="ml-2 flex items-center"></div>
+                <div
+                  id="header-actions-portal"
+                  className="ml-2 flex items-center"
+                ></div>
               </div>
             </div>
             <DateTimeDisplay compact />

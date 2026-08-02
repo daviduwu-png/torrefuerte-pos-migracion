@@ -90,6 +90,35 @@ pub fn run() {
             // Sistema
             commands::crear_respaldo,
             commands::restaurar_base_datos,
+
+            // Clientes — Directorio
+            commands::listar_clientes,
+            commands::obtener_cliente,
+            commands::guardar_cliente,
+            commands::eliminar_cliente,
+
+            // Cotizaciones
+            commands::guardar_cotizacion,
+            commands::listar_cotizaciones,
+            commands::obtener_cotizacion,
+            commands::cambiar_estado_cotizacion,
+            commands::eliminar_cotizacion,
+
+            // Pedidos a proveedor
+            commands::guardar_pedido,
+            commands::listar_pedidos,
+            commands::obtener_pedido,
+            commands::recibir_pedido,
+            commands::cambiar_estado_pedido,
+
+            // Apartados
+            commands::crear_apartado,
+            commands::listar_apartados,
+            commands::obtener_apartado,
+            commands::abonar_apartado,
+            commands::liquidar_apartado,
+            commands::cancelar_apartado,
+
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
