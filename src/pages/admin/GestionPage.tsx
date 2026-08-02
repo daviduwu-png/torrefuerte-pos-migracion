@@ -51,7 +51,7 @@ export default function Gestion() {
         }`}
       >
         <Truck className="w-3.5 h-3.5" />
-        Pedidos a Proveedores
+        Pedidos
       </button>
     </div>
   );

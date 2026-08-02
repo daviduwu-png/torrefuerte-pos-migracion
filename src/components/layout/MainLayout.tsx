@@ -165,7 +165,7 @@ function DateTimeDisplay({ compact = false }: { compact?: boolean }) {
 
 export default function MainLayout({ userType }: MainLayoutProps) {
   const location = useLocation();
-  const { title, subtitle, icon: Icon, color } = getPageInfo(location.pathname);
+  const { subtitle, icon: Icon, color } = getPageInfo(location.pathname);
 
   // Helper to get color classes safely since Tailwind doesn't support dynamic class construction fully
   // But we can map common color names if needed, or use style={{}}.
@@ -260,9 +260,6 @@ export default function MainLayout({ userType }: MainLayoutProps) {
                 <Icon className={`w-5 h-5 ${colors.text}`} />
               </div>
               <div className="flex items-center gap-2.5">
-                <h1 className="text-lg font-bold text-white tracking-tight">
-                  {title}
-                </h1>
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">
                   {subtitle}
                 </span>

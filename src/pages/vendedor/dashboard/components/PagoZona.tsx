@@ -115,7 +115,7 @@ export function PagoZona({
                     <div className="flex justify-end items-baseline gap-1">
                         <span className="text-xl text-slate-400 font-light">$</span>
                         <p className="text-4xl font-black text-white tracking-tighter drop-shadow-lg">
-                            {total.toFixed(2)}
+                            {total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                     </div>
                 </div>

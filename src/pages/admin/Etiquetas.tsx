@@ -141,7 +141,7 @@ export default function Etiquetas() {
               Sin resultados
             </div>
           ) : (
-            <div className="overflow-y-auto flex-1">
+            <div className="overflow-auto flex-1">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-slate-900 border-b border-slate-800 z-10">
                   <tr>
@@ -151,7 +151,7 @@ export default function Etiquetas() {
                     <th className="text-left px-4 py-3 text-slate-400 font-medium hidden md:table-cell">
                       Código barras
                     </th>
-                    <th className="text-left px-4 py-3 text-slate-400 font-medium hidden lg:table-cell">
+                    <th className="text-left px-4 py-3 text-slate-400 font-medium hidden xl:table-cell">
                       Interno
                     </th>
                     <th className="text-center px-4 py-3 text-slate-400 font-medium">
@@ -171,7 +171,7 @@ export default function Etiquetas() {
                       }`}
                     >
                       <td className="px-4 py-3">
-                        <p className="text-slate-200 font-medium truncate max-w-xs">
+                        <p className="text-slate-200 font-medium truncate max-w-[200px] lg:max-w-[240px] xl:max-w-xs">
                           {p.nombre}
                         </p>
                         <p className="text-slate-500 text-xs">ID #{p.id}</p>
@@ -187,7 +187,7 @@ export default function Etiquetas() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 hidden lg:table-cell">
+                      <td className="px-4 py-3 hidden xl:table-cell">
                         <span className="font-mono text-slate-400 text-xs">
                           {p.codigo_interno ?? "—"}
                         </span>

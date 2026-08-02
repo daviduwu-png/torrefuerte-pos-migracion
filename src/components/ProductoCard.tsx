@@ -45,7 +45,7 @@ export default function ProductoCard({
 
     return (
       <div
-        className={`glass-panel border border-slate-700/40 rounded-xl p-3 hover:border-blue-500/40 hover:bg-slate-800/60 transition-all flex flex-col gap-2 text-left min-w-0 overflow-hidden relative ${className}`}
+        className={`glass-panel border border-slate-700/40 rounded-xl p-3 hover:bg-white/[0.02] transition-colors flex flex-col gap-2 text-left min-w-0 overflow-hidden relative ${className}`}
       >
         <h4 className="text-sm font-bold text-white leading-snug line-clamp-2 min-w-0 break-words">
           {producto.nombre}
@@ -57,6 +57,9 @@ export default function ProductoCard({
               {producto.codigo_interno}
             </span>
           )}
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-700/40 border border-slate-600/50 text-slate-300 shrink-0">
+            ID: {producto.id}
+          </span>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase shrink-0">
             {producto.tipo_medida}
           </span>
@@ -69,26 +72,26 @@ export default function ProductoCard({
           <div className="flex flex-wrap gap-2 mt-1.5 min-w-0">
             <div className="flex items-center gap-1.5 bg-slate-900/60 px-2 py-1 rounded-md border border-white/5 whitespace-nowrap shrink-0">
               <span className={size === "md" ? "text-xs text-slate-400 font-medium" : "text-[10px] text-slate-400 font-medium"}>Público:</span>
-              <span className={size === "md" ? "text-sm font-bold text-emerald-400" : "text-xs font-bold text-emerald-400"}>${producto.precio_venta.toFixed(2)}</span>
+              <span className={size === "md" ? "text-sm font-bold text-emerald-400" : "text-xs font-bold text-emerald-400"}>${producto.precio_venta.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             
             {(producto.precio_mayoreo ?? 0) > 0 && (
               <div className="flex items-center gap-1.5 bg-slate-900/60 px-2 py-1 rounded-md border border-white/5 whitespace-nowrap shrink-0">
                 <span className={size === "md" ? "text-xs text-slate-400 font-medium" : "text-[10px] text-slate-400 font-medium"}>Mayoreo:</span>
-                <span className={size === "md" ? "text-sm font-bold text-blue-400" : "text-xs font-bold text-blue-400"}>${producto.precio_mayoreo!.toFixed(2)}</span>
+                <span className={size === "md" ? "text-sm font-bold text-blue-400" : "text-xs font-bold text-blue-400"}>${producto.precio_mayoreo!.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
             
             {(producto.precio_distribuidor ?? 0) > 0 && (
               <div className="flex items-center gap-1.5 bg-slate-900/60 px-2 py-1 rounded-md border border-white/5 whitespace-nowrap shrink-0">
                 <span className={size === "md" ? "text-xs text-slate-400 font-medium" : "text-[10px] text-slate-400 font-medium"}>Dist:</span>
-                <span className={size === "md" ? "text-sm font-bold text-purple-400" : "text-xs font-bold text-purple-400"}>${producto.precio_distribuidor!.toFixed(2)}</span>
+                <span className={size === "md" ? "text-sm font-bold text-purple-400" : "text-xs font-bold text-purple-400"}>${producto.precio_distribuidor!.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
 
             <div className="flex items-center gap-1.5 bg-slate-900/60 px-2 py-1 rounded-md border border-white/5 whitespace-nowrap shrink-0">
               <span className={size === "md" ? "text-xs text-slate-400 font-medium" : "text-[10px] text-slate-400 font-medium"}>Compra:</span>
-              <span className={size === "md" ? "text-sm font-bold text-amber-400" : "text-xs font-bold text-amber-400"}>${producto.precio_compra.toFixed(2)}</span>
+              <span className={size === "md" ? "text-sm font-bold text-amber-400" : "text-xs font-bold text-amber-400"}>${producto.precio_compra.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               {tieneIva && (
                 <span className="text-[8px] bg-amber-500/30 text-amber-300 px-1 py-0.5 rounded font-bold">+IVA</span>
               )}
@@ -97,7 +100,7 @@ export default function ProductoCard({
         ) : (
           <div className="mt-1">
             <p className="text-sm font-black text-emerald-400">
-              ${producto.precio_venta.toFixed(2)}
+              ${producto.precio_venta.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         )}
@@ -166,7 +169,7 @@ export default function ProductoCard({
               Precio Venta
             </p>
             <p className="text-xl font-black text-emerald-400">
-              ${producto.precio_venta.toFixed(2)}
+              ${producto.precio_venta.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -219,26 +222,26 @@ export default function ProductoCard({
           <div className="flex flex-wrap gap-3 mt-2 min-w-0">
             <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-2 rounded-lg border border-white/5 whitespace-nowrap">
               <span className="text-sm text-slate-400 font-medium">Público:</span>
-              <span className="text-lg font-black text-emerald-400">${producto.precio_venta.toFixed(2)}</span>
+              <span className="text-lg font-black text-emerald-400">${producto.precio_venta.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             
             {(producto.precio_mayoreo ?? 0) > 0 && (
               <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-2 rounded-lg border border-white/5 whitespace-nowrap">
                 <span className="text-sm text-slate-400 font-medium">Mayoreo:</span>
-                <span className="text-lg font-black text-blue-400">${producto.precio_mayoreo!.toFixed(2)}</span>
+                <span className="text-lg font-black text-blue-400">${producto.precio_mayoreo!.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
             
             {(producto.precio_distribuidor ?? 0) > 0 && (
               <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-2 rounded-lg border border-white/5 whitespace-nowrap">
                 <span className="text-sm text-slate-400 font-medium">Dist:</span>
-                <span className="text-lg font-black text-purple-400">${producto.precio_distribuidor!.toFixed(2)}</span>
+                <span className="text-lg font-black text-purple-400">${producto.precio_distribuidor!.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
 
             <div className="flex items-center gap-2 bg-slate-900/60 px-3 py-2 rounded-lg border border-white/5 whitespace-nowrap">
               <span className="text-sm text-slate-400 font-medium">Compra:</span>
-              <span className="text-lg font-black text-amber-400">${producto.precio_compra.toFixed(2)}</span>
+              <span className="text-lg font-black text-amber-400">${producto.precio_compra.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               {tieneIva && (
                 <span className="text-[10px] bg-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-bold">+IVA</span>
               )}
@@ -250,7 +253,7 @@ export default function ProductoCard({
               Precio de Venta
             </p>
             <p className="text-3xl font-black text-emerald-400">
-              ${producto.precio_venta.toFixed(2)}
+              ${producto.precio_venta.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         )}

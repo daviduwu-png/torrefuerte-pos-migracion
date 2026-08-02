@@ -41,25 +41,25 @@ export function ProductosTable({
                 <table className="w-full">
                     <thead className="bg-slate-800/80 sticky top-0 z-10 ">
                         <tr>
-                            <th className="text-left py-3 px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
+                            <th className="text-left py-2 xl:py-3 px-2 xl:px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
                                 Código / ID
                             </th>
-                            <th className="text-left py-3 px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap min-w-[200px]">
+                            <th className="text-left py-2 xl:py-3 px-2 xl:px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap min-w-[160px] xl:min-w-[200px]">
                                 Producto
                             </th>
-                            <th className="text-left py-3 px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
+                            <th className="text-left py-2 xl:py-3 px-2 xl:px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
                                 Marca
                             </th>
-                            <th className="text-left py-3 px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
+                            <th className="text-left py-2 xl:py-3 px-2 xl:px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
                                 Proveed.
                             </th>
-                            <th className="text-right py-3 px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
+                            <th className="text-right py-2 xl:py-3 px-2 xl:px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
                                 Stock
                             </th>
-                            <th className="text-right py-3 px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
+                            <th className="text-right py-2 xl:py-3 px-2 xl:px-4 text-xs font-bold text-slate-400 uppercase whitespace-nowrap">
                                 Precio
                             </th>
-                            <th className="text-center py-3 px-4 text-xs font-bold text-slate-400 uppercase w-20 whitespace-nowrap" />
+                            <th className="text-center py-2 xl:py-3 px-2 xl:px-4 text-xs font-bold text-slate-400 uppercase w-16 xl:w-20 whitespace-nowrap" />
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
@@ -69,7 +69,7 @@ export function ProductosTable({
                                     key={prod.id}
                                     className="hover:bg-slate-800/40 transition-colors group"
                                 >
-                                    <td className="py-3 px-4 whitespace-nowrap">
+                                    <td className="py-2 xl:py-3 px-2 xl:px-4 whitespace-nowrap">
                                         <div className="flex flex-col">
                                             <span className="text-amber-500 font-mono text-sm font-bold">
                                                 {prod.codigo_interno || prod.codigo_barras || "S/C"}
@@ -79,32 +79,32 @@ export function ProductosTable({
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="py-3 px-4 text-white text-sm font-medium">
+                                    <td className="py-2 xl:py-3 px-2 xl:px-4 text-white text-sm font-medium">
                                         <div className="line-clamp-2">{prod.nombre}</div>
                                         {prod.descripcion && prod.descripcion !== prod.nombre && (
-                                            <p className="text-slate-500 text-xs mt-0.5 truncate max-w-[250px]">
+                                            <p className="text-slate-500 text-xs mt-0.5 truncate max-w-[200px] xl:max-w-[250px]">
                                                 {prod.descripcion}
                                             </p>
                                         )}
                                     </td>
-                                    <td className="py-3 px-4 text-slate-300 text-sm whitespace-nowrap">
+                                    <td className="py-2 xl:py-3 px-2 xl:px-4 text-slate-300 text-sm whitespace-nowrap">
                                         <span className="px-2 py-1 rounded bg-slate-800 text-xs">
                                             {prod.marca}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 text-slate-400 text-sm whitespace-nowrap">
+                                    <td className="py-2 xl:py-3 px-2 xl:px-4 text-slate-400 text-sm whitespace-nowrap">
                                         {prod.proveedor}
                                     </td>
                                     <td
-                                        className={`py-3 px-4 text-right text-sm font-bold whitespace-nowrap ${prod.stock <= 5 ? "text-red-400" : "text-slate-300"
+                                        className={`py-2 xl:py-3 px-2 xl:px-4 text-right text-sm font-bold whitespace-nowrap ${prod.stock <= 5 ? "text-red-400" : "text-slate-300"
                                             }`}
                                     >
                                         {prod.stock}
                                     </td>
-                                    <td className="py-3 px-4 text-right text-emerald-400 text-sm font-bold whitespace-nowrap">
+                                    <td className="py-2 xl:py-3 px-2 xl:px-4 text-right text-emerald-400 text-sm font-bold whitespace-nowrap">
                                         ${prod.precio_venta.toFixed(2)}
                                     </td>
-                                    <td className="py-3 px-4 whitespace-nowrap">
+                                    <td className="py-2 xl:py-3 px-2 xl:px-4 whitespace-nowrap">
                                         <div className="flex items-center justify-end gap-1">
                                             <button
                                                 onClick={() => onEdit(prod)}

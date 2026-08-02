@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { api, TicketConProductos } from "../../api/tauri";
+import { useState, useEffect } from "react";
+import { api, TicketConProductos } from "../../../../api/tauri";
 import {
   Search,
   Filter,
@@ -10,19 +10,23 @@ import {
   RotateCcw,
   Printer,
 } from "lucide-react";
-import { StyledSwal as Swal } from "../../utils/swal";
-import { formatFechaHoraCorta, getFechaHoy } from "../../utils/dateFormat";
-import DatePicker from "../ui/DatePicker";
+import { StyledSwal as Swal } from "../../../../utils/swal";
+import { formatFechaHoraCorta, getFechaHoy } from "../../../../utils/dateFormat";
+import DatePicker from "../../../../components/ui/DatePicker";
 
 export default function SalesHistory() {
   const [loading, setLoading] = useState(false);
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
-  // Results Modal State
-  const [showResultsModal, setShowResultsModal] = useState(false);
+  // Results State
   const [tickets, setTickets] = useState<TicketConProductos[]>([]);
-  const [modalTitle, setModalTitle] = useState("");
+  const [modalTitle, setModalTitle] = useState("Ventas de Hoy");
+  const [activeFilter, setActiveFilter] = useState<"hoy" | "semana" | "mes" | "anio" | "custom">("hoy");
+
+  useEffect(() => {
+    fetchTickets("hoy");
+  }, []);
 
   // Ticket Detail Modal
   const [showTicketDetail, setShowTicketDetail] = useState(false);
@@ -69,11 +73,14 @@ export default function SalesHistory() {
         title = `Ventas del ${start} al ${end}`;
       }
 
+      setFechaInicio(fStart!);
+      setFechaFin(fEnd!);
+      setActiveFilter(range);
+
       const response = await api.listarTickets(fStart, fEnd);
       if (response.success && response.data) {
         setTickets(response.data);
         setModalTitle(title);
-        setShowResultsModal(true);
       } else {
         Swal.fire({
           icon: "info",
@@ -103,6 +110,7 @@ export default function SalesHistory() {
       });
       return;
     }
+    setActiveFilter("custom");
     fetchTickets("custom", fechaInicio, fechaFin);
   };
 
@@ -133,7 +141,6 @@ export default function SalesHistory() {
       if (response.success && response.data && response.data.length > 0) {
         setTickets(response.data);
         setModalTitle(`Resultados para: "${trimmedId}"`);
-        setShowResultsModal(true);
       } else {
         Swal.fire({
           icon: "error",
@@ -173,7 +180,7 @@ export default function SalesHistory() {
       confirmButtonColor: "#ef4444",
       background: "#1e293b",
       color: "#ebe6e6ff",
-      inputValidator: (value) => {
+      inputValidator: (value: string) => {
         return !value ? "Debes seleccionar un motivo" : null;
       },
       customClass: {
@@ -205,7 +212,7 @@ export default function SalesHistory() {
       background: "#1e293b",
       color: "#ebe6e6ff",
 
-      inputValidator: (value) => {
+      inputValidator: (value: string) => {
         return !value ? "Debes seleccionar un motivo" : null;
       },
       customClass: {
@@ -246,7 +253,7 @@ export default function SalesHistory() {
           const cantInt = parseInt(cantidad);
           const montoDevolucion = cantInt * producto.precio_unitario;
 
-          const updatedProductos = selectedTicket.productos.map((p) => {
+          const updatedProductos = selectedTicket.productos.map((p: any) => {
             if (p.producto_id === producto.producto_id) {
               return {
                 ...p,
@@ -332,13 +339,14 @@ export default function SalesHistory() {
   };
 
   return (
-    <>
-      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 h-full flex flex-col relative">
-        <div className="p-4 sm:p-6">
-          <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6">
+    <div className="flex flex-col h-full gap-6 animate-in fade-in duration-300">
+      {/* Panel de Filtros */}
+      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 shrink-0 relative z-20">
+        <div className="p-4 sm:p-5">
+          <div className="w-full max-w-4xl mx-auto space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 items-end">
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2 ml-1">
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
                   Desde
                 </label>
                 <DatePicker
@@ -348,7 +356,7 @@ export default function SalesHistory() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2 ml-1">
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
                   Hasta
                 </label>
                 <DatePicker
@@ -386,140 +394,117 @@ export default function SalesHistory() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-white/5">
-              <button
-                onClick={() => fetchTickets("hoy")}
-                className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
-              >
-                Hoy
-              </button>
-              <button
-                onClick={() => fetchTickets("semana")}
-                className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
-              >
-                Semana
-              </button>
-              <button
-                onClick={() => fetchTickets("mes")}
-                className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
-              >
-                Mes
-              </button>
-              <button
-                onClick={() => fetchTickets("anio")}
-                className="px-3 py-2.5 text-xs font-bold text-cyan-400 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors bg-cyan-500/5 shadow-sm"
-              >
-                Año
-              </button>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3 border-t border-white/5">
+              {["hoy", "semana", "mes", "anio"].map((period) => (
+                <button
+                  key={period}
+                  onClick={() => fetchTickets(period as any)}
+                  className={`px-3 py-2 text-xs font-bold rounded-xl transition-colors shadow-sm border ${
+                    activeFilter === period
+                      ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-400"
+                      : "bg-white/5 border-white/5 text-slate-400 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-400"
+                  }`}
+                >
+                  {period === "anio" ? "Año" : period.charAt(0).toUpperCase() + period.slice(1)}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {showResultsModal && (
-        <div
-          onClick={() => setShowResultsModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/80"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="glass-panel w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/10 overflow-hidden max-h-[90vh] sm:max-h-[85vh] flex flex-col animate-in fade-in zoom-in duration-300"
-          >
-            <div className="bg-slate-900/50 px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between flex-shrink-0 border-b border-white/5">
-              <h3 className="font-bold text-base sm:text-lg text-white flex items-center gap-2 min-w-0">
-                <div className="p-1.5 sm:p-2 bg-cyan-500/20 rounded-lg border border-cyan-500/20 shrink-0">
-                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
-                </div>
-                <span className="truncate">{modalTitle}</span>
-              </h3>
-              <button
-                onClick={() => setShowResultsModal(false)}
-                className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full p-2 transition-all shrink-0"
-              >
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-            </div>
-
-            {/* scroll horizontal en móvil para la tabla */}
-            <div className="flex-1 overflow-auto">
-              <div className="min-w-[500px]">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-900/50 sticky top-0 z-10 shadow-sm border-b border-white/5">
-                    <tr>
-                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider w-12">
-                        ID
-                      </th>
-                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">
-                        Folio
-                      </th>
-                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Fecha
-                      </th>
-                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Total
-                      </th>
-                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">
-                        Método
-                      </th>
-                      <th className="p-3 sm:p-4 text-xs font-bold text-slate-400 uppercase text-center tracking-wider">
-                        Ver
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {tickets.length > 0 ? (
-                      tickets.map((t) => (
-                        <tr
-                          key={t.ticket.id}
-                          className="hover:bg-white/5 transition-colors group"
-                        >
-                          <td className="p-3 sm:p-4 text-sm font-mono text-slate-400">
-                            {t.ticket.id}
-                          </td>
-                          <td className="p-3 sm:p-4 text-sm font-mono text-slate-300 group-hover:text-cyan-300 transition-colors hidden sm:table-cell">
-                            {t.ticket.folio_fiscal || (
-                              <span className="text-slate-600 italic">--</span>
-                            )}
-                          </td>
-                          <td className="p-3 sm:p-4 text-xs sm:text-sm text-slate-400">
-                            {formatFechaHoraCorta(t.ticket.fecha)}
-                          </td>
-                          <td className="p-3 sm:p-4 text-sm font-bold text-emerald-400 font-mono whitespace-nowrap">
-                            ${t.ticket.total.toFixed(2)}
-                          </td>
-                          <td className="p-3 sm:p-4 text-sm text-slate-300 hidden md:table-cell">
-                            <span className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-slate-300 font-medium">
-                              {t.ticket.metodo_pago}
-                            </span>
-                          </td>
-                          <td className="p-3 sm:p-4 text-center">
-                            <button
-                              onClick={() => openTicketDetail(t)}
-                              className="p-2 text-cyan-400 hover:bg-cyan-500/20 hover:text-cyan-300 rounded-lg transition-all"
-                              title="Ver Detalles"
-                            >
-                              <Eye className="w-5 h-5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="p-8 text-center text-slate-500"
-                        >
-                          No se encontraron tickets.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+      {/* Tabla de Resultados */}
+      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 flex-1 flex flex-col min-h-0 relative z-10">
+        <div className="bg-slate-900/50 px-4 sm:px-6 py-4 flex items-center gap-2 border-b border-white/5 shrink-0">
+          <div className="p-1.5 bg-cyan-500/20 rounded-lg border border-cyan-500/20 shrink-0">
+            <FileText className="w-4 h-4 text-cyan-400" />
           </div>
+          <h3 className="font-bold text-base sm:text-lg text-white truncate">
+            {modalTitle}
+          </h3>
         </div>
-      )}
+
+        <div className="flex-1 overflow-auto custom-scrollbar">
+          <table className="w-full min-w-[600px] text-left border-collapse">
+            <thead className="bg-slate-900/50 sticky top-0 z-10 shadow-sm border-b border-white/5">
+              <tr>
+                <th className="p-3 sm:px-6 sm:py-4 text-xs font-bold text-slate-400 uppercase tracking-wider w-12">
+                  ID
+                </th>
+                <th className="p-3 sm:px-6 sm:py-4 text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">
+                  Folio
+                </th>
+                <th className="p-3 sm:px-6 sm:py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Fecha
+                </th>
+                <th className="p-3 sm:px-6 sm:py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Total
+                </th>
+                <th className="p-3 sm:px-6 sm:py-4 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">
+                  Método
+                </th>
+                <th className="p-3 sm:px-6 sm:py-4 text-xs font-bold text-slate-400 uppercase text-center tracking-wider">
+                  Ver
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {tickets.length > 0 ? (
+                tickets.map((t) => (
+                  <tr
+                    key={t.ticket.id}
+                    className="hover:bg-white/5 transition-colors group"
+                  >
+                    <td className="p-3 sm:px-6 sm:py-4 text-sm font-mono text-slate-400">
+                      {t.ticket.id}
+                    </td>
+                    <td className="p-3 sm:px-6 sm:py-4 text-sm font-mono text-slate-300 group-hover:text-cyan-300 transition-colors hidden sm:table-cell">
+                      {t.ticket.folio_fiscal || (
+                        <span className="text-slate-600 italic">--</span>
+                      )}
+                    </td>
+                    <td className="p-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-slate-400">
+                      {formatFechaHoraCorta(t.ticket.fecha)}
+                    </td>
+                    <td className="p-3 sm:px-6 sm:py-4 text-sm font-bold text-emerald-400 font-mono whitespace-nowrap">
+                      ${t.ticket.total.toFixed(2)}
+                    </td>
+                    <td className="p-3 sm:px-6 sm:py-4 text-sm text-slate-300 hidden md:table-cell">
+                      <span className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-slate-300 font-medium">
+                        {t.ticket.metodo_pago}
+                      </span>
+                    </td>
+                    <td className="p-3 sm:px-6 sm:py-4 text-center">
+                      <button
+                        onClick={() => openTicketDetail(t)}
+                        className="p-2 text-cyan-400 hover:bg-cyan-500/20 hover:text-cyan-300 rounded-lg transition-all"
+                        title="Ver Detalles"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="p-16 text-center text-slate-500"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center">
+                        <RotateCcw className="w-8 h-8 opacity-20" />
+                      </div>
+                      <p className="font-medium text-lg">No hay tickets</p>
+                      <p className="text-sm opacity-60">Prueba usando los filtros superiores</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Ticket Detail Modal */}
       {showTicketDetail && selectedTicket && (
@@ -586,7 +571,7 @@ export default function SalesHistory() {
               <div className="border-t-2 border-slate-900 border-dashed my-4"></div>
 
               <div className="space-y-4 mb-6">
-                {selectedTicket.productos.map((p, idx) => {
+                {selectedTicket.productos.map((p: any, idx: number) => {
                   const devuelto = p.devuelto || 0;
                   const originalQty = p.cantidad + devuelto;
                   const originalSubtotal = originalQty * p.precio_unitario;
@@ -653,7 +638,7 @@ export default function SalesHistory() {
               {(() => {
                 // Cálculos Totales para coherencia visual
                 let totalDevuelto = 0;
-                selectedTicket.productos.forEach((p) => {
+                selectedTicket.productos.forEach((p: any) => {
                   totalDevuelto += (p.devuelto || 0) * p.precio_unitario;
                 });
                 const currentTotal = selectedTicket.ticket.total;
@@ -705,6 +690,6 @@ export default function SalesHistory() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
