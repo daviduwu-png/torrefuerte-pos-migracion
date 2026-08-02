@@ -149,3 +149,9 @@ input,
 select {
   transition: all 0.2s ease-in-out;
 }
+
+/* Force Sileo/Sonner toaster to absolute top */
+[data-sonner-toaster],
+.sileo-toaster {
+  z-index: 2147483647 !important;
+}

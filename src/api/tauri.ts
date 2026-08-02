@@ -1,10 +1,88 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
+import type {
+  // Autenticación
+  Usuario,
+  LoginResponse,
+  // Genérico
+  ApiResponse,
+  // Catálogo
+  Categoria,
+  Producto,
+  ProductoInput,
+  ProductoFiltros,
+  // Ventas
+  TicketInput,
+  Ticket,
+  TicketConProductos,
+  // Devoluciones
+  DevolucionInput,
+  Devolucion,
+  // Reportes
+  CorteCaja,
+  VentasDiarias,
+  ItemEtiqueta,
+  // Clientes
+  Cliente,
+  ClienteInput,
+  // CXC
+  CuentaPorCobrar,
+  CuentaInput,
+  AbonoInput,
+  ResumenDeudas,
+  // Cotizaciones
+  Cotizacion,
+  CotizacionInput,
+  CotizacionConProductos,
+  // Pedidos
+  PedidoProveedor,
+  PedidoInput,
+  PedidoConProductos,
+  RecepcionItem,
+  // Apartados
+  Apartado,
+  ApartadoInput,
+  ApartadoConProductos,
+  AbonoApartadoInput,
+} from "./types";
 
-// Wrapper function to handle Tauri invoke calls safely
-// This prevents crashes when running in a strict browser environment (not Tauri app)
+export type {
+  Usuario,
+  LoginResponse,
+  ApiResponse,
+  Categoria,
+  Producto,
+  ProductoInput,
+  ProductoFiltros,
+  ItemCarrito,
+  TicketInput,
+  Ticket,
+  TicketConProductos,
+  DevolucionInput,
+  Devolucion,
+  CorteCaja,
+  VentasDiarias,
+  ItemEtiqueta,
+  Cliente,
+  ClienteInput,
+  CuentaPorCobrar,
+  CuentaInput,
+  AbonoInput,
+  ResumenDeudas,
+  Cotizacion,
+  CotizacionInput,
+  CotizacionConProductos,
+  PedidoProveedor,
+  PedidoInput,
+  PedidoConProductos,
+  RecepcionItem,
+  Apartado,
+  ApartadoInput,
+  ApartadoConProductos,
+  ApartadoProducto,
+  AbonoApartadoInput,
+} from "./types";
+
 const invoke = async <T>(cmd: string, args?: any): Promise<T> => {
-  // Check if we are in a Tauri environment
-  // In Tauri v2, the internals are exposed via window.__TAURI_INTERNALS__
   const isTauri =
     typeof window !== "undefined" &&
     (window as any).__TAURI_INTERNALS__ !== undefined;
@@ -13,11 +91,8 @@ const invoke = async <T>(cmd: string, args?: any): Promise<T> => {
     console.warn(
       `[Tauri] Attempted to invoke '${cmd}' outside of Tauri context.`,
     );
-    // You can uncomment this to mock specific commands in dev mode
-    // if (cmd === 'login') return { success: true, user: { ... } };
-
     throw new Error(
-      "Tauri API no detectada. Asegúrate de estar ejecutando la aplicación con 'npm run tauri dev' o dentro de la ventana de Tauri.",
+      "Tauri API no detectada. Asegúrate de estar ejecutando la aplicación con 'npm run tauri dev'.",
     );
   }
 
@@ -29,347 +104,267 @@ const invoke = async <T>(cmd: string, args?: any): Promise<T> => {
   }
 };
 
-// ==================== INTERFACES ====================
-
-export interface Usuario {
-  id: number;
-  nombre: string;
-  email: string;
-  rol: "admin" | "normal";
-}
-
-export interface LoginResponse {
-  success: boolean;
-  message: string;
-  user?: Usuario;
-}
-
-export interface Categoria {
-  id: number;
-  nombre: string;
-}
-
-export interface Producto {
-  id: number;
-  codigo_barras?: string;
-  codigo_interno?: string;
-  nombre: string;
-  descripcion?: string;
-  marca?: string;
-  proveedor: string;
-  tipo_medida: string;
-  categoria_id: number;
-  precio_compra: number;
-  precio_venta: number;
-  precio_mayoreo?: number;
-  precio_distribuidor?: number;
-  facturable: boolean;
-  stock: number;
-  precio_compra_incluye_iva: boolean;
-}
-
-export interface ProductoInput {
-  id?: number;
-  codigo_barras?: string;
-  codigo_interno?: string;
-  nombre: string;
-  descripcion?: string;
-  marca?: string;
-  proveedor?: string;
-  tipo_medida: string;
-  categoria_id: number;
-  precio_compra: number;
-  precio_venta: number;
-  precio_mayoreo?: number;
-  precio_distribuidor?: number;
-  facturable: boolean;
-  stock: number;
-  precio_compra_incluye_iva: boolean;
-}
-
-export interface ProductoFiltros {
-  categoria?: string;
-  marca?: string;
-  proveedor?: string;
-  limit?: number;
-}
-
-export interface ItemCarrito {
-  id: number;
-  cantidad: number;
-  precio_venta: number;
-}
-
-export interface TicketInput {
-  productos: ItemCarrito[];
-  total: number;
-  metodo_pago: string;
-  dinero_recibido: number;
-  cambio: number;
-}
-
-export interface Ticket {
-  id: number;
-  folio_fiscal: string;
-  metodo_pago: string;
-  total: number;
-  direccion_local: string;
-  nombre_local: string;
-  dinero_recibido: number;
-  cambio: number;
-  usuario_id?: number;
-  fecha: string;
-}
-
-export interface TicketProducto {
-  producto_id: number;
-  nombre: string;
-  codigo_interno?: string;
-  cantidad: number;
-  devuelto?: number;
-  precio_unitario: number;
-  subtotal: number;
-}
-
-export interface TicketConProductos {
-  ticket: Ticket;
-  productos: TicketProducto[];
-}
-
-export interface DevolucionInput {
-  ticket_id: number;
-  producto_id: number;
-  cantidad: number;
-  motivo?: string;
-}
-
-export interface Devolucion {
-  id: number;
-  ticket_id: number;
-  folio_fiscal: string;
-  producto: string;
-  codigo_interno?: string;
-  cantidad: number;
-  motivo?: string;
-  usuario?: string;
-  fecha: string;
-}
-
-export interface CorteCaja {
-  total_tickets: number;
-  total_venta: number;
-  total_efectivo: number;
-  total_tarjeta: number;
-  total_transferencia: number;
-  ticket_inicial?: number;
-  ticket_final?: number;
-  fecha: string;
-}
-
-export interface VentasDiarias {
-  labels: string[];
-  ventas: number[];
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data?: T;
-}
-
-export interface ItemEtiqueta {
-  codigo: string;
-  codigo_interno?: string | null;
-  copias?: number;
-}
-
-// ==================== API SERVICE ====================
-
 export const api = {
-  // --- Autenticación ---
-  login: async (username: string, password: string): Promise<LoginResponse> => {
-    return await invoke("login", { username, password });
-  },
+  login: async (username: string, password: string): Promise<LoginResponse> =>
+    invoke("login", { username, password }),
 
-  logout: async (): Promise<ApiResponse<void>> => {
-    return await invoke("logout");
-  },
+  logout: async (): Promise<ApiResponse<void>> => invoke("logout"),
 
-  getCurrentUser: async (): Promise<Usuario | null> => {
-    return await invoke("get_current_user");
-  },
+  getCurrentUser: async (): Promise<Usuario | null> =>
+    invoke("get_current_user"),
 
-  // --- Productos ---
-  buscarProducto: async (query: string): Promise<ApiResponse<Producto[]>> => {
-    return await invoke("buscar_producto", { query });
-  },
+  // ── Productos ────────────────────────────────────────────
+  buscarProducto: async (query: string): Promise<ApiResponse<Producto[]>> =>
+    invoke("buscar_producto", { query }),
 
   consultarProductos: async (
     filtros?: ProductoFiltros,
-  ): Promise<ApiResponse<Producto[]>> => {
-    return await invoke("consultar_productos", { filtros });
-  },
+  ): Promise<ApiResponse<Producto[]>> =>
+    invoke("consultar_productos", { filtros }),
 
-  obtenerProducto: async (id: number): Promise<ApiResponse<Producto>> => {
-    return await invoke("obtener_producto", { id });
-  },
+  obtenerProducto: async (id: number): Promise<ApiResponse<Producto>> =>
+    invoke("obtener_producto", { id }),
 
   ingresarProducto: async (
     producto: ProductoInput,
-  ): Promise<ApiResponse<number>> => {
-    return await invoke("ingresar_producto", { producto });
-  },
+  ): Promise<ApiResponse<number>> => invoke("ingresar_producto", { producto }),
 
   guardarProducto: async (
     producto: ProductoInput,
-  ): Promise<ApiResponse<void>> => {
-    return await invoke("guardar_producto", { producto });
-  },
+  ): Promise<ApiResponse<void>> => invoke("guardar_producto", { producto }),
 
-  eliminarProducto: async (id: number): Promise<ApiResponse<void>> => {
-    return await invoke("eliminar_producto", { id });
-  },
+  eliminarProducto: async (id: number): Promise<ApiResponse<void>> =>
+    invoke("eliminar_producto", { id }),
 
-  // --- Categorías y Catálogos ---
-  obtenerCategorias: async (): Promise<ApiResponse<Categoria[]>> => {
-    return await invoke("obtener_categorias");
-  },
+  // ── Categorías y catálogos ───────────────────────────────
+  obtenerCategorias: async (): Promise<ApiResponse<Categoria[]>> =>
+    invoke("obtener_categorias"),
 
-  crearCategoria: async (nombre: string): Promise<ApiResponse<number>> => {
-    return await invoke("crear_categoria", { nombre });
-  },
+  crearCategoria: async (nombre: string): Promise<ApiResponse<number>> =>
+    invoke("crear_categoria", { nombre }),
 
-  obtenerMarcas: async (): Promise<ApiResponse<string[]>> => {
-    return await invoke("obtener_marcas");
-  },
+  obtenerMarcas: async (): Promise<ApiResponse<string[]>> =>
+    invoke("obtener_marcas"),
 
-  obtenerProveedores: async (): Promise<ApiResponse<string[]>> => {
-    return await invoke("obtener_proveedores");
-  },
+  obtenerProveedores: async (): Promise<ApiResponse<string[]>> =>
+    invoke("obtener_proveedores"),
 
-  // --- Ventas ---
+  // ── Ventas ───────────────────────────────────────────────
   generarTicket: async (
     ticketInput: TicketInput,
-  ): Promise<ApiResponse<Ticket>> => {
-    return await invoke("generar_ticket", { ticketInput });
-  },
+  ): Promise<ApiResponse<Ticket>> => invoke("generar_ticket", { ticketInput }),
 
   buscarTicket: async (
     query: string,
-  ): Promise<ApiResponse<TicketConProductos[]>> => {
-    return await invoke("buscar_ticket", { query });
-  },
+  ): Promise<ApiResponse<TicketConProductos[]>> =>
+    invoke("buscar_ticket", { query }),
 
   listarTickets: async (
     fechaInicio?: string,
     fechaFin?: string,
-  ): Promise<ApiResponse<TicketConProductos[]>> => {
-    return await invoke("listar_tickets", { fechaInicio, fechaFin });
-  },
+  ): Promise<ApiResponse<TicketConProductos[]>> =>
+    invoke("listar_tickets", { fechaInicio, fechaFin }),
 
-  // --- Devoluciones ---
+  // ── Devoluciones ─────────────────────────────────────────
   realizarDevolucion: async (
     devolucion: DevolucionInput,
-  ): Promise<ApiResponse<void>> => {
-    return await invoke("realizar_devolucion", { devolucion });
-  },
+  ): Promise<ApiResponse<void>> =>
+    invoke("realizar_devolucion", { devolucion }),
 
   listarDevoluciones: async (
     inicio?: string,
     fin?: string,
-  ): Promise<ApiResponse<Devolucion[]>> => {
-    return await invoke("listar_devoluciones", { inicio, fin });
-  },
+  ): Promise<ApiResponse<Devolucion[]>> =>
+    invoke("listar_devoluciones", { inicio, fin }),
 
-  // --- Reportes ---
-  obtenerCorteCaja: async (fecha?: string): Promise<ApiResponse<CorteCaja>> => {
-    return await invoke("obtener_corte_caja", { fecha: fecha ?? null });
-  },
+  // ── Reportes ─────────────────────────────────────────────
+  obtenerCorteCaja: async (fecha?: string): Promise<ApiResponse<CorteCaja>> =>
+    invoke("obtener_corte_caja", { fecha: fecha ?? null }),
 
-  exportarCorteExcel: async (fecha?: string): Promise<ApiResponse<string>> => {
-    return await invoke("exportar_corte_excel", { fecha: fecha ?? null });
-  },
+  exportarCorteExcel: async (fecha?: string): Promise<ApiResponse<string>> =>
+    invoke("exportar_corte_excel", { fecha: fecha ?? null }),
 
   exportarReporteFinanciero: async (
     fechaInicio: string,
     fechaFin: string,
-  ): Promise<ApiResponse<string>> => {
-    return await invoke("exportar_reporte_financiero", {
-      fechaInicio,
-      fechaFin,
-    });
-  },
+  ): Promise<ApiResponse<string>> =>
+    invoke("exportar_reporte_financiero", { fechaInicio, fechaFin }),
 
-  reporteVentasDiarias: async (): Promise<ApiResponse<VentasDiarias>> => {
-    return await invoke("reporte_ventas_diarias");
-  },
+  reporteVentasDiarias: async (): Promise<ApiResponse<VentasDiarias>> =>
+    invoke("reporte_ventas_diarias"),
 
-  reporteVentasSemanales: async (): Promise<ApiResponse<VentasDiarias>> => {
-    return await invoke("reporte_ventas_semanales");
-  },
+  reporteVentasSemanales: async (): Promise<ApiResponse<VentasDiarias>> =>
+    invoke("reporte_ventas_semanales"),
 
-  reporteVentasMensuales: async (): Promise<ApiResponse<VentasDiarias>> => {
-    return await invoke("reporte_ventas_mensuales");
-  },
+  reporteVentasMensuales: async (): Promise<ApiResponse<VentasDiarias>> =>
+    invoke("reporte_ventas_mensuales"),
 
-  reporteVentasAnuales: async (): Promise<ApiResponse<VentasDiarias>> => {
-    return await invoke("reporte_ventas_anuales");
-  },
+  reporteVentasAnuales: async (): Promise<ApiResponse<VentasDiarias>> =>
+    invoke("reporte_ventas_anuales"),
 
-  obtenerEstadisticas: async (): Promise<ApiResponse<any>> => {
-    return await invoke("obtener_estadisticas");
-  },
+  obtenerEstadisticas: async (): Promise<ApiResponse<any>> =>
+    invoke("obtener_estadisticas"),
 
-  // --- Sistema (Backups) ---
+  // ── Sistema / Backups ────────────────────────────────────
   crearRespaldo: async (
     tipo: "auto" | "manual",
-  ): Promise<ApiResponse<string>> => {
-    return await invoke("crear_respaldo", { tipo });
-  },
+  ): Promise<ApiResponse<string>> => invoke("crear_respaldo", { tipo }),
 
-  restaurarBaseDatos: async (contenido: string): Promise<ApiResponse<void>> => {
-    return await invoke("restaurar_base_datos", { contenido });
-  },
+  restaurarBaseDatos: async (contenido: string): Promise<ApiResponse<void>> =>
+    invoke("restaurar_base_datos", { contenido }),
 
-  // --- Importación ---
+  rellenarStockMasivo: async (): Promise<ApiResponse<string>> =>
+    invoke("rellenar_stock_masivo", {}),
+
+  // ── Importación ──────────────────────────────────────────
   importarProductosTruper: async (
     productos: ProductoInput[],
-  ): Promise<ApiResponse<string>> => {
-    return await invoke("importar_productos_truper", { productos });
-  },
+  ): Promise<ApiResponse<string>> =>
+    invoke("importar_productos_truper", { productos }),
 
-  // --- Sistema ---
-  rellenarStockMasivo: async (): Promise<ApiResponse<string>> => {
-    return await invoke("rellenar_stock_masivo", {});
-  },
+  // ── Impresión ────────────────────────────────────────────
+  imprimirTicket: async (ticketId: number): Promise<ApiResponse<void>> =>
+    invoke("imprimir_ticket", { ticketId }),
 
-  // --- Impresión ---
-  imprimirTicket: async (ticketId: number): Promise<ApiResponse<void>> => {
-    return await invoke("imprimir_ticket", { ticketId: ticketId });
-  },
+  imprimirCorte: async (corte: CorteCaja): Promise<ApiResponse<void>> =>
+    invoke("imprimir_corte", { corte }),
 
-  imprimirCorte: async (corte: CorteCaja): Promise<ApiResponse<void>> => {
-    return await invoke("imprimir_corte", { corte });
-  },
-
-  imprimirTest: async (): Promise<ApiResponse<void>> => {
-    return await invoke("imprimir_test");
-  },
+  imprimirTest: async (): Promise<ApiResponse<void>> => invoke("imprimir_test"),
 
   imprimirCodigosBarras: async (
     items: ItemEtiqueta[],
-    impresora?: string
-  ): Promise<ApiResponse<void>> => {
-    return await invoke("imprimir_codigos_barras", { items, impresora });
-  },
+    impresora?: string,
+  ): Promise<ApiResponse<void>> =>
+    invoke("imprimir_codigos_barras", { items, impresora }),
 
   asignarCodigoBarras: async (
     productoId: number,
     codigoBarras: string,
-  ): Promise<ApiResponse<string>> => {
-    return await invoke("asignar_codigo_barras", {
-      productoId,
-      codigoBarras,
-    });
-  },
+  ): Promise<ApiResponse<string>> =>
+    invoke("asignar_codigo_barras", { productoId, codigoBarras }),
+
+  // ── Clientes — Directorio ────────────────────────────────
+  listarClientes: async (query?: string): Promise<ApiResponse<Cliente[]>> =>
+    invoke("listar_clientes", { query: query ?? null }),
+
+  obtenerCliente: async (id: number): Promise<ApiResponse<Cliente>> =>
+    invoke("obtener_cliente", { id }),
+
+  guardarCliente: async (cliente: ClienteInput): Promise<ApiResponse<number>> =>
+    invoke("guardar_cliente", { cliente }),
+
+  eliminarCliente: async (id: number): Promise<ApiResponse<void>> =>
+    invoke("eliminar_cliente", { id }),
+
+  // ── Clientes — Cuentas por cobrar ────────────────────────
+  listarCuentas: async (
+    clienteId?: number,
+    estado?: string,
+  ): Promise<ApiResponse<CuentaPorCobrar[]>> =>
+    invoke("listar_cuentas", {
+      clienteId: clienteId ?? null,
+      estado: estado ?? null,
+    }),
+
+  crearCuenta: async (cuenta: CuentaInput): Promise<ApiResponse<number>> =>
+    invoke("crear_cuenta", { cuenta }),
+
+  registrarAbono: async (abono: AbonoInput): Promise<ApiResponse<void>> =>
+    invoke("registrar_abono", { abono }),
+
+  obtenerResumenDeudas: async (): Promise<ApiResponse<ResumenDeudas>> =>
+    invoke("obtener_resumen_deudas"),
+
+  // ── Cotizaciones ─────────────────────────────────────────
+  guardarCotizacion: async (
+    cotizacion: CotizacionInput,
+  ): Promise<ApiResponse<number>> =>
+    invoke("guardar_cotizacion", { cotizacion }),
+
+  listarCotizaciones: async (
+    clienteId?: number,
+    estado?: string,
+    fechaInicio?: string,
+    fechaFin?: string,
+  ): Promise<ApiResponse<Cotizacion[]>> =>
+    invoke("listar_cotizaciones", {
+      clienteId: clienteId ?? null,
+      estado: estado ?? null,
+      fechaInicio: fechaInicio ?? null,
+      fechaFin: fechaFin ?? null,
+    }),
+
+  obtenerCotizacion: async (
+    id: number,
+  ): Promise<ApiResponse<CotizacionConProductos>> =>
+    invoke("obtener_cotizacion", { id }),
+
+  cambiarEstadoCotizacion: async (
+    id: number,
+    nuevoEstado: string,
+  ): Promise<ApiResponse<void>> =>
+    invoke("cambiar_estado_cotizacion", { id, nuevoEstado }),
+
+  eliminarCotizacion: async (id: number): Promise<ApiResponse<void>> =>
+    invoke("eliminar_cotizacion", { id }),
+
+  // ── Pedidos a proveedor ──────────────────────────────────
+  guardarPedido: async (pedido: PedidoInput): Promise<ApiResponse<number>> =>
+    invoke("guardar_pedido", { pedido }),
+
+  listarPedidos: async (
+    proveedor?: string,
+    estado?: string,
+  ): Promise<ApiResponse<PedidoProveedor[]>> =>
+    invoke("listar_pedidos", {
+      proveedor: proveedor ?? null,
+      estado: estado ?? null,
+    }),
+
+  obtenerPedido: async (id: number): Promise<ApiResponse<PedidoConProductos>> =>
+    invoke("obtener_pedido", { id }),
+
+  recibirPedido: async (
+    pedidoId: number,
+    items: RecepcionItem[],
+  ): Promise<ApiResponse<void>> =>
+    invoke("recibir_pedido", { pedidoId, items }),
+
+  cambiarEstadoPedido: async (
+    id: number,
+    nuevoEstado: string,
+  ): Promise<ApiResponse<void>> =>
+    invoke("cambiar_estado_pedido", { id, nuevoEstado }),
+
+  // ── Apartados ────────────────────────────────────────────
+  crearApartado: async (
+    apartado: ApartadoInput,
+  ): Promise<ApiResponse<number>> => invoke("crear_apartado", { apartado }),
+
+  listarApartados: async (
+    estado?: string,
+    clienteId?: number,
+  ): Promise<ApiResponse<Apartado[]>> =>
+    invoke("listar_apartados", {
+      estado: estado ?? null,
+      clienteId: clienteId ?? null,
+    }),
+
+  obtenerApartado: async (
+    id: number,
+  ): Promise<ApiResponse<ApartadoConProductos>> =>
+    invoke("obtener_apartado", { id }),
+
+  abonarApartado: async (
+    abono: AbonoApartadoInput,
+  ): Promise<ApiResponse<void>> => invoke("abonar_apartado", { abono }),
+
+  liquidarApartado: async (
+    apartadoId: number,
+    metodoPago: string,
+  ): Promise<ApiResponse<number>> =>
+    invoke("liquidar_apartado", { apartadoId, metodoPago }),
+
+  cancelarApartado: async (apartadoId: number): Promise<ApiResponse<void>> =>
+    invoke("cancelar_apartado", { apartadoId }),
 };

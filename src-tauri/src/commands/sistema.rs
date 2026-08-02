@@ -143,7 +143,15 @@ pub fn restaurar_base_datos(
                 let _ = std::mem::replace(&mut *db_conn, new_conn);
             }
 
-            ApiResponse::success("Base de datos restaurada exitosamente.", ())
+            // Soltamos el lock antes de llamar a init_tables para evitar deadlock
+            drop(db_conn);
+            
+            // Ejecutamos las migraciones sobre la base de datos recién restaurada
+            if let Err(e) = state.db.init_tables() {
+                return ApiResponse::error(&format!("Restaurada con éxito, pero falló la migración: {}", e));
+            }
+
+            ApiResponse::success("Base de datos restaurada y actualizada exitosamente.", ())
         }
         Err(e) => {
             // Si la copia falla, restauramos la copia de seguridad previa de emergencia

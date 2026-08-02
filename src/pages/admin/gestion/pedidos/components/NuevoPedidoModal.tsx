@@ -1,9 +1,20 @@
 import { useState, useEffect } from "react";
-import { X, ShoppingCart, Plus, Minus, Trash2, FileDown } from "lucide-react";
+import {
+  X,
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2,
+  Save,
+  Loader2,
+} from "lucide-react";
 import { createPortal } from "react-dom";
 import { notify } from "../../../../../utils/sileo";
 import DatePicker from "../../../../../components/ui/DatePicker";
-import { Producto } from "../../../../../api/tauri";
+import { Producto, api } from "../../../../../api/tauri";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import logoTorre from "../../../../../assets/torre.png";
 
 interface ItemPedido {
   producto: Producto;
@@ -14,16 +25,16 @@ interface NuevoPedidoModalProps {
   open: boolean;
   onClose: () => void;
   productosPreseleccionados?: Producto[];
-  proveedores: string[];
   marcas: string[];
+  proveedorFiltro?: string;
 }
 
 export function NuevoPedidoModal({
   open,
   onClose,
   productosPreseleccionados = [],
-  proveedores,
   marcas,
+  proveedorFiltro = "",
 }: NuevoPedidoModalProps) {
   const [proveedor, setProveedor] = useState("");
   const [marca, setMarca] = useState("");
@@ -31,13 +42,26 @@ export function NuevoPedidoModal({
   const [notas, setNotas] = useState("");
   const [items, setItems] = useState<ItemPedido[]>([]);
   const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [guardandoEnSistema, setGuardandoEnSistema] = useState(false);
 
   // Sincronizar items cada vez que se abre el modal con nuevos productos
   useEffect(() => {
     if (open) {
-      setItems(productosPreseleccionados.map((p) => ({ producto: p, cantidad: 1 })));
+      setItems(
+        productosPreseleccionados.map((p) => ({ producto: p, cantidad: 1 })),
+      );
+
+      // Auto-capturar el proveedor del primer producto seleccionado
+      if (
+        productosPreseleccionados.length > 0 &&
+        productosPreseleccionados[0].proveedor
+      ) {
+        setProveedor(productosPreseleccionados[0].proveedor);
+      } else if (proveedorFiltro) {
+        setProveedor(proveedorFiltro);
+      }
     }
-  }, [open, productosPreseleccionados]);
+  }, [open, productosPreseleccionados, proveedorFiltro]);
 
   const handleClose = () => {
     setProveedor("");
@@ -53,8 +77,8 @@ export function NuevoPedidoModal({
       prev.map((item, i) =>
         i === index
           ? { ...item, cantidad: Math.max(1, item.cantidad + delta) }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -62,7 +86,7 @@ export function NuevoPedidoModal({
     const n = parseInt(val);
     if (!isNaN(n) && n >= 1) {
       setItems((prev) =>
-        prev.map((item, i) => (i === index ? { ...item, cantidad: n } : item))
+        prev.map((item, i) => (i === index ? { ...item, cantidad: n } : item)),
       );
     }
   };
@@ -71,124 +95,157 @@ export function NuevoPedidoModal({
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleGenerarPDF = async () => {
+  const handleGuardarYGenerar = async () => {
     if (!proveedor.trim()) {
-      notify.warning({ title: "Proveedor requerido", description: "Selecciona o escribe el nombre del proveedor.", duration: 4000 });
+      notify.warning({
+        title: "Proveedor requerido",
+        description: "Selecciona o escribe el nombre del proveedor.",
+        duration: 4000,
+      });
       return;
     }
     if (items.length === 0) {
-      notify.warning({ title: "Sin productos", description: "Agrega al menos un producto al pedido.", duration: 4000 });
+      notify.warning({
+        title: "Sin productos",
+        description: "Agrega al menos un producto al pedido.",
+        duration: 4000,
+      });
       return;
     }
     if (!fecha) {
-      notify.warning({ title: "Fecha requerida", description: "Selecciona la fecha del pedido.", duration: 4000 });
+      notify.warning({
+        title: "Fecha requerida",
+        description: "Selecciona la fecha del pedido.",
+        duration: 4000,
+      });
       return;
     }
 
     setGenerandoPdf(true);
+    setGuardandoEnSistema(true);
+    let nuevoIdPedido = "";
+
     try {
+      // 1. Guardar en Sistema primero
+      const res = await api.guardarPedido({
+        proveedor: proveedor.trim(),
+        marca: marca.trim() || undefined,
+        notas: notas.trim() || undefined,
+        items: items.map((i) => ({
+          producto_id: i.producto.id,
+          cantidad_pedida: i.cantidad,
+          precio_estimado: undefined,
+        })),
+      });
 
-      const contenidoHTML = `
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            body { font-family: Arial, sans-serif; color: #1a1a2e; margin: 40px; }
-            .logo-header { display: flex; align-items: center; gap: 16px; border-bottom: 3px solid #c0392b; padding-bottom: 16px; margin-bottom: 24px; }
-            .logo-title { font-size: 28px; font-weight: 900; color: #c0392b; letter-spacing: 1px; }
-            .logo-subtitle { font-size: 13px; color: #555; margin-top: 2px; }
-            h2 { color: #c0392b; margin-top: 0; }
-            .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f5f5f5; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-            .meta span { color: #555; }
-            .meta strong { color: #1a1a2e; }
-            table { width: 100%; border-collapse: collapse; font-size: 14px; }
-            th { background: #c0392b; color: white; padding: 10px 12px; text-align: left; }
-            td { padding: 9px 12px; border-bottom: 1px solid #eee; }
-            tr:nth-child(even) td { background: #fafafa; }
-            .footer { margin-top: 32px; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 12px; text-align: center; }
-          </style>
-        </head>
-        <body>
-          <div class="logo-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>
-              </svg>
-              <div class="logo-title">TorreFuerte POS</div>
-            </div>
-            <div class="logo-subtitle">Sistema de Punto de Venta</div>
-            </div>
-          </div>
-          <h2>Orden de Pedido a Proveedor</h2>
-          <div class="meta">
-            <div><span>Proveedor: </span><strong>${proveedor}</strong></div>
-            <div><span>Marca: </span><strong>${marca || "N/A"}</strong></div>
-            <div><span>Fecha: </span><strong>${fecha}</strong></div>
-            <div><span>Total productos: </span><strong>${items.length} artículos</strong></div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Producto</th>
-                <th>Código</th>
-                <th>Stock Actual</th>
-                <th>Cantidad Pedida</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items
-                .map(
-                  (item, i) => `
-                <tr>
-                  <td>${i + 1}</td>
-                  <td>${item.producto.nombre}</td>
-                  <td>${item.producto.codigo_interno ?? item.producto.id}</td>
-                  <td style="color: ${item.producto.stock === 0 ? "#c0392b" : "#e67e22"}; font-weight: bold;">${item.producto.stock}</td>
-                  <td><strong>${item.cantidad}</strong></td>
-                </tr>`
-                )
-                .join("")}
-            </tbody>
-          </table>
-          ${notas ? `<div style="margin-top:20px;padding:12px 14px;background:#fff8e1;border-left:4px solid #f39c12;border-radius:4px;font-size:13px;"><strong>Notas:</strong> ${notas}</div>` : ""}
-          <div class="footer">Generado por TorreFuerte POS · ${new Date().toLocaleString("es-MX")}</div>
-          <script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); }</script>
-        </body>
-        </html>
-      `;
-
-      const ventana = window.open("", "_blank", "width=900,height=700");
-      if (ventana) {
-        ventana.document.write(contenidoHTML);
-        ventana.document.close();
-        notify.success({
-          title: "PDF generado",
-          description: `Pedido a ${proveedor} listo para imprimir (${items.length} productos).`,
-          duration: 5000,
-        });
-      } else {
+      if (!res.success) {
         notify.error({
-          title: "Error al abrir ventana",
-          description: "El navegador bloqueó la ventana emergente. Permite ventanas emergentes.",
+          title: "Error al guardar",
+          description: res.message,
           duration: 6000,
         });
+        setGenerandoPdf(false);
+        setGuardandoEnSistema(false);
+        return;
       }
+
+      nuevoIdPedido = res.data?.toString() || "";
+
+      // 2. Generar PDF con el ID Oficial
+      const doc = new jsPDF();
+
+      try {
+        const response = await fetch(logoTorre);
+        const blob = await response.blob();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        doc.addImage(base64, "PNG", 14, 10, 40, 40);
+      } catch (e) {
+        console.warn("No se pudo cargar el logo:", e);
+      }
+
+      doc.setFontSize(22);
+      doc.setTextColor(192, 57, 43);
+      doc.text("Ferretería Torre Fuerte", 60, 24);
+
+      doc.setFontSize(14);
+      doc.setTextColor(80, 80, 80);
+      doc.text(`Orden de Pedido #${nuevoIdPedido}`, 60, 32);
+
+      doc.setFontSize(11);
+      const rawTime = new Date().toLocaleTimeString("es-MX", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      const timeStr = rawTime.replace(/:/g, "");
+
+      doc.text(`Fecha: ${fecha} ${rawTime}`, 196, 24, { align: "right" });
+      doc.text(`Proveedor: ${proveedor}`, 60, 40);
+      doc.text(`Marca: ${marca || "N/A"}`, 60, 46);
+
+      const tableData = items.map((item, index) => [
+        index + 1,
+        item.producto.nombre,
+        item.producto.codigo_interno ?? item.producto.id,
+        item.cantidad,
+      ]);
+
+      autoTable(doc, {
+        startY: 55,
+        head: [["#", "Producto", "Código", "Cantidad Pedida"]],
+        body: tableData,
+        theme: "striped",
+        headStyles: { fillColor: [192, 57, 43] },
+        styles: { fontSize: 10 },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          3: { halign: "center", fontStyle: "bold" },
+        },
+      });
+
+      if (notas) {
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setFontSize(10);
+        doc.setTextColor(50, 50, 50);
+        doc.text("Notas:", 14, finalY);
+        doc.setFontSize(9);
+        const splitNotas = doc.splitTextToSize(notas, 180);
+        doc.text(splitNotas, 14, finalY + 5);
+      }
+
+      doc.save(
+        `Pedido_${nuevoIdPedido}_${proveedor.replace(/\s+/g, "_")}_${fecha.replace(/\//g, "-")}_${timeStr}.pdf`,
+      );
+
+      notify.success({
+        title: "Pedido Registrado",
+        description: `El pedido #${nuevoIdPedido} se guardó y exportó correctamente.`,
+        duration: 5000,
+      });
+
+      handleClose();
     } catch {
       notify.error({
-        title: "Error al generar PDF",
-        description: "No se pudo generar el documento del pedido.",
+        title: "Error al generar pedido",
+        description: "Ocurrió un problema inesperado.",
         duration: 6000,
       });
     } finally {
       setGenerandoPdf(false);
+      setGuardandoEnSistema(false);
     }
   };
 
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
       <div className="bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-700/50 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center flex-shrink-0">
@@ -197,11 +254,18 @@ export function NuevoPedidoModal({
               <ShoppingCart className="w-6 h-6 text-emerald-500" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Nueva Orden de Pedido</h2>
-              <p className="text-sm text-slate-400 mt-0.5">Genera una lista de reabastecimiento para tu proveedor</p>
+              <h2 className="text-xl font-bold text-white">
+                Nueva Orden de Pedido
+              </h2>
+              <p className="text-sm text-slate-400 mt-0.5">
+                Genera una lista de reabastecimiento para tu proveedor
+              </p>
             </div>
           </div>
-          <button onClick={handleClose} className="text-slate-400 hover:text-white transition-colors">
+          <button
+            onClick={handleClose}
+            className="text-slate-400 hover:text-white transition-colors"
+          >
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -213,21 +277,16 @@ export function NuevoPedidoModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">
-                  Proveedor <span className="text-rose-500">*</span>
+                  Proveedor
                 </label>
-                <input
-                  list="proveedores-list"
-                  value={proveedor}
-                  onChange={(e) => setProveedor(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-emerald-500 outline-none"
-                  placeholder="Nombre del proveedor"
-                />
-                <datalist id="proveedores-list">
-                  {proveedores.map((p) => <option key={p} value={p} />)}
-                </datalist>
+                <div className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-2 text-slate-300 select-none cursor-not-allowed">
+                  {proveedor || "Cargando proveedor..."}
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1">Marca</label>
+                <label className="block text-sm font-medium text-slate-400 mb-1">
+                  Marca
+                </label>
                 <input
                   list="marcas-list"
                   value={marca}
@@ -236,7 +295,9 @@ export function NuevoPedidoModal({
                   placeholder="Marca (opcional)"
                 />
                 <datalist id="marcas-list">
-                  {marcas.map((m) => <option key={m} value={m} />)}
+                  {marcas.map((m) => (
+                    <option key={m} value={m} />
+                  ))}
                 </datalist>
               </div>
             </div>
@@ -246,14 +307,21 @@ export function NuevoPedidoModal({
               <label className="block text-sm font-medium text-slate-400 mb-1">
                 Fecha del Pedido <span className="text-rose-500">*</span>
               </label>
-              <DatePicker value={fecha} onChange={setFecha} className="w-full" />
+              <DatePicker
+                value={fecha}
+                onChange={setFecha}
+                className="w-full"
+              />
             </div>
 
             {/* Lista de productos */}
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-white">
-                  Productos a Pedir <span className="text-slate-400 font-normal">({items.length})</span>
+                  Productos a Pedir{" "}
+                  <span className="text-slate-400 font-normal">
+                    ({items.length})
+                  </span>
                 </h3>
               </div>
 
@@ -261,7 +329,9 @@ export function NuevoPedidoModal({
                 <div className="py-10 flex flex-col items-center gap-2 text-slate-500 border border-dashed border-slate-700 rounded-xl">
                   <ShoppingCart className="w-8 h-8 opacity-40" />
                   <p className="text-sm">No hay productos en el pedido.</p>
-                  <p className="text-xs">Selecciona productos desde la tabla principal.</p>
+                  <p className="text-xs">
+                    Selecciona productos desde la tabla principal.
+                  </p>
                 </div>
               ) : (
                 <div className="rounded-xl border border-white/5 overflow-hidden">
@@ -276,17 +346,25 @@ export function NuevoPedidoModal({
                     </thead>
                     <tbody>
                       {items.map((item, index) => (
-                        <tr key={item.producto.id} className="border-b border-white/5 bg-slate-900/30">
+                        <tr
+                          key={item.producto.id}
+                          className="border-b border-white/5 bg-slate-900/30"
+                        >
                           <td className="px-4 py-3">
                             <div className="flex flex-col">
-                              <span className="font-medium text-slate-200">{item.producto.nombre}</span>
+                              <span className="font-medium text-slate-200">
+                                {item.producto.nombre}
+                              </span>
                               <span className="text-xs text-slate-500 font-mono mt-0.5">
-                                {item.producto.codigo_interno ?? `#${item.producto.id}`}
+                                {item.producto.codigo_interno ??
+                                  `#${item.producto.id}`}
                               </span>
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`text-sm font-bold ${item.producto.stock === 0 ? "text-rose-500" : "text-amber-400"}`}>
+                            <span
+                              className={`text-sm font-bold ${item.producto.stock === 0 ? "text-rose-500" : "text-amber-400"}`}
+                            >
                               {item.producto.stock}
                             </span>
                           </td>
@@ -302,7 +380,9 @@ export function NuevoPedidoModal({
                                 type="number"
                                 min={1}
                                 value={item.cantidad}
-                                onChange={(e) => handleCantidadDirecta(index, e.target.value)}
+                                onChange={(e) =>
+                                  handleCantidadDirecta(index, e.target.value)
+                                }
                                 className="w-14 text-center bg-slate-800 border border-slate-700 rounded-lg py-1 text-white text-sm outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
                               <button
@@ -331,7 +411,9 @@ export function NuevoPedidoModal({
 
             {/* Notas */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Notas adicionales (Opcional)</label>
+              <label className="block text-sm font-medium text-slate-400 mb-1">
+                Notas adicionales (Opcional)
+              </label>
               <textarea
                 value={notas}
                 onChange={(e) => setNotas(e.target.value)}
@@ -344,23 +426,34 @@ export function NuevoPedidoModal({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-800 flex justify-between items-center flex-shrink-0">
-          <p className="text-xs text-slate-500">{items.length} producto(s) · PDF con logo TorreFuerte</p>
+          <p className="text-xs text-slate-500">
+            {items.length} producto(s) · PDF con logo TorreFuerte
+          </p>
           <div className="flex gap-3">
-            <button onClick={handleClose} className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors">
+            <button
+              onClick={handleClose}
+              className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors"
+            >
               Cancelar
             </button>
             <button
-              onClick={handleGenerarPDF}
-              disabled={generandoPdf}
+              onClick={handleGuardarYGenerar}
+              disabled={guardandoEnSistema || generandoPdf}
               className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 transition-colors disabled:opacity-50"
             >
-              <FileDown className="w-4 h-4" />
-              {generandoPdf ? "Generando..." : "Generar PDF"}
+              {guardandoEnSistema || generandoPdf ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {guardandoEnSistema || generandoPdf
+                ? "Procesando..."
+                : "Guardar y Generar PDF"}
             </button>
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

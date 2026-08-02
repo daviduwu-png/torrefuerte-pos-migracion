@@ -8,3 +8,4 @@ export { default as BaseDatos } from "./BaseDatos";
 export { default as Ventas } from "./Ventas";
 export { default as Etiquetas } from "./Etiquetas";
 export { default as Gestion } from "./GestionPage";
+export { default as Pedidos } from "./Pedidos";

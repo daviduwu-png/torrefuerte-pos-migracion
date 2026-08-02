@@ -67,6 +67,7 @@ impl Database {
                 -- Stock con decimales
                 facturable INTEGER NOT NULL DEFAULT 1,
                 stock NUMERIC(10, 3) NOT NULL DEFAULT 0,
+                stock_reservado INTEGER NOT NULL DEFAULT 0,
                 precio_compra_incluye_iva INTEGER NOT NULL DEFAULT 0,
                 
                 FOREIGN KEY (categoria_id) REFERENCES categoria(id)
@@ -138,6 +139,156 @@ impl Database {
 
             CREATE INDEX IF NOT EXISTS idx_devolucion_ticket_id ON devolucion(ticket_id);
 
+            -- 7. Tabla Clientes
+            CREATE TABLE IF NOT EXISTS cliente (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre     TEXT NOT NULL,
+                telefono   TEXT,
+                email      TEXT,
+                direccion  TEXT,
+                rfc        TEXT,
+                notas      TEXT,
+                activo     INTEGER NOT NULL DEFAULT 1,
+                fecha_alta DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_cliente_nombre ON cliente(nombre);
+            CREATE INDEX IF NOT EXISTS idx_cliente_activo ON cliente(activo);
+
+            -- 8. Tabla Cuentas por Cobrar
+            CREATE TABLE IF NOT EXISTS cuenta_por_cobrar (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                cliente_id      INTEGER NOT NULL,
+                ticket_id       INTEGER,
+                concepto        TEXT NOT NULL,
+                monto_original  NUMERIC(10,2) NOT NULL,
+                monto_pendiente NUMERIC(10,2) NOT NULL,
+                fecha           DATETIME DEFAULT CURRENT_TIMESTAMP,
+                estado          TEXT NOT NULL DEFAULT 'pendiente'
+                                CHECK(estado IN ('pendiente','abonado','saldado')),
+                FOREIGN KEY (cliente_id) REFERENCES cliente(id),
+                FOREIGN KEY (ticket_id)  REFERENCES ticket(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_cxc_cliente_id ON cuenta_por_cobrar(cliente_id);
+            CREATE INDEX IF NOT EXISTS idx_cxc_estado     ON cuenta_por_cobrar(estado);
+
+            -- 9. Tabla Abonos
+            CREATE TABLE IF NOT EXISTS abono (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                cuenta_id   INTEGER NOT NULL,
+                monto       NUMERIC(10,2) NOT NULL,
+                metodo_pago TEXT NOT NULL DEFAULT 'EFECTIVO',
+                fecha       DATETIME DEFAULT CURRENT_TIMESTAMP,
+                usuario_id  INTEGER,
+                notas       TEXT,
+                FOREIGN KEY (cuenta_id)  REFERENCES cuenta_por_cobrar(id),
+                FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_abono_cuenta_id ON abono(cuenta_id);
+
+            -- 10. Tabla Cotizaciones
+            CREATE TABLE IF NOT EXISTS cotizacion (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                cliente_id  INTEGER,
+                cliente_ref TEXT,
+                total       NUMERIC(10,2) NOT NULL,
+                notas       TEXT,
+                estado      TEXT NOT NULL DEFAULT 'vigente'
+                            CHECK(estado IN ('vigente','enviada','aprobada','cancelada')),
+                usuario_id  INTEGER,
+                fecha       DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (cliente_id) REFERENCES cliente(id),
+                FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_cotizacion_fecha      ON cotizacion(fecha);
+            CREATE INDEX IF NOT EXISTS idx_cotizacion_cliente_id ON cotizacion(cliente_id);
+            CREATE INDEX IF NOT EXISTS idx_cotizacion_estado     ON cotizacion(estado);
+
+            -- 11. Tabla Cotizacion-Producto
+            CREATE TABLE IF NOT EXISTS cotizacion_producto (
+                cotizacion_id   INTEGER NOT NULL,
+                producto_id     INTEGER NOT NULL,
+                cantidad        NUMERIC(10,3) NOT NULL,
+                precio_unitario NUMERIC(10,2) NOT NULL,
+                subtotal        NUMERIC(10,2) NOT NULL,
+                PRIMARY KEY (cotizacion_id, producto_id),
+                FOREIGN KEY (cotizacion_id) REFERENCES cotizacion(id),
+                FOREIGN KEY (producto_id)   REFERENCES producto(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_cot_prod_cotizacion ON cotizacion_producto(cotizacion_id);
+
+            -- 12. Tabla Pedidos a Proveedor
+            CREATE TABLE IF NOT EXISTS pedido_proveedor (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                proveedor  TEXT NOT NULL,
+                marca      TEXT,
+                notas      TEXT,
+                estado     TEXT NOT NULL DEFAULT 'pendiente'
+                           CHECK(estado IN ('pendiente','enviado','recibido','cancelado')),
+                usuario_id INTEGER,
+                fecha      DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_pedido_proveedor ON pedido_proveedor(proveedor);
+            CREATE INDEX IF NOT EXISTS idx_pedido_fecha     ON pedido_proveedor(fecha);
+            CREATE INDEX IF NOT EXISTS idx_pedido_estado    ON pedido_proveedor(estado);
+
+            -- 13. Tabla Pedido-Producto
+            CREATE TABLE IF NOT EXISTS pedido_producto (
+                pedido_id         INTEGER NOT NULL,
+                producto_id       INTEGER NOT NULL,
+                cantidad_pedida   NUMERIC(10,3) NOT NULL,
+                cantidad_recibida NUMERIC(10,3) NOT NULL DEFAULT 0,
+                precio_estimado   NUMERIC(10,2),
+                PRIMARY KEY (pedido_id, producto_id),
+                FOREIGN KEY (pedido_id)   REFERENCES pedido_proveedor(id),
+                FOREIGN KEY (producto_id) REFERENCES producto(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_ped_prod_pedido ON pedido_producto(pedido_id);
+
+            -- 14. Tabla Apartados
+            CREATE TABLE IF NOT EXISTS apartado (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                cliente_id      INTEGER NOT NULL,
+                total           NUMERIC(10,2) NOT NULL,
+                monto_pagado    NUMERIC(10,2) NOT NULL DEFAULT 0,
+                monto_pendiente NUMERIC(10,2) NOT NULL,
+                notas           TEXT,
+                estado          TEXT NOT NULL DEFAULT 'activo'
+                                CHECK(estado IN ('activo','cancelado','liquidado')),
+                usuario_id      INTEGER,
+                fecha           DATETIME DEFAULT CURRENT_TIMESTAMP,
+                fecha_liquidado DATETIME,
+                ticket_id       INTEGER,
+                FOREIGN KEY (cliente_id) REFERENCES cliente(id),
+                FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+                FOREIGN KEY (ticket_id)  REFERENCES ticket(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_apartado_cliente_id ON apartado(cliente_id);
+            CREATE INDEX IF NOT EXISTS idx_apartado_estado     ON apartado(estado);
+            CREATE INDEX IF NOT EXISTS idx_apartado_fecha      ON apartado(fecha);
+
+            -- 15. Tabla Apartado-Producto
+            CREATE TABLE IF NOT EXISTS apartado_producto (
+                apartado_id     INTEGER NOT NULL,
+                producto_id     INTEGER NOT NULL,
+                cantidad        NUMERIC(10,3) NOT NULL,
+                precio_unitario NUMERIC(10,2) NOT NULL,
+                subtotal        NUMERIC(10,2) NOT NULL,
+                PRIMARY KEY (apartado_id, producto_id),
+                FOREIGN KEY (apartado_id) REFERENCES apartado(id),
+                FOREIGN KEY (producto_id) REFERENCES producto(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_apart_prod_apartado ON apartado_producto(apartado_id);
+
             -- DATOS INICIALES
             INSERT OR IGNORE INTO categoria (nombre) VALUES 
                 ('FERRETERIA'),
@@ -164,6 +315,9 @@ impl Database {
 
         // 2. Flag que indica si precio_compra ya incluye IVA (para evitar doble aplicación)
         let _ = conn.execute("ALTER TABLE producto ADD COLUMN precio_compra_incluye_iva INTEGER NOT NULL DEFAULT 0", []);
+
+        // 3. Reserva de stock para apartados
+        let _ = conn.execute("ALTER TABLE producto ADD COLUMN stock_reservado INTEGER NOT NULL DEFAULT 0", []);
         
         let _ = conn.execute_batch("PRAGMA foreign_keys = ON;");
 
