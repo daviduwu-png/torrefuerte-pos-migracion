@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api, Devolucion } from "../../api/tauri";
-import { Search, Filter, Loader2, RotateCcw } from "lucide-react";
+import { Search, Loader2, RotateCcw } from "lucide-react";
 import { StyledSwal as Swal } from "../../utils/swal";
 import { formatFechaHoraCorta, getFechaHoy } from "../../utils/dateFormat";
 import DatePicker from "../../components/ui/DatePicker";
@@ -10,6 +10,8 @@ export default function Devoluciones() {
   const [devoluciones, setDevoluciones] = useState<Devolucion[]>([]);
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+  const [titulo, setTitulo] = useState("Devoluciones de Hoy");
+  const [activeFilter, setActiveFilter] = useState<"hoy" | "semana" | "mes" | "anio" | "custom">("hoy");
 
   // Initial load - maybe load today's returns?
   useEffect(() => {
@@ -44,6 +46,8 @@ export default function Devoluciones() {
       });
       return;
     }
+    setTitulo(`Devoluciones del ${fechaInicio} al ${fechaFin}`);
+    setActiveFilter("custom");
     fetchDevoluciones(fechaInicio, fechaFin);
   };
 
@@ -59,32 +63,33 @@ export default function Devoluciones() {
     if (period === "hoy") {
       start = getFechaHoy();
       end = start;
+      setTitulo("Devoluciones de Hoy");
     } else if (period === "semana") {
       const first = new Date(now.setDate(d - now.getDay()));
       start = first.toISOString().split("T")[0];
       end = getFechaHoy();
+      setTitulo("Devoluciones de la Semana");
     } else if (period === "mes") {
       start = new Date(y, m, 1).toISOString().split("T")[0];
       end = new Date(y, m + 1, 0).toISOString().split("T")[0];
+      setTitulo("Devoluciones del Mes");
     } else if (period === "anio") {
       start = new Date(y, 0, 1).toISOString().split("T")[0];
       end = new Date(y, 11, 31).toISOString().split("T")[0];
+      setTitulo("Devoluciones del Año");
     }
 
     setFechaInicio(start);
     setFechaFin(end);
+    setActiveFilter(period);
     fetchDevoluciones(start, end);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="glass-panel rounded-2xl p-6 border border-white/10 relative z-20">
+    <div className="flex flex-col h-full gap-6 animate-in fade-in duration-300">
+      <div className="glass-panel rounded-2xl p-6 border border-white/10 shrink-0 relative z-20">
         <div className="max-w-4xl mx-auto space-y-6">
-          <h6 className="text-amber-500 font-bold text-xs uppercase flex items-center gap-2 tracking-wider">
-            <Filter className="w-4 h-4" /> Filtrar Devoluciones
-          </h6>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
                 Desde
@@ -105,7 +110,7 @@ export default function Devoluciones() {
                 className="w-full"
               />
             </div>
-            <div className="lg:col-span-2">
+            <div>
               <button
                 onClick={handleSearch}
                 disabled={loading}
@@ -127,7 +132,11 @@ export default function Devoluciones() {
               <button
                 key={period}
                 onClick={() => handleQuickFilter(period as any)}
-                className="py-2.5 px-4 rounded-xl border border-white/5 bg-white/5 hover:bg-amber-500/10 hover:border-amber-500/30 text-slate-300 hover:text-amber-400 text-sm font-medium transition-all capitalize shadow-sm"
+                className={`py-2.5 px-4 rounded-xl border text-sm font-medium transition-all capitalize shadow-sm ${
+                  activeFilter === period
+                    ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                    : "bg-white/5 border-white/5 text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400"
+                }`}
               >
                 {period === "anio"
                   ? "Año Actual"
@@ -139,30 +148,39 @@ export default function Devoluciones() {
       </div>
 
       {/* Results Table */}
-      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 relative z-10">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px]">
-            <thead className="bg-slate-900/50 border-b border-white/5">
+      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 flex-1 flex flex-col min-h-0 relative z-10">
+        <div className="bg-slate-900/50 px-4 sm:px-6 py-4 flex items-center gap-2 border-b border-white/5 shrink-0">
+          <div className="p-1.5 bg-amber-500/20 rounded-lg border border-amber-500/20 shrink-0">
+            <RotateCcw className="w-4 h-4 text-amber-400" />
+          </div>
+          <h3 className="font-bold text-base sm:text-lg text-white truncate">
+            {titulo}
+          </h3>
+        </div>
+
+        <div className="flex-1 overflow-auto custom-scrollbar">
+          <table className="w-full min-w-[600px]">
+            <thead className="bg-slate-900/50 sticky top-0 z-10 shadow-sm border-b border-white/5">
               <tr>
-                <th className="text-left text-xs font-bold text-slate-400 uppercase px-6 py-4 tracking-wider">
+                <th className="text-left text-xs font-bold text-slate-400 uppercase px-4 py-3 tracking-wider">
                   Fecha
                 </th>
-                <th className="text-left text-xs font-bold text-slate-400 uppercase px-6 py-4 tracking-wider">
+                <th className="text-left text-xs font-bold text-slate-400 uppercase px-4 py-3 tracking-wider">
                   Ticket (ID)
                 </th>
-                <th className="text-left text-xs font-bold text-slate-400 uppercase px-6 py-4 tracking-wider">
+                <th className="text-left text-xs font-bold text-slate-400 uppercase px-4 py-3 tracking-wider">
                   Código
                 </th>
-                <th className="text-left text-xs font-bold text-slate-400 uppercase px-6 py-4 tracking-wider">
+                <th className="text-left text-xs font-bold text-slate-400 uppercase px-4 py-3 tracking-wider">
                   Producto
                 </th>
-                <th className="text-center text-xs font-bold text-slate-400 uppercase px-6 py-4 tracking-wider">
+                <th className="text-center text-xs font-bold text-slate-400 uppercase px-4 py-3 tracking-wider">
                   Cant.
                 </th>
-                <th className="text-left text-xs font-bold text-slate-400 uppercase px-6 py-4 tracking-wider">
+                <th className="text-left text-xs font-bold text-slate-400 uppercase px-4 py-3 tracking-wider">
                   Motivo
                 </th>
-                <th className="text-left text-xs font-bold text-slate-400 uppercase px-6 py-4 tracking-wider">
+                <th className="text-left text-xs font-bold text-slate-400 uppercase px-4 py-3 tracking-wider">
                   Usuario
                 </th>
               </tr>
@@ -174,25 +192,25 @@ export default function Devoluciones() {
                     key={dev.id}
                     className="hover:bg-white/5 transition-colors group"
                   >
-                    <td className="px-6 py-4 text-sm text-slate-400 group-hover:text-slate-300 transition-colors">
+                    <td className="px-4 py-3 text-sm text-slate-400 group-hover:text-slate-300 transition-colors">
                       {formatFechaHoraCorta(dev.fecha)}
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono text-amber-500/90 font-medium group-hover:text-amber-400">
+                    <td className="px-4 py-3 text-sm font-mono text-amber-500/90 font-medium group-hover:text-amber-400">
                       {dev.ticket_id}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 font-mono group-hover:text-slate-400">
+                    <td className="px-4 py-3 text-sm text-slate-500 font-mono group-hover:text-slate-400">
                       {dev.codigo_interno || "-"}
                     </td>
-                    <td className="px-6 py-4 text-sm text-white font-medium">
+                    <td className="px-4 py-3 text-sm text-white font-medium">
                       {dev.producto}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-200 text-center font-bold bg-white/5 mx-2 rounded-lg">
+                    <td className="px-4 py-3 text-sm text-slate-200 text-center font-bold bg-white/5 mx-2 rounded-lg">
                       {dev.cantidad}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-400 italic">
+                    <td className="px-4 py-3 text-sm text-slate-400 italic">
                       {dev.motivo || "Sin motivo"}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 group-hover:text-slate-400">
+                    <td className="px-4 py-3 text-sm text-slate-500 group-hover:text-slate-400">
                       {dev.usuario || "Sistema"}
                     </td>
                   </tr>

@@ -4,7 +4,9 @@ import DirectorioClientes from "./clientes/DirectorioClientes";
 import CuentasPorCobrar from "./clientes/CuentasPorCobrar";
 
 export default function ClientesTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"directorio" | "adeudos">("directorio");
+  const [activeSubTab, setActiveSubTab] = useState<"directorio" | "adeudos">(
+    "directorio",
+  );
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300 h-full min-h-0">
@@ -14,9 +16,12 @@ export default function ClientesTab() {
             <Users className="w-5 h-5 text-blue-500" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Gestión de Clientes</h2>
+            <h2 className="text-xl font-bold text-white tracking-tight">
+              Gestión de Clientes
+            </h2>
             <p className="text-sm text-slate-400">
-              Administra cuentas por cobrar y pedidos pendientes de los clientes.
+              Administra cuentas por cobrar y pedidos pendientes de los
+              clientes.
             </p>
           </div>
         </div>
@@ -43,7 +48,7 @@ export default function ClientesTab() {
             }`}
           >
             <Receipt className="w-4 h-4" />
-            Adeudos de Tickets
+            Adeudos
           </button>
         </div>
       </div>

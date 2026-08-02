@@ -28,7 +28,7 @@ export function ProductosSidebar({
     onLimpiarFiltros,
 }: ProductosSidebarProps) {
     return (
-        <div className="w-56 bg-slate-900 rounded-xl border border-slate-800 flex flex-col flex-shrink-0 overflow-hidden">
+        <div className="w-48 xl:w-56 bg-slate-900 rounded-xl border border-slate-800 flex flex-col flex-shrink-0 overflow-hidden">
             <div className="p-4 border-b border-slate-800 bg-slate-900 z-10">
                 <h6 className="font-bold text-slate-300 text-xs uppercase flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4" /> Filtros

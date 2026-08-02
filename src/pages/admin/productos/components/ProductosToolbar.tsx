@@ -28,7 +28,7 @@ export function ProductosToolbar({
                 />
             </div>
 
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
                 <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50 flex items-center gap-3 ">
                     <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
                         <Box className="w-5 h-5 text-blue-400" />

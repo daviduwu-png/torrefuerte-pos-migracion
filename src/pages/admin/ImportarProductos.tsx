@@ -289,7 +289,7 @@ export default function ImportarProductos() {
   };
 
   return (
-    <div className="space-y-4 lg:space-y-6">
+    <div className="space-y-4 xl:space-y-6">
       {stats && (
         <div className="bg-emerald-500/20 text-emerald-400 p-4 rounded-xl border border-emerald-500/30 flex items-center gap-3">
           <CheckCircle className="w-5 h-5 flex-shrink-0" />
@@ -314,7 +314,7 @@ export default function ImportarProductos() {
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
         className={`
-          border-2 border-dashed rounded-xl p-8 lg:p-12 text-center cursor-pointer transition-all duration-300
+          border-2 border-dashed rounded-xl p-6 md:p-8 xl:p-12 text-center cursor-pointer transition-all duration-300
           ${arrastrando
             ? "border-amber-500 bg-amber-500/10"
             : archivo
@@ -333,13 +333,13 @@ export default function ImportarProductos() {
 
         {archivo ? (
           <div className="space-y-3">
-            <div className="w-14 h-14 lg:w-16 lg:h-16 mx-auto bg-emerald-500/20 rounded-xl flex items-center justify-center">
-              <CheckCircle className="w-7 h-7 lg:w-8 lg:h-8 text-emerald-400" />
+            <div className="w-12 h-12 md:w-14 md:h-14 xl:w-16 xl:h-16 mx-auto bg-emerald-500/20 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 md:w-7 md:h-7 xl:w-8 xl:h-8 text-emerald-400" />
             </div>
-            <p className="text-sm lg:text-lg font-medium text-white">
+            <p className="text-sm md:text-base xl:text-lg font-medium text-white">
               {archivo.name}
             </p>
-            <p className="text-xs lg:text-sm text-slate-400">
+            <p className="text-xs xl:text-sm text-slate-400">
               {(archivo.size / 1024).toFixed(1)} KB — {datosProcesados.length}{" "}
               productos detectados
             </p>
@@ -352,7 +352,7 @@ export default function ImportarProductos() {
                 setError(null);
                 setStats(null);
               }}
-              className="text-xs lg:text-sm text-red-400 hover:text-red-300 flex items-center gap-1 mx-auto"
+              className="text-xs xl:text-sm text-red-400 hover:text-red-300 flex items-center gap-1 mx-auto"
             >
               <X className="w-4 h-4" />
               Cancelar
@@ -360,15 +360,15 @@ export default function ImportarProductos() {
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="w-14 h-14 lg:w-16 lg:h-16 mx-auto bg-slate-800 rounded-xl flex items-center justify-center">
-              <CloudUpload className="w-7 h-7 lg:w-8 lg:h-8 text-slate-500" />
+            <div className="w-12 h-12 md:w-14 md:h-14 xl:w-16 xl:h-16 mx-auto bg-slate-800 rounded-xl flex items-center justify-center">
+              <CloudUpload className="w-6 h-6 md:w-7 md:h-7 xl:w-8 xl:h-8 text-slate-500" />
             </div>
-            <p className="text-sm lg:text-lg font-medium text-white">
+            <p className="text-sm md:text-base xl:text-lg font-medium text-white">
               {arrastrando
                 ? "Suelta el archivo aquí"
                 : "Arrastra tu archivo Excel de Truper aquí"}
             </p>
-            <p className="text-xs lg:text-sm text-slate-400">
+            <p className="text-xs xl:text-sm text-slate-400">
               o haz clic para seleccionar
             </p>
           </div>
@@ -376,11 +376,11 @@ export default function ImportarProductos() {
       </div>
 
       {/* Format Info */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 lg:p-5">
-        <h3 className="text-sm lg:text-lg font-semibold text-white mb-3 lg:mb-4">
+      <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 xl:p-5">
+        <h3 className="text-sm md:text-base xl:text-lg font-semibold text-white mb-3 xl:mb-4">
           Columnas Excel TRUPER
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 xl:gap-4">
           {[
             {
               col: "Código",
@@ -397,9 +397,9 @@ export default function ImportarProductos() {
           ].map((item) => (
             <div
               key={item.col}
-              className="bg-slate-800/50 rounded-lg p-3 lg:p-4"
+              className="bg-slate-800/50 rounded-lg p-3 xl:p-4"
             >
-              <span className="text-xs lg:text-sm font-bold text-amber-500 block mb-1">
+              <span className="text-xs xl:text-sm font-bold text-amber-500 block mb-1">
                 {item.col}
               </span>
               <p className="text-xs text-slate-400">{item.example}</p>
@@ -412,12 +412,12 @@ export default function ImportarProductos() {
       {/* Preview Table */}
       {previsualizacion.length > 0 && (
         <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
-          <div className="p-4 lg:p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="p-4 xl:p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h3 className="text-sm lg:text-lg font-semibold text-white">
+              <h3 className="text-sm md:text-base xl:text-lg font-semibold text-white">
                 Previsualización
               </h3>
-              <p className="text-xs lg:text-sm text-slate-400">
+              <p className="text-xs xl:text-sm text-slate-400">
                 Mostrando primeros {previsualizacion.length} de{" "}
                 {datosProcesados.length} productos
               </p>
@@ -425,16 +425,16 @@ export default function ImportarProductos() {
             <button
               onClick={handleImportar}
               disabled={importando}
-              className="flex items-center justify-center gap-2 px-4 lg:px-5 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-700 disabled:text-slate-400 text-slate-900 text-xs lg:text-sm font-bold rounded-lg transition-colors"
+              className="flex items-center justify-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-700 disabled:text-slate-400 text-slate-900 text-xs xl:text-sm font-bold rounded-lg transition-colors"
             >
               {importando ? (
                 <>
-                  <Loader2 className="w-4 h-4 lg:w-5 lg:h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 xl:w-5 xl:h-5 animate-spin" />
                   Procesando Importación...
                 </>
               ) : (
                 <>
-                  <CloudUpload className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <CloudUpload className="w-4 h-4 xl:w-5 xl:h-5" />
                   Confirmar e Importar
                 </>
               )}
@@ -444,16 +444,16 @@ export default function ImportarProductos() {
             <table className="w-full min-w-[500px]">
               <thead className="bg-slate-800/50">
                 <tr>
-                  <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 lg:px-5 py-2 lg:py-3">
+                  <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 xl:px-5 py-2 xl:py-3">
                     Código (Clave)
                   </th>
-                  <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 lg:px-5 py-2 lg:py-3">
+                  <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 xl:px-5 py-2 xl:py-3">
                     Nombre
                   </th>
-                  <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 lg:px-5 py-2 lg:py-3">
+                  <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 xl:px-5 py-2 xl:py-3">
                     Precio Venta
                   </th>
-                  <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 lg:px-5 py-2 lg:py-3">
+                  <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 xl:px-5 py-2 xl:py-3">
                     Unidad
                   </th>
                 </tr>
@@ -464,16 +464,16 @@ export default function ImportarProductos() {
                     key={idx}
                     className="hover:bg-slate-800/30 transition-colors"
                   >
-                    <td className="px-3 lg:px-5 py-3 lg:py-4 text-xs lg:text-sm text-amber-500 font-mono font-medium">
+                    <td className="px-3 xl:px-5 py-2 md:py-3 xl:py-4 text-xs xl:text-sm text-amber-500 font-mono font-medium">
                       {prod.codigo}
                     </td>
-                    <td className="px-3 lg:px-5 py-3 lg:py-4 text-xs lg:text-sm text-white">
+                    <td className="px-3 xl:px-5 py-2 md:py-3 xl:py-4 text-xs xl:text-sm text-white">
                       {prod.nombre}
                     </td>
-                    <td className="px-3 lg:px-5 py-3 lg:py-4 text-xs lg:text-sm text-emerald-400 font-medium">
+                    <td className="px-3 xl:px-5 py-2 md:py-3 xl:py-4 text-xs xl:text-sm text-emerald-400 font-medium">
                       ${prod.precio.toFixed(2)}
                     </td>
-                    <td className="px-3 lg:px-5 py-3 lg:py-4 text-xs lg:text-sm text-slate-300">
+                    <td className="px-3 xl:px-5 py-2 md:py-3 xl:py-4 text-xs xl:text-sm text-slate-300">
                       {prod.unidad}
                     </td>
                   </tr>

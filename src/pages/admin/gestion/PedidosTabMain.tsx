@@ -139,7 +139,7 @@ export default function PedidosTab() {
     <div className="flex flex-col animate-in fade-in duration-300 h-full min-h-0 overflow-hidden">
       {/* Header: título + tabs + acciones en una sola barra */}
       <div className="shrink-0 pb-3 border-b border-white/10 mb-3">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           {/* Título */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
@@ -152,7 +152,7 @@ export default function PedidosTab() {
           </div>
 
           {/* Sub-tabs inline + acciones */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Sub-tabs */}
             <div className="flex items-center gap-1 p-1 bg-slate-900/50 border border-white/5 rounded-xl">
               {tabsConfig.map((tab) => (
