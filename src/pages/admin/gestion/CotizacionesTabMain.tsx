@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FileText,
   FileDown,
@@ -38,8 +38,25 @@ export default function CotizacionesTab() {
     editarPrecio,
     eliminar,
     vaciar,
+    cargarCotizacion,
     total,
   } = useCotizacion();
+
+  useEffect(() => {
+    const data = localStorage.getItem("cotizacion_a_cargar");
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.items && Array.isArray(parsed.items)) {
+          cargarCotizacion(parsed.items);
+          if (parsed.clienteId) {
+            setClienteId(parsed.clienteId.toString());
+          }
+        }
+      } catch (e) {}
+      localStorage.removeItem("cotizacion_a_cargar");
+    }
+  }, [cargarCotizacion]);
 
   const getBase64Image = async (url: string) => {
     const response = await fetch(url);
@@ -71,7 +88,8 @@ export default function CotizacionesTab() {
       const clienteIdNum = clienteId ? parseInt(clienteId) : undefined;
       const res = await api.guardarCotizacion({
         cliente_id: !isNaN(clienteIdNum ?? NaN) ? clienteIdNum : undefined,
-        cliente_ref: clienteId && isNaN(clienteIdNum ?? NaN) ? clienteId : undefined,
+        cliente_ref:
+          clienteId && isNaN(clienteIdNum ?? NaN) ? clienteId : undefined,
         items: items.map((i) => ({
           producto_id: i.producto.id,
           cantidad: i.cantidad,
@@ -81,12 +99,16 @@ export default function CotizacionesTab() {
       });
 
       if (!res.success) {
-        notify.error({ title: "Error", description: res.message, duration: 6000 });
+        notify.error({
+          title: "Error",
+          description: res.message,
+          duration: 6000,
+        });
         setGenerandoPdf(false);
         setGuardandoEnSistema(false);
         return;
       }
-      
+
       nuevoIdCotizacion = res.data?.toString() || "";
 
       // 2. Generar PDF
@@ -109,9 +131,18 @@ export default function CotizacionesTab() {
 
       doc.setFontSize(11);
       const fechaActual = new Date();
-      const fechaFormateada = fechaActual.toLocaleDateString("es-MX", { day: '2-digit', month: '2-digit', year: 'numeric' });
-      const horaFormateada = fechaActual.toLocaleTimeString("es-MX", { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
-      
+      const fechaFormateada = fechaActual.toLocaleDateString("es-MX", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      const horaFormateada = fechaActual.toLocaleTimeString("es-MX", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
       let nombreClienteAMostrar = clienteId;
       if (clienteId && !isNaN(parseInt(clienteId))) {
         try {
@@ -124,7 +155,9 @@ export default function CotizacionesTab() {
         }
       }
 
-      doc.text(`Fecha: ${fechaFormateada} ${horaFormateada}`, 196, 24, { align: "right" });
+      doc.text(`Fecha: ${fechaFormateada} ${horaFormateada}`, 196, 24, {
+        align: "right",
+      });
       if (nombreClienteAMostrar) {
         doc.text(`Cliente: ${nombreClienteAMostrar}`, 60, 40);
       }
@@ -160,11 +193,22 @@ export default function CotizacionesTab() {
       doc.setTextColor(0, 0, 0);
       doc.text(`Total de Cotización: $${total.toFixed(2)}`, 14, finalY);
 
-      const idClienteFormat = clienteId && !isNaN(parseInt(clienteId)) ? `CL-${String(clienteId).padStart(3, "0")}` : "Mostrador";
-      const fechaArchivo = fechaActual.toLocaleDateString("es-MX", { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, "-");
+      const idClienteFormat =
+        clienteId && !isNaN(parseInt(clienteId))
+          ? `CL-${String(clienteId).padStart(3, "0")}`
+          : "Mostrador";
+      const fechaArchivo = fechaActual
+        .toLocaleDateString("es-MX", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+        .replace(/\//g, "-");
       const timeStr = horaFormateada.replace(/:/g, "");
-      
-      doc.save(`Cotizacion_${nuevoIdCotizacion}_${idClienteFormat}_${fechaArchivo}_${timeStr}.pdf`);
+
+      doc.save(
+        `Cotizacion_${nuevoIdCotizacion}_${idClienteFormat}_${fechaArchivo}_${timeStr}.pdf`,
+      );
 
       notify.success({
         title: "Cotización Generada",
@@ -266,7 +310,11 @@ export default function CotizacionesTab() {
             <button
               onClick={handleConvertirApartado}
               disabled={creandoApartado || items.length === 0 || !clienteId}
-              title={!clienteId ? "Selecciona un cliente registrado para apartar mercancía" : undefined}
+              title={
+                !clienteId
+                  ? "Selecciona un cliente registrado para apartar mercancía"
+                  : undefined
+              }
               className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {creandoApartado ? (
@@ -278,7 +326,9 @@ export default function CotizacionesTab() {
             </button>
             <button
               onClick={handleGuardarYGenerar}
-              disabled={guardandoEnSistema || generandoPdf || items.length === 0}
+              disabled={
+                guardandoEnSistema || generandoPdf || items.length === 0
+              }
               className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               {guardandoEnSistema || generandoPdf ? (
@@ -286,7 +336,9 @@ export default function CotizacionesTab() {
               ) : (
                 <FileDown className="w-3.5 h-3.5" />
               )}
-              {guardandoEnSistema || generandoPdf ? "Procesando..." : "Guardar y Exportar"}
+              {guardandoEnSistema || generandoPdf
+                ? "Procesando..."
+                : "Guardar y Exportar"}
             </button>
           </div>
         </div>
@@ -301,7 +353,7 @@ export default function CotizacionesTab() {
                 <User className="w-4 h-4" />
                 Cliente
               </label>
-              
+
               <div className="relative group">
                 <button
                   type="button"
@@ -310,26 +362,39 @@ export default function CotizacionesTab() {
                   className="w-full flex items-center justify-between px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white hover:border-blue-500/50 focus:border-blue-500/50 outline-none transition-all disabled:opacity-50 text-left"
                 >
                   <span className="truncate">
-                    {cargandoClientes ? "Cargando..." : 
-                     clienteId 
-                       ? `CL-${String(clienteId).padStart(3, "0")} - ${clientes.find(c => c.id.toString() === clienteId)?.nombre || ""}`
-                       : "-- Cliente de Mostrador --"
-                    }
+                    {cargandoClientes
+                      ? "Cargando..."
+                      : clienteId
+                        ? `CL-${String(clienteId).padStart(3, "0")} - ${clientes.find((c) => c.id.toString() === clienteId)?.nombre || ""}`
+                        : "-- Cliente de Mostrador --"}
                   </span>
-                  <svg className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${clienteDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${clienteDropdownOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
 
                 {clienteDropdownOpen && (
                   <>
-                    <div 
-                      className="fixed inset-0 z-10" 
+                    <div
+                      className="fixed inset-0 z-10"
                       onClick={() => setClienteDropdownOpen(false)}
                     />
                     <div className="absolute top-full left-0 right-0 mt-2 py-2 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-20 animate-in fade-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto custom-scrollbar">
                       <button
-                        onClick={() => { setClienteId(""); setClienteDropdownOpen(false); }}
+                        onClick={() => {
+                          setClienteId("");
+                          setClienteDropdownOpen(false);
+                        }}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                           !clienteId
                             ? "bg-blue-500/20 text-blue-400 font-bold border-l-2 border-blue-500"
@@ -338,18 +403,23 @@ export default function CotizacionesTab() {
                       >
                         -- Cliente de Mostrador --
                       </button>
-                      
+
                       {clientes.map((c) => (
                         <button
                           key={c.id}
-                          onClick={() => { setClienteId(c.id.toString()); setClienteDropdownOpen(false); }}
+                          onClick={() => {
+                            setClienteId(c.id.toString());
+                            setClienteDropdownOpen(false);
+                          }}
                           className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                             clienteId === c.id.toString()
                               ? "bg-blue-500/20 text-blue-400 font-bold border-l-2 border-blue-500"
                               : "text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
                           }`}
                         >
-                          <span className="font-mono text-xs opacity-60 mr-2">CL-{String(c.id).padStart(3, "0")}</span>
+                          <span className="font-mono text-xs opacity-60 mr-2">
+                            CL-{String(c.id).padStart(3, "0")}
+                          </span>
                           {c.nombre}
                         </button>
                       ))}

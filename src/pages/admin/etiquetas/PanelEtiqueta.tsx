@@ -26,8 +26,6 @@ export function PanelEtiqueta({
   const [copias, setCopias] = useState(1);
   const [guardando, setGuardando] = useState(false);
   const [imprimiendo, setImprimiendo] = useState(false);
-  const [impresoraDestino, setImpresoraDestino] = useState<"1" | "2">("2");
-
   const tieneCodigo = !!producto.codigo_barras;
   const codigoValido = codigo.trim().length >= 4;
   const esEan13 = /^\d{13}$/.test(codigo.trim());
@@ -75,7 +73,11 @@ export function PanelEtiqueta({
           copias,
         },
       ];
-      const res = await api.imprimirCodigosBarras(items, impresoraDestino);
+      const target = localStorage.getItem("printer_etiquetas") || "auto";
+      const res = await api.imprimirCodigosBarras(
+        items,
+        target === "auto" ? undefined : target,
+      );
       if (res.success) {
         notify.success({
           title: "¡Enviado a imprimir!",
@@ -191,31 +193,10 @@ export function PanelEtiqueta({
           </div>
         </div>
 
-        {/* Selección de Impresora */}
-        <div className="flex-1">
-          <label className="block text-xs text-slate-400 mb-1">Impresora</label>
-          <div className="flex bg-slate-800 rounded-lg p-1">
-            <button
-              onClick={() => setImpresoraDestino("1")}
-              className={`flex-1 py-1 text-xs font-medium rounded-md transition-colors ${
-                impresoraDestino === "1"
-                  ? "bg-slate-600 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-300"
-              }`}
-            >
-              1
-            </button>
-            <button
-              onClick={() => setImpresoraDestino("2")}
-              className={`flex-1 py-1 text-xs font-medium rounded-md transition-colors ${
-                impresoraDestino === "2"
-                  ? "bg-slate-600 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-300"
-              }`}
-            >
-              2
-            </button>
-          </div>
+        <div className="flex-1 flex flex-col justify-end pb-1">
+          <p className="text-xs text-slate-500 italic">
+            La impresora se gestiona en Configuración.
+          </p>
         </div>
       </div>
 

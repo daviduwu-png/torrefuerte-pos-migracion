@@ -14,6 +14,7 @@ import {
   Tag,
   Users,
   Truck,
+  Settings,
 } from "lucide-react";
 import torreLogo from "../../assets/torre.png";
 interface NavItem {
@@ -81,6 +82,11 @@ const adminNavItems: NavItem[] = [
     path: "/admin/pedidos",
     label: "Pedidos",
     icon: <Truck className="w-6 h-6" />,
+  },
+  {
+    path: "/admin/configuracion",
+    label: "Configuración",
+    icon: <Settings className="w-6 h-6" />,
   },
 ];
 

@@ -5,7 +5,7 @@ use tauri::command;
 /// Imprime una página de prueba mínima para verificar que la impresora responde.
 /// No requiere datos de BD: solo imprime un banner, fecha/hora actual y un corte.
 #[command]
-pub fn imprimir_test() -> ApiResponse<()> {
+pub async fn imprimir_test(impresora: Option<String>) -> ApiResponse<()> {
     use chrono::Local;
 
     let fecha_hora = Local::now().format("%d/%m/%Y %H:%M:%S").to_string();
@@ -38,7 +38,7 @@ pub fn imprimir_test() -> ApiResponse<()> {
     p.feed(4);
     p.cut();
 
-    match send_to_printer(&p.buffer, None) {
+    match send_to_printer(&p.buffer, impresora.as_deref()) {
         Ok(_) => ApiResponse::success("Página de prueba enviada", ()),
         Err(e) => ApiResponse::error(&e),
     }

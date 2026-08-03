@@ -12,6 +12,17 @@ export default function Gestion() {
     setActiveTab(tab);
   };
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail === "cotizaciones" || detail === "clientes" || detail === "apartados") {
+        setActiveTab(detail);
+      }
+    };
+    window.addEventListener("cambiarTabGestion", handler);
+    return () => window.removeEventListener("cambiarTabGestion", handler);
+  }, []);
+
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {

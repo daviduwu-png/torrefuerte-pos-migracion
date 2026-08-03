@@ -95,51 +95,31 @@ export default function BaseDatos() {
     if (result.isConfirmed) {
       setLoading(true);
       try {
-        const reader = new FileReader();
-        reader.readAsDataURL(restoreFile);
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const b64 = reader.result?.toString().split(",")[1];
+            if (!b64) reject(new Error("Error al leer el archivo"));
+            else resolve(b64);
+          };
+          reader.onerror = () => reject(new Error("Error al leer el archivo"));
+          reader.readAsDataURL(restoreFile);
+        });
 
-        reader.onload = async () => {
-          const base64 = reader.result?.toString().split(",")[1];
+        const res = await api.restaurarBaseDatos(base64);
 
-          if (!base64) {
-            throw new Error("Error al leer el archivo");
-          }
-
-          try {
-            const res = await api.restaurarBaseDatos(base64);
-
-            if (res.success) {
-              await Swal.fire({
-                title: "¡Éxito!",
-                text: "Base de datos restaurada. El sistema se reiniciará ahora.",
-                icon: "success",
-                confirmButtonColor: "#3b82f6",
-              }).then(() => {
-                window.location.reload();
-              });
-            } else {
-              throw new Error(res.message);
-            }
-          } catch (error: any) {
-            console.error(error);
-            await Swal.fire({
-              title: "Error",
-              text: error.message || "Fallo en la restauración",
-              icon: "error",
-            });
-          } finally {
-            setLoading(false);
-          }
-        };
-
-        reader.onerror = () => {
-          setLoading(false);
-          Swal.fire({
-            title: "Error",
-            text: "Error al leer el archivo",
-            icon: "error",
+        if (res.success) {
+          await Swal.fire({
+            title: "¡Éxito!",
+            text: "Base de datos restaurada. El sistema se reiniciará ahora.",
+            icon: "success",
+            confirmButtonColor: "#3b82f6",
+          }).then(() => {
+            window.location.reload();
           });
-        };
+        } else {
+          throw new Error(res.message);
+        }
       } catch (error: any) {
         console.error(error);
         await Swal.fire({

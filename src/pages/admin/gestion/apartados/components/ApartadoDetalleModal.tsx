@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Save, DollarSign, CheckCircle, Package } from "lucide-react";
 import {
@@ -28,7 +28,7 @@ export function ApartadoDetalleModal({
   const [metodoPago, setMetodoPago] = useState("Efectivo");
 
   // Load details
-  useState(() => {
+  useEffect(() => {
     let mounted = true;
     api.obtenerApartado(apartadoId).then((res) => {
       if (mounted) {
@@ -46,7 +46,7 @@ export function ApartadoDetalleModal({
     return () => {
       mounted = false;
     };
-  });
+  }, [apartadoId, onClose]);
 
   const handleAbonar = async () => {
     const monto = parseFloat(montoAbono);
@@ -89,7 +89,7 @@ export function ApartadoDetalleModal({
   const handleLiquidar = async () => {
     const result = await StyledSwal.fire({
       title: "¿Liquidar apartado?",
-      text: "Se generará un ticket de venta y se descontará el stock real. ¿Método de pago final?",
+      text: "Se generará el ticket de venta final. ¿Cuál fue el método de pago?",
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Efectivo",
@@ -243,7 +243,9 @@ export function ApartadoDetalleModal({
           {/* Historial de Abonos Table */}
           {abonos && abonos.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-white mb-3">Historial de Pagos</h3>
+              <h3 className="text-sm font-semibold text-white mb-3">
+                Historial de Pagos
+              </h3>
               <div className="bg-slate-950/50 rounded-xl border border-white/5 overflow-x-auto custom-scrollbar">
                 <table className="w-full text-sm text-left">
                   <thead className="text-xs text-slate-400 bg-white/[0.02] border-b border-white/5 uppercase">
@@ -258,7 +260,15 @@ export function ApartadoDetalleModal({
                     {abonos.map((abono) => (
                       <tr key={abono.id} className="hover:bg-white/[0.02]">
                         <td className="px-4 py-3 text-slate-300">
-                          {new Date(abono.fecha + "Z").toLocaleDateString("es-MX", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          {new Date(
+                            abono.fecha.replace(" ", "T"),
+                          ).toLocaleDateString("es-MX", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </td>
                         <td className="px-4 py-3 text-white">
                           <span className="px-2 py-1 bg-slate-800 rounded-md text-xs border border-white/10 uppercase">
