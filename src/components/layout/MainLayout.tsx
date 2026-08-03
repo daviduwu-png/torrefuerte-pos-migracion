@@ -19,6 +19,7 @@ import {
   Tag,
   Users,
   Truck,
+  Settings,
 } from "lucide-react";
 
 interface MainLayoutProps {
@@ -103,6 +104,13 @@ const getPageInfo = (pathname: string) => {
       subtitle: "Órdenes a Proveedor",
       icon: Truck,
       color: "emerald",
+    };
+  if (pathname.includes("/admin/configuracion"))
+    return {
+      title: "Configuración",
+      subtitle: "Sistema",
+      icon: Settings,
+      color: "slate",
     };
 
   // Vendedor Routes

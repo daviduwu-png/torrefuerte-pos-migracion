@@ -14,6 +14,7 @@ import {
   Etiquetas,
   Gestion,
   Pedidos,
+  Configuracion,
 } from "./pages/admin";
 import { VendedorDashboard, CorteCaja } from "./pages/vendedor";
 
@@ -52,6 +53,7 @@ function App() {
           <Route path="etiquetas" element={<Etiquetas />} />
           <Route path="gestion" element={<Gestion />} />
           <Route path="pedidos" element={<Pedidos />} />
+          <Route path="configuracion" element={<Configuracion />} />
         </Route>
 
         {/* Vendedor Routes */}

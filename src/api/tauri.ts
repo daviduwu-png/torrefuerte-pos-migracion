@@ -1,7 +1,8 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 import type {
-  // Autenticación
+  // Autenticación & Usuarios
   Usuario,
+  UsuarioInput,
   LoginResponse,
   // Genérico
   ApiResponse,
@@ -47,6 +48,7 @@ import type {
 
 export type {
   Usuario,
+  UsuarioInput,
   LoginResponse,
   ApiResponse,
   Categoria,
@@ -112,6 +114,16 @@ export const api = {
 
   getCurrentUser: async (): Promise<Usuario | null> =>
     invoke("get_current_user"),
+
+  // ── Usuarios ─────────────────────────────────────────────
+  listarUsuarios: async (): Promise<ApiResponse<Usuario[]>> =>
+    invoke("listar_usuarios"),
+
+  guardarUsuario: async (usuario: UsuarioInput): Promise<ApiResponse<number>> =>
+    invoke("guardar_usuario", { usuario }),
+
+  eliminarUsuario: async (id: number): Promise<ApiResponse<void>> =>
+    invoke("eliminar_usuario", { id }),
 
   // ── Productos ────────────────────────────────────────────
   buscarProducto: async (query: string): Promise<ApiResponse<Producto[]>> =>
@@ -216,6 +228,12 @@ export const api = {
   rellenarStockMasivo: async (): Promise<ApiResponse<string>> =>
     invoke("rellenar_stock_masivo", {}),
 
+  obtenerConfiguracion: async (): Promise<ApiResponse<Record<string, string>>> =>
+    invoke("obtener_configuracion"),
+
+  guardarConfiguracion: async (config: Record<string, string>): Promise<ApiResponse<void>> =>
+    invoke("guardar_configuracion", { config }),
+
   // ── Importación ──────────────────────────────────────────
   importarProductosTruper: async (
     productos: ProductoInput[],
@@ -223,19 +241,39 @@ export const api = {
     invoke("importar_productos_truper", { productos }),
 
   // ── Impresión ────────────────────────────────────────────
-  imprimirTicket: async (ticketId: number): Promise<ApiResponse<void>> =>
-    invoke("imprimir_ticket", { ticketId }),
+  listarImpresoras: async (): Promise<ApiResponse<string>> =>
+    invoke("listar_impresoras"),
 
-  imprimirCorte: async (corte: CorteCaja): Promise<ApiResponse<void>> =>
-    invoke("imprimir_corte", { corte }),
+  registrarImpresoraCups: async (nombre: string, uri: string): Promise<ApiResponse<void>> =>
+    invoke("registrar_impresora_cups", { nombre, uri }),
 
-  imprimirTest: async (): Promise<ApiResponse<void>> => invoke("imprimir_test"),
+  imprimirTicket: async (
+    ticketId: number,
+    impresora?: string,
+  ): Promise<ApiResponse<void>> => {
+    const target = impresora ?? localStorage.getItem("printer_tickets") ?? undefined;
+    return invoke("imprimir_ticket", { ticketId, impresora: target === "auto" ? undefined : target });
+  },
+
+  imprimirCorte: async (
+    corte: CorteCaja,
+    impresora?: string,
+  ): Promise<ApiResponse<void>> => {
+    const target = impresora ?? localStorage.getItem("printer_tickets") ?? undefined;
+    return invoke("imprimir_corte", { corte, impresora: target === "auto" ? undefined : target });
+  },
+
+  imprimirTest: async (impresora?: string): Promise<ApiResponse<void>> => {
+    return invoke("imprimir_test", { impresora: impresora === "auto" ? undefined : impresora });
+  },
 
   imprimirCodigosBarras: async (
     items: ItemEtiqueta[],
     impresora?: string,
-  ): Promise<ApiResponse<void>> =>
-    invoke("imprimir_codigos_barras", { items, impresora }),
+  ): Promise<ApiResponse<void>> => {
+    const target = impresora ?? localStorage.getItem("printer_etiquetas") ?? undefined;
+    return invoke("imprimir_codigos_barras", { items, impresora: target === "auto" ? undefined : target });
+  },
 
   asignarCodigoBarras: async (
     productoId: number,

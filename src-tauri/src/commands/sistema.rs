@@ -4,6 +4,7 @@ use chrono::Local;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::State;
+use std::collections::HashMap;
 
 // ==================== SISTEMA / BACKUPS ====================
 
@@ -166,6 +167,59 @@ pub fn restaurar_base_datos(
             }
             ApiResponse::error(&format!("Error al copiar nueva base de datos: {}", e))
         }
+    }
+}
+
+// ==================== CONFIGURACION ====================
+
+#[tauri::command]
+pub fn obtener_configuracion(state: State<AppState>) -> ApiResponse<HashMap<String, String>> {
+    let conn = state.db.conn.lock().unwrap();
+    let mut stmt = match conn.prepare("SELECT clave, valor FROM configuracion") {
+        Ok(s) => s,
+        Err(e) => return ApiResponse::error(&format!("Error preparando consulta: {}", e)),
+    };
+    
+    let mut config = HashMap::new();
+    let rows = stmt.query_map([], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+    });
+    
+    match rows {
+        Ok(iter) => {
+            for row in iter {
+                if let Ok((k, v)) = row {
+                    config.insert(k, v);
+                }
+            }
+            ApiResponse::success("Configuración obtenida", config)
+        },
+        Err(e) => ApiResponse::error(&format!("Error leyendo configuración: {}", e))
+    }
+}
+
+#[tauri::command]
+pub fn guardar_configuracion(
+    config: HashMap<String, String>,
+    state: State<AppState>
+) -> ApiResponse<()> {
+    let mut conn = state.db.conn.lock().unwrap();
+    let tx = match conn.transaction() {
+        Ok(t) => t,
+        Err(e) => return ApiResponse::error(&format!("Error iniciando transacción: {}", e)),
+    };
+    
+    for (k, v) in config {
+        let _ = tx.execute(
+            "INSERT INTO configuracion (clave, valor) VALUES (?1, ?2) 
+             ON CONFLICT(clave) DO UPDATE SET valor=excluded.valor",
+            [&k, &v]
+        );
+    }
+    
+    match tx.commit() {
+        Ok(_) => ApiResponse::success("Configuración guardada", ()),
+        Err(e) => ApiResponse::error(&format!("Error guardando configuración: {}", e)),
     }
 }
 

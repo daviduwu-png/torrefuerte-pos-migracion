@@ -73,7 +73,7 @@ export function CotizacionesClienteModal({ open, onClose, cliente }: Props) {
         doc.text(`Cotización #${id}`, 60, 32);
 
         doc.setFontSize(11);
-        const fechaCot = new Date(cotizacion.fecha);
+        const fechaCot = new Date(cotizacion.fecha.replace(" ", "T"));
         const fechaFormateada = fechaCot.toLocaleDateString("es-MX", { day: '2-digit', month: '2-digit', year: 'numeric' });
         const horaFormateada = fechaCot.toLocaleTimeString("es-MX", { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
         
@@ -181,7 +181,7 @@ export function CotizacionesClienteModal({ open, onClose, cliente }: Props) {
                       </span>
                     </div>
                     <div className="text-xs text-slate-400 flex items-center gap-2">
-                      <span>{new Date(cotizacion.fecha).toLocaleDateString("es-MX", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>{new Date(cotizacion.fecha.replace(" ", "T")).toLocaleDateString("es-MX", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       {cotizacion.notas && (
                         <>
                           <span className="w-1 h-1 bg-slate-600 rounded-full" />

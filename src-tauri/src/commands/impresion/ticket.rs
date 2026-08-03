@@ -6,7 +6,7 @@ use tauri::{command, State};
 
 /// Imprime el ticket de venta completo dado su ID.
 #[command]
-pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()> {
+pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<AppState>) -> ApiResponse<()> {
     let conn = state.db.conn.lock().unwrap();
 
     // 1. Obtener cabecera
@@ -81,32 +81,24 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     p.left();
     p.text(&format!("Ticket: {}\n", ticket.id));
 
-    // Formatear fecha de "YYYY-MM-DD HH:MM:SS" a "DD/MM/YYYY HH:MM"
-    let fecha_fmt: String = {
-        let partes: Vec<&str> = ticket.fecha.split_whitespace().collect();
-        if partes.len() >= 2 {
-            let f: Vec<&str> = partes[0].split('-').collect();
-            let hora = partes[1].get(..8).unwrap_or(partes[1]);
-            if f.len() == 3 {
-                format!("{}/{}/{} {}", f[2], f[1], f[0], hora)
-            } else {
-                ticket.fecha.clone()
-            }
-        } else {
-            ticket.fecha.clone()
+    let mut fecha_fmt: String = ticket.fecha.clone();
+    let partes: Vec<&str> = ticket.fecha.split_whitespace().collect();
+    if partes.len() >= 2 {
+        let f: Vec<&str> = partes[0].split('-').collect();
+        let hora = partes[1].get(..8).unwrap_or(partes[1]);
+        if f.len() == 3 {
+            fecha_fmt = format!("{}/{}/{} {}", f[2], f[1], f[0], hora);
         }
-    };
+    }
     p.text(&format!("Fecha:  {}\n", fecha_fmt));
     p.text_raw("--------------------------------\n");
 
     // Línea por producto
     for prod in &productos {
-        let nombre: String = sanitize_text(&prod.nombre);
-        let nombre: String = if nombre.len() > 32 {
-            format!("{}...", &nombre[..29])
-        } else {
-            nombre
-        };
+        let mut nombre: String = sanitize_text(&prod.nombre);
+        if nombre.len() > 32 {
+            nombre = format!("{}...", &nombre[..29]);
+        }
         p.text_raw(&format!("{}\n", nombre));
 
         let detalles = format!("{} x ${:.2}", prod.cantidad, prod.precio_unitario);
@@ -150,7 +142,7 @@ pub fn imprimir_ticket(ticket_id: i64, state: State<AppState>) -> ApiResponse<()
     p.cut();
     p.pulse();
 
-    match send_to_printer(&p.buffer, None) {
+    match send_to_printer(&p.buffer, impresora.as_deref()) {
         Ok(_) => ApiResponse::success("Ticket enviado a impresión", ()),
         Err(e) => ApiResponse::error(&e),
     }

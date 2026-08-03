@@ -7,6 +7,7 @@ pub mod clientes;
 pub mod cotizaciones;
 pub mod pedidos;
 pub mod apartados;
+pub mod usuarios;
 
 pub use productos::*;
 pub use ventas::*;
@@ -16,3 +17,4 @@ pub use clientes::*;
 pub use cotizaciones::*;
 pub use pedidos::*;
 pub use apartados::*;
+pub use usuarios::*;

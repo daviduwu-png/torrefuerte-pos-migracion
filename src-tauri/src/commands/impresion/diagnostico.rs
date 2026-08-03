@@ -4,7 +4,7 @@ use tauri::command;
 
 /// Lista las impresoras disponibles en el sistema (CUPS / dispositivos USB).
 #[command]
-pub fn listar_impresoras() -> ApiResponse<String> {
+pub async fn listar_impresoras() -> ApiResponse<String> {
     #[cfg(windows)]
     {
         // Windows: listar con PowerShell
@@ -106,5 +106,39 @@ pub fn listar_impresoras() -> ApiResponse<String> {
     #[cfg(not(any(windows, target_os = "linux")))]
     {
         ApiResponse::error("Listado de impresoras no soportado en este sistema operativo.")
+    }
+}
+
+/// Registra una impresora en CUPS usando el modo raw. Requiere permisos (usará pkexec).
+#[command]
+pub async fn registrar_impresora_cups(nombre: String, uri: String) -> ApiResponse<()> {
+    #[cfg(target_os = "linux")]
+    {
+        // Sanitizar inputs básicos
+        let nombre = nombre.replace(" ", "_");
+        
+        let status = Command::new("pkexec")
+            .args([
+                "lpadmin",
+                "-p",
+                &nombre,
+                "-E",
+                "-v",
+                &uri,
+                "-m",
+                "raw",
+            ])
+            .status();
+
+        match status {
+            Ok(s) if s.success() => ApiResponse::success(&format!("Impresora {} registrada exitosamente.", nombre), ()),
+            Ok(s) => ApiResponse::error(&format!("Error al registrar: el comando salió con código {}", s)),
+            Err(e) => ApiResponse::error(&format!("Error ejecutando pkexec: {}", e)),
+        }
+    }
+    
+    #[cfg(not(target_os = "linux"))]
+    {
+        ApiResponse::error("El registro por CUPS solo está soportado en Linux.")
     }
 }

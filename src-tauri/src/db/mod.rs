@@ -289,6 +289,12 @@ impl Database {
 
             CREATE INDEX IF NOT EXISTS idx_apart_prod_apartado ON apartado_producto(apartado_id);
 
+            -- 16. Tabla Configuración
+            CREATE TABLE IF NOT EXISTS configuracion (
+                clave TEXT PRIMARY KEY,
+                valor TEXT NOT NULL
+            );
+
             -- DATOS INICIALES
             INSERT OR IGNORE INTO categoria (nombre) VALUES 
                 ('FERRETERIA'),
@@ -299,6 +305,15 @@ impl Database {
             INSERT OR IGNORE INTO usuario (nombre, email, contraseña, rol) VALUES 
                 ('administrador', 'admin@torrefuerte.com', '$2y$10$XYXG6aJqWs.qhbIZRsjxo.KIwYdFnwAYlCT0SLgxBLj06KHx5NBAC', 'admin'),
                 ('vendedor', 'vendedor@torrefuerte.com', '$2y$10$XYXG6aJqWs.qhbIZRsjxo.KIwYdFnwAYlCT0SLgxBLj06KHx5NBAC', 'normal');
+
+            INSERT OR IGNORE INTO configuracion (clave, valor) VALUES 
+                ('ticket_nombre_local', 'TORRE FUERTE'),
+                ('ticket_rfc', 'NIGA0412116D7'),
+                ('ticket_direccion_1', '9 PONIENTE 907,'),
+                ('ticket_direccion_2', 'COL ALVARO OBREGON'),
+                ('ticket_direccion_3', 'ATLIXCO PUEBLA C.P 74260'),
+                ('ticket_mensaje', 'Gracias por su compra'),
+                ('sistema_tema', 'dark');
             "#
         )?;
         

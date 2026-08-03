@@ -7,7 +7,7 @@ mod models;
 use commands::impresion::ticket::imprimir_ticket;
 use commands::impresion::corte::imprimir_corte;
 use commands::impresion::test_page::imprimir_test;
-use commands::impresion::diagnostico::listar_impresoras;
+use commands::impresion::diagnostico::{listar_impresoras, registrar_impresora_cups};
 use commands::impresion::barcode::imprimir_codigos_barras;
 use commands::impresion::barcode::asignar_codigo_barras;
 
@@ -59,6 +59,7 @@ pub fn run() {
             imprimir_corte,
             imprimir_test,
             listar_impresoras,
+            registrar_impresora_cups,
             imprimir_codigos_barras,
             asignar_codigo_barras,
             
@@ -90,12 +91,19 @@ pub fn run() {
             // Sistema
             commands::crear_respaldo,
             commands::restaurar_base_datos,
+            commands::obtener_configuracion,
+            commands::guardar_configuracion,
 
             // Clientes — Directorio
             commands::listar_clientes,
             commands::obtener_cliente,
             commands::guardar_cliente,
             commands::eliminar_cliente,
+
+            // Usuarios
+            commands::listar_usuarios,
+            commands::guardar_usuario,
+            commands::eliminar_usuario,
 
             // Cotizaciones
             commands::guardar_cotizacion,
