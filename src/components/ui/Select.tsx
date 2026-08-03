@@ -3,7 +3,8 @@ import { ChevronDown } from "lucide-react";
 
 interface Option {
   value: string;
-  label: string;
+  label: React.ReactNode;
+  disabled?: boolean;
 }
 
 interface SelectProps {
@@ -54,12 +55,19 @@ export function Select({ value, onChange, options, className = "", disabled = fa
               <li key={option.value}>
                 <button
                   type="button"
+                  disabled={option.disabled}
                   onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
+                    if (!option.disabled) {
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }
                   }}
-                  className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-slate-700/80 ${
-                    value === option.value ? "bg-blue-500/20 text-blue-300 font-medium" : "text-slate-200"
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                    option.disabled
+                      ? "opacity-50 cursor-not-allowed text-slate-500"
+                      : value === option.value
+                      ? "bg-blue-500/20 text-blue-300 font-medium hover:bg-slate-700/80"
+                      : "text-slate-200 hover:bg-slate-700/80"
                   }`}
                 >
                   {option.label}

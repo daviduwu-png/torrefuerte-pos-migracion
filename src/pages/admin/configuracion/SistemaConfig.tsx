@@ -164,12 +164,31 @@ export function SistemaConfig() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-400 mb-1">Tasa de IVA (%)</label>
-              <input 
-                type="number" 
-                value={iva}
-                onChange={(e) => setIva(e.target.value)}
-                className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors border border-slate-700 bg-slate-800/80" 
-              />
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled
+                    className="w-8 h-8 flex items-center justify-center shrink-0 bg-slate-700 rounded-full border border-slate-600 text-white font-bold opacity-50 cursor-not-allowed"
+                  >
+                    -
+                  </button>
+                  <input 
+                    type="number" 
+                    value="16"
+                    disabled
+                    className="w-full text-center px-3 py-1.5 rounded-lg text-sm text-slate-400 font-bold border border-slate-700 bg-slate-800/40 cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                  />
+                  <button
+                    type="button"
+                    disabled
+                    className="w-8 h-8 flex items-center justify-center shrink-0 bg-slate-700 rounded-full border border-slate-600 text-white font-bold opacity-50 cursor-not-allowed"
+                  >
+                    +
+                  </button>
+                </div>
+                <p className="text-[10px] text-blue-400 mt-1.5">Fijo al estándar nacional (16%) temporalmente</p>
+              </div>
             </div>
           </div>
           <p className="text-xs text-slate-500 mt-3">Estos datos se utilizarán por defecto al calcular impuestos y mostrar precios en todo el sistema.</p>

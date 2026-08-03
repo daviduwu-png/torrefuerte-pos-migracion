@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Select } from "./Select";
 
 interface DatePickerProps {
   value: string;
@@ -190,40 +191,25 @@ export default function DatePicker({
             </button>
 
             <div className="flex items-center gap-1.5">
-              <select
-                value={viewMonth}
-                onChange={(e) => setViewMonth(Number(e.target.value))}
-                className="bg-slate-100 border border-slate-300 rounded-md text-xs text-slate-900 font-semibold px-1 py-0.5 outline-none cursor-pointer"
-              >
-                {MESES.map((m, i) => {
+              <Select
+                value={String(viewMonth)}
+                onChange={(val) => setViewMonth(Number(val))}
+                options={MESES.map((m, i) => {
                   const disabled =
                     maxParsed !== null &&
                     viewYear === maxParsed.year &&
                     i > maxParsed.month;
-                  return (
-                    <option
-                      key={m}
-                      value={i}
-                      disabled={disabled}
-                      className="text-slate-900 bg-white"
-                    >
-                      {m}
-                    </option>
-                  );
+                  return { value: String(i), label: m, disabled };
                 })}
-              </select>
+                className="w-28"
+              />
 
-              <select
-                value={viewYear}
-                onChange={(e) => setViewYear(Number(e.target.value))}
-                className="bg-slate-100 border border-slate-300 rounded-md text-xs text-slate-900 font-semibold px-1 py-0.5 outline-none cursor-pointer"
-              >
-                {years.map((y) => (
-                  <option key={y} value={y} className="text-slate-900 bg-white">
-                    {y}
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={String(viewYear)}
+                onChange={(val) => setViewYear(Number(val))}
+                options={years.map((y) => ({ value: String(y), label: String(y) }))}
+                className="w-20"
+              />
             </div>
 
             <button

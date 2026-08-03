@@ -1,7 +1,8 @@
 import { Categoria } from "../../../../api/tauri";
 import { ProductoInput } from "../types";
 import { UNIDADES_MEDIDA } from "../types";
-import { ChevronDown, Receipt } from "lucide-react";
+import { Receipt } from "lucide-react";
+import { Select } from "../../../../components/ui/Select";
 
 interface ProductoFormProps {
     formData: ProductoInput;
@@ -165,20 +166,12 @@ export function ProductoForm({
                         <label className="text-xs font-bold text-slate-500 uppercase h-5 flex items-center">
                             Categoría
                         </label>
-                        <div className="relative">
-                            <select
-                                value={formData.categoria_id}
-                                onChange={(e) => set({ categoria_id: Number(e.target.value) })}
-                                className={inputCls + " appearance-none cursor-pointer pr-10"}
-                            >
-                                {categorias.map((c) => (
-                                    <option key={c.id} value={c.id} className="bg-slate-900">
-                                        {c.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                        </div>
+                        <Select
+                            value={String(formData.categoria_id)}
+                            onChange={(val) => set({ categoria_id: Number(val) })}
+                            options={categorias.map((c) => ({ value: String(c.id), label: c.nombre }))}
+                            className="w-full"
+                        />
                     </div>
 
                     {/* Marca */}
@@ -202,21 +195,15 @@ export function ProductoForm({
                                 className="w-full bg-blue-500/10 border border-blue-500/50 rounded-lg px-3 py-2 text-white focus:border-blue-400 outline-none transition-colors"
                             />
                         ) : (
-                            <div className="relative">
-                                <select
-                                    value={formData.marca || ""}
-                                    onChange={(e) => set({ marca: e.target.value })}
-                                    className={inputCls + " appearance-none cursor-pointer pr-10"}
-                                >
-                                    <option value="" className="bg-slate-900">-- Seleccionar --</option>
-                                    {marcas.map((m) => (
-                                        <option key={m} value={m} className="bg-slate-900">
-                                            {m}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                            </div>
+                            <Select
+                                value={formData.marca || ""}
+                                onChange={(val) => set({ marca: val })}
+                                options={[
+                                    { value: "", label: "-- Seleccionar --" },
+                                    ...marcas.map((m) => ({ value: m, label: m })),
+                                ]}
+                                className="w-full"
+                            />
                         )}
                     </div>
 
@@ -243,21 +230,15 @@ export function ProductoForm({
                                 className="w-full bg-blue-500/10 border border-blue-500/50 rounded-lg px-3 py-2 text-white focus:border-blue-400 outline-none transition-colors"
                             />
                         ) : (
-                            <div className="relative">
-                                <select
-                                    value={formData.proveedor || ""}
-                                    onChange={(e) => set({ proveedor: e.target.value })}
-                                    className={inputCls + " appearance-none cursor-pointer pr-10"}
-                                >
-                                    <option value="" className="bg-slate-900">-- Seleccionar --</option>
-                                    {proveedores.map((p) => (
-                                        <option key={p} value={p} className="bg-slate-900">
-                                            {p}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                            </div>
+                            <Select
+                                value={formData.proveedor || ""}
+                                onChange={(val) => set({ proveedor: val })}
+                                options={[
+                                    { value: "", label: "-- Seleccionar --" },
+                                    ...proveedores.map((p) => ({ value: p, label: p })),
+                                ]}
+                                className="w-full"
+                            />
                         )}
                     </div>
 
@@ -266,20 +247,12 @@ export function ProductoForm({
                         <label className="text-xs font-bold text-slate-500 uppercase h-5 flex items-center">
                             Unidad Medida
                         </label>
-                        <div className="relative">
-                            <select
-                                value={formData.tipo_medida}
-                                onChange={(e) => set({ tipo_medida: e.target.value })}
-                                className={inputCls + " appearance-none cursor-pointer pr-10"}
-                            >
-                                {UNIDADES_MEDIDA.map((u) => (
-                                    <option key={u} value={u} className="bg-slate-900">
-                                        {u}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                        </div>
+                        <Select
+                            value={formData.tipo_medida}
+                            onChange={(val) => set({ tipo_medida: val })}
+                            options={UNIDADES_MEDIDA.map((u) => ({ value: u, label: u }))}
+                            className="w-full"
+                        />
                     </div>
 
                     {/* Descripción */}
@@ -394,17 +367,15 @@ export function ProductoForm({
                         <label className="text-xs font-bold text-slate-500 uppercase">
                             Facturable
                         </label>
-                        <div className="relative">
-                            <select
-                                value={formData.facturable ? "true" : "false"}
-                                onChange={(e) => set({ facturable: e.target.value === "true" })}
-                                className={inputCls + " appearance-none cursor-pointer pr-10"}
-                            >
-                                <option value="true" className="bg-slate-900">Sí</option>
-                                <option value="false" className="bg-slate-900">No</option>
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                        </div>
+                        <Select
+                            value={formData.facturable ? "true" : "false"}
+                            onChange={(val) => set({ facturable: val === "true" })}
+                            options={[
+                                { value: "true", label: "Sí" },
+                                { value: "false", label: "No" },
+                            ]}
+                            className="w-full"
+                        />
                     </div>
                 </div>
             </div>
