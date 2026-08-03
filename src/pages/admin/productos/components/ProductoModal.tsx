@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Box, X, Check, Loader2 } from "lucide-react";
-import { Categoria } from "../../../../api/tauri";
+import { Categoria, api } from "../../../../api/tauri";
 import { Producto, ProductoInput } from "../types";
 import { ProductoForm } from "./ProductoForm";
 
@@ -26,8 +26,6 @@ interface ProductoModalProps {
   ) => Promise<void>;
 }
 
-const IVA = 0.16;
-
 export function ProductoModal({
   open,
   productoEditando,
@@ -47,16 +45,26 @@ export function ProductoModal({
 
   const [calcularIva, setCalcularIva] = useState(false);
   const [precioCompraBase, setPrecioCompraBase] = useState<number>(0);
+  const [ivaGlobal, setIvaGlobal] = useState<number>(0.16);
 
   useEffect(() => {
     if (open) {
       const yaIncluye = formData.precio_compra_incluye_iva ?? false;
       setCalcularIva(yaIncluye);
 
-      const base = yaIncluye
-        ? parseFloat((formData.precio_compra / (1 + IVA)).toFixed(2))
-        : (formData.precio_compra ?? 0);
-      setPrecioCompraBase(base);
+      api.obtenerConfiguracion().then((res) => {
+        let currentIva = 0.16;
+        if (res.success && res.data && res.data.sistema_iva) {
+          const parsed = parseFloat(res.data.sistema_iva);
+          if (!isNaN(parsed)) currentIva = parsed / 100;
+        }
+        setIvaGlobal(currentIva);
+
+        const base = yaIncluye
+          ? parseFloat((formData.precio_compra / (1 + currentIva)).toFixed(2))
+          : (formData.precio_compra ?? 0);
+        setPrecioCompraBase(base);
+      });
     }
   }, [open, productoEditando?.id]);
 
@@ -66,7 +74,7 @@ export function ProductoModal({
     const nuevoCalcula = !calcularIva;
     setCalcularIva(nuevoCalcula);
     const efectivo = nuevoCalcula
-      ? parseFloat((precioCompraBase * (1 + IVA)).toFixed(2))
+      ? parseFloat((precioCompraBase * (1 + ivaGlobal)).toFixed(2))
       : precioCompraBase;
     onFormChange({
       ...formData,
@@ -77,7 +85,9 @@ export function ProductoModal({
 
   const handlePrecioBaseChange = (v: number) => {
     setPrecioCompraBase(v);
-    const efectivo = calcularIva ? parseFloat((v * (1 + IVA)).toFixed(2)) : v;
+    const efectivo = calcularIva
+      ? parseFloat((v * (1 + ivaGlobal)).toFixed(2))
+      : v;
     onFormChange({
       ...formData,
       precio_compra: efectivo,
@@ -162,6 +172,7 @@ export function ProductoModal({
               onToggleIva={handleToggleIva}
               precioCompraBase={precioCompraBase}
               onPrecioCompraBaseChange={handlePrecioBaseChange}
+              globalIva={ivaGlobal}
             />
           </form>
         </div>

@@ -5,12 +5,12 @@ import { notify } from "../../../utils/sileo";
 
 export function TicketsConfig() {
   const [config, setConfig] = useState<Record<string, string>>({
-    ticket_nombre_local: "TORRE FUERTE",
-    ticket_rfc: "NIGA0412116D7",
-    ticket_direccion_1: "9 PONIENTE 907,",
-    ticket_direccion_2: "COL ALVARO OBREGON",
-    ticket_direccion_3: "ATLIXCO PUEBLA C.P 74260",
-    ticket_mensaje: "Gracias por su compra",
+    ticket_nombre_local: "",
+    ticket_rfc: "",
+    ticket_direccion_1: "",
+    ticket_direccion_2: "",
+    ticket_direccion_3: "",
+    ticket_mensaje: "",
   });
   
   const [loading, setLoading] = useState(true);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FileText,
   FileDown,
@@ -38,8 +38,25 @@ export default function CotizacionesTab() {
     editarPrecio,
     eliminar,
     vaciar,
+    cargarCotizacion,
     total,
   } = useCotizacion();
+
+  useEffect(() => {
+    const data = localStorage.getItem("cotizacion_a_cargar");
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.items && Array.isArray(parsed.items)) {
+          cargarCotizacion(parsed.items);
+          if (parsed.clienteId) {
+            setClienteId(parsed.clienteId.toString());
+          }
+        }
+      } catch (e) {}
+      localStorage.removeItem("cotizacion_a_cargar");
+    }
+  }, [cargarCotizacion]);
 
   const getBase64Image = async (url: string) => {
     const response = await fetch(url);

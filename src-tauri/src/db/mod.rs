@@ -307,11 +307,11 @@ impl Database {
                 ('vendedor', 'vendedor@torrefuerte.com', '$2y$10$XYXG6aJqWs.qhbIZRsjxo.KIwYdFnwAYlCT0SLgxBLj06KHx5NBAC', 'normal');
 
             INSERT OR IGNORE INTO configuracion (clave, valor) VALUES 
-                ('ticket_nombre_local', 'TORRE FUERTE'),
-                ('ticket_rfc', 'NIGA0412116D7'),
-                ('ticket_direccion_1', '9 PONIENTE 907,'),
-                ('ticket_direccion_2', 'COL ALVARO OBREGON'),
-                ('ticket_direccion_3', 'ATLIXCO PUEBLA C.P 74260'),
+                ('ticket_nombre_local', ''),
+                ('ticket_rfc', ''),
+                ('ticket_direccion_1', ''),
+                ('ticket_direccion_2', ''),
+                ('ticket_direccion_3', ''),
                 ('ticket_mensaje', 'Gracias por su compra'),
                 ('sistema_tema', 'dark');
             "#

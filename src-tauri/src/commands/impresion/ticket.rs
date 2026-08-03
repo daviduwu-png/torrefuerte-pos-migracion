@@ -11,7 +11,7 @@ pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<A
 
     // 1. Obtener cabecera
     let ticket_res = conn.query_row(
-        "SELECT id, folio_fiscal, metodo_pago, total, dinero_recibido, cambio, fecha FROM ticket WHERE id = ?",
+        "SELECT id, folio_fiscal, metodo_pago, total, direccion_local, nombre_local, dinero_recibido, cambio, fecha FROM ticket WHERE id = ?",
         params![ticket_id],
         |row| {
             Ok(Ticket {
@@ -19,12 +19,12 @@ pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<A
                 folio_fiscal: row.get(1)?,
                 metodo_pago: row.get(2)?,
                 total: row.get(3)?,
-                direccion_local: "TORRE FUERTE".to_string(),
-                nombre_local: "TORRE FUERTE".to_string(),
-                dinero_recibido: row.get(4)?,
-                cambio: row.get(5)?,
+                direccion_local: row.get(4)?,
+                nombre_local: row.get(5)?,
+                dinero_recibido: row.get(6)?,
+                cambio: row.get(7)?,
                 usuario_id: None,
-                fecha: row.get(6)?,
+                fecha: row.get(8)?,
             })
         },
     );
@@ -60,6 +60,21 @@ pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<A
         .filter_map(|r| r.ok())
         .collect();
 
+    // Obtener configuración de tickets de la base de datos
+    let mut config_stmt = conn.prepare("SELECT clave, valor FROM configuracion WHERE clave LIKE 'ticket_%'").unwrap();
+    let config_map: std::collections::HashMap<String, String> = config_stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+        .unwrap()
+        .filter_map(|r| r.ok())
+        .collect();
+
+    let _nombre_local = config_map.get("ticket_nombre_local").cloned().unwrap_or_else(|| "TORRE FUERTE".to_string());
+    let rfc = config_map.get("ticket_rfc").cloned().unwrap_or_default();
+    let dir1 = config_map.get("ticket_direccion_1").cloned().unwrap_or_default();
+    let dir2 = config_map.get("ticket_direccion_2").cloned().unwrap_or_default();
+    let dir3 = config_map.get("ticket_direccion_3").cloned().unwrap_or_default();
+    let mensaje_despedida = config_map.get("ticket_mensaje").cloned().unwrap_or_else(|| "Gracias por su compra".to_string());
+
     // 3. Generar ESC/POS
     let mut p = EscPos::new();
     p.init();
@@ -69,12 +84,19 @@ pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<A
     // Encabezado
     p.center();
     p.double_size(true);
-    p.text("TORRE FUERTE\n");
+    // Usa el nombre_local histórico guardado al momento de la venta
+    p.text(&format!("{}\n", ticket.nombre_local));
     p.double_size(false);
-    p.text("RFC: NIGA0412116D7\n");
-    p.text("9 PONIENTE 907,\n");
-    p.text("COL ALVARO OBREGON\n");
-    p.text("ATLIXCO PUEBLA C.P 74260\n");
+    
+    if !rfc.is_empty() { p.text(&format!("RFC: {}\n", rfc)); }
+    // Usa la direccion_local histórica si existe, sino la actual
+    if !ticket.direccion_local.is_empty() { 
+        p.text(&format!("{}\n", ticket.direccion_local)); 
+    } else if !dir1.is_empty() { 
+        p.text(&format!("{}\n", dir1)); 
+    }
+    if !dir2.is_empty() { p.text(&format!("{}\n", dir2)); }
+    if !dir3.is_empty() { p.text(&format!("{}\n", dir3)); }
     p.feed(1);
 
     // Datos del ticket
@@ -137,7 +159,7 @@ pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<A
     // Pie
     p.center();
     p.feed(2);
-    p.text("Gracias por su compra\n");
+    p.text(&format!("{}\n", mensaje_despedida));
     p.feed(3);
     p.cut();
     p.pulse();

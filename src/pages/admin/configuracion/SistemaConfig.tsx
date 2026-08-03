@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Monitor, Moon, Sun, Save, RefreshCw } from "lucide-react";
 import { api } from "../../../api/tauri";
 import { notify } from "../../../utils/sileo";
+import { Select } from "../../../components/ui/Select";
 
 export function SistemaConfig() {
   const [tema, setTema] = useState<string>("dark");
@@ -151,15 +152,15 @@ export function SistemaConfig() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-400 mb-1">Moneda Principal</label>
-              <select 
+              <Select
                 value={moneda}
-                onChange={(e) => setMoneda(e.target.value)}
-                className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors border border-slate-700 bg-slate-800/80"
-              >
-                <option value="MXN">Pesos Mexicanos (MXN)</option>
-                <option value="USD">Dólares (USD)</option>
-                <option value="EUR">Euros (EUR)</option>
-              </select>
+                onChange={(val) => setMoneda(val)}
+                options={[
+                  { value: "MXN", label: "Pesos Mexicanos (MXN)" },
+                  { value: "USD", label: "Dólares (USD)" },
+                  { value: "EUR", label: "Euros (EUR)" },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-400 mb-1">Tasa de IVA (%)</label>

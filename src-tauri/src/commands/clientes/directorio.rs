@@ -1,5 +1,6 @@
 use crate::commands::productos::AppState;
 use crate::models::*;
+use chrono::Local;
 use rusqlite::params;
 use tauri::State;
 
@@ -92,9 +93,10 @@ pub fn guardar_cliente(
         }
         // --- INSERT ---
         None => {
+            let fecha_local = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
             let result = conn.execute(
-                r#"INSERT INTO cliente (nombre, telefono, email, direccion, rfc, notas)
-                   VALUES (?1, ?2, ?3, ?4, ?5, ?6)"#,
+                r#"INSERT INTO cliente (nombre, telefono, email, direccion, rfc, notas, fecha_alta)
+                   VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"#,
                 params![
                     cliente.nombre.trim(),
                     cliente.telefono,
@@ -102,6 +104,7 @@ pub fn guardar_cliente(
                     cliente.direccion,
                     cliente.rfc,
                     cliente.notas,
+                    fecha_local,
                 ],
             );
             match result {

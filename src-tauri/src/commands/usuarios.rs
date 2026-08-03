@@ -20,10 +20,10 @@ pub fn listar_usuarios(state: State<AppState>) -> ApiResponse<Vec<Usuario>> {
 
     let mut stmt = match conn.prepare("SELECT id, nombre, email, rol FROM usuario ORDER BY nombre") {
         Ok(s) => s,
-        Err(e) => return ApiResponse::<Vec<Usuario>>::error(&format!("Error preparando consulta: {}", e)),
+        Err(e) => return ApiResponse::error(&format!("Error preparando consulta: {}", e)),
     };
 
-    let mapped_rows = match stmt.query_map([], |row| {
+    let mapped_rows = match stmt.query_map(params![], |row| {
         Ok(Usuario {
             id: row.get(0)?,
             nombre: row.get(1)?,
@@ -32,7 +32,7 @@ pub fn listar_usuarios(state: State<AppState>) -> ApiResponse<Vec<Usuario>> {
         })
     }) {
         Ok(iter) => iter,
-        Err(e) => return ApiResponse::<Vec<Usuario>>::error(&format!("Error en consulta: {}", e)),
+        Err(e) => return ApiResponse::error(&format!("Error en consulta: {}", e)),
     };
 
 

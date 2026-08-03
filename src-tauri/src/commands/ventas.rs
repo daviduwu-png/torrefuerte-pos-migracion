@@ -29,6 +29,17 @@ pub fn generar_ticket(
         return ApiResponse::error(&format!("Error al iniciar transacción: {}", e));
     }
     
+    // Obtener configuración actual para guardar en histórico
+    let mut config_stmt = conn.prepare("SELECT clave, valor FROM configuracion WHERE clave LIKE 'ticket_%'").unwrap();
+    let config_map: std::collections::HashMap<String, String> = config_stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+        .unwrap()
+        .filter_map(|r| r.ok())
+        .collect();
+
+    let nombre_local = config_map.get("ticket_nombre_local").cloned().unwrap_or_else(|| "NOMBRE DEL LOCAL".to_string());
+    let direccion_local = config_map.get("ticket_direccion_1").cloned().unwrap_or_else(|| "".to_string());
+
     // Insertar ticket
     let result = conn.execute(
         r#"INSERT INTO ticket (folio_fiscal, metodo_pago, total, direccion_local, nombre_local, 
@@ -38,8 +49,8 @@ pub fn generar_ticket(
             folio_fiscal,
             ticket_input.metodo_pago,
             ticket_input.total,
-            "9 Poniente #907",  // Dirección por defecto
-            "TORRE FUERTE",
+            direccion_local,
+            nombre_local,
             ticket_input.dinero_recibido,
             ticket_input.cambio,
             usuario_id,
@@ -105,8 +116,8 @@ pub fn generar_ticket(
         folio_fiscal,
         metodo_pago: ticket_input.metodo_pago,
         total: ticket_input.total,
-        direccion_local: "Av. Principal #123".to_string(),
-        nombre_local: "TORRE FUERTE".to_string(),
+        direccion_local,
+        nombre_local,
         dinero_recibido: ticket_input.dinero_recibido,
         cambio: ticket_input.cambio,
         usuario_id,

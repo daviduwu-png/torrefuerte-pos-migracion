@@ -22,9 +22,8 @@ interface ProductoFormProps {
     onToggleIva: () => void;
     precioCompraBase: number;
     onPrecioCompraBaseChange: (v: number) => void;
+    globalIva: number;
 }
-
-const IVA = 0.16;
 
 const inputCls =
     "w-full bg-blue-500/10 border border-blue-500/50 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:border-blue-400 outline-none transition-colors";
@@ -95,13 +94,14 @@ export function ProductoForm({
     onToggleIva,
     precioCompraBase,
     onPrecioCompraBaseChange,
+    globalIva,
 }: ProductoFormProps) {
     const set = (partial: Partial<ProductoInput>) =>
         onChange({ ...formData, ...partial });
 
     // Preview del precio con IVA — solo visual, el cálculo real lo hace ProductoModal
     const precioCompraEfectivo = calcularIva
-        ? parseFloat((precioCompraBase * (1 + IVA)).toFixed(2))
+        ? parseFloat((precioCompraBase * (1 + globalIva)).toFixed(2))
         : precioCompraBase;
 
     return (
@@ -321,7 +321,7 @@ export function ProductoForm({
                                 }`}
                             >
                                 <Receipt className="w-3 h-3" />
-                                IVA 16%
+                                IVA {globalIva * 100}%
                                 <span className={`w-3 h-3 rounded-sm border flex items-center justify-center ${
                                     calcularIva ? "bg-amber-500 border-amber-400" : "border-slate-500"
                                 }`}>

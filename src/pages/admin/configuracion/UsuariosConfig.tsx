@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Users, Plus, Edit2, Trash2, Save, X, RefreshCw } from "lucide-react";
 import { api, Usuario, UsuarioInput } from "../../../api/tauri";
 import { notify } from "../../../utils/sileo";
+import { Select } from "../../../components/ui/Select";
 
 export function UsuariosConfig() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -60,26 +61,33 @@ export function UsuariosConfig() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este usuario?"))
-      return;
-    try {
-      const res = await api.eliminarUsuario(id);
-      if (res.success) {
-        notify.success({
-          title: "Eliminado",
-          description: "Usuario eliminado correctamente.",
-        });
-        cargarUsuarios();
-      } else {
-        notify.error({ title: "Error", description: res.message });
-      }
-    } catch (error) {
-      notify.error({
-        title: "Error",
-        description: "No se pudo eliminar el usuario.",
-      });
-    }
+  const handleDelete = (id: number) => {
+    notify.warning({
+      title: "Eliminar Usuario",
+      description: "¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.",
+      button: {
+        title: "Sí, eliminar",
+        onClick: async () => {
+          try {
+            const res = await api.eliminarUsuario(id);
+            if (res.success) {
+              notify.success({
+                title: "Eliminado",
+                description: "Usuario eliminado correctamente.",
+              });
+              cargarUsuarios();
+            } else {
+              notify.error({ title: "Error", description: res.message });
+            }
+          } catch (error) {
+            notify.error({
+              title: "Error",
+              description: "No se pudo eliminar el usuario.",
+            });
+          }
+        },
+      },
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -286,17 +294,21 @@ export function UsuariosConfig() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">
-                  Rol
+                <label className="block text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+                  <span>Rol</span>
+                  {editingId && usuarios.find((u) => u.id === editingId)?.rol === "admin" && (
+                    <span className="text-amber-400/80 font-normal text-[10px] bg-amber-900/20 px-2 py-0.5 rounded">No se puede cambiar el rol de un Administrador</span>
+                  )}
                 </label>
-                <select
+                <Select
                   value={rol}
-                  onChange={(e) => setRol(e.target.value)}
-                  className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors border border-slate-700 bg-slate-800/80"
-                >
-                  <option value="normal">Vendedor (Normal)</option>
-                  <option value="admin">Administrador</option>
-                </select>
+                  onChange={(val) => setRol(val)}
+                  disabled={editingId ? usuarios.find((u) => u.id === editingId)?.rol === "admin" : false}
+                  options={[
+                    { value: "normal", label: "Vendedor (Normal)" },
+                    { value: "admin", label: "Administrador" },
+                  ]}
+                />
               </div>
             </div>
 

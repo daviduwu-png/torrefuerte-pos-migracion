@@ -52,9 +52,9 @@ export const notify = {
   info: (opts: SileoOptions) => showWithDismiss(sileo.info, withTitleColor("!text-blue-500", opts)),
   warning: (opts: SileoOptions) => {
     const coloredOpts = withTitleColor("!text-amber-500", opts);
-    // Si tiene un botón, le damos aún más tiempo
+    // Si tiene un botón, le damos aún más tiempo, pero mantenemos el comportamiento de cierre por click
     if (opts.button) {
-      return sileo.warning({ ...coloredOpts, duration: 15000 });
+      coloredOpts.duration = 15000;
     }
     return showWithDismiss(sileo.warning, coloredOpts);
   },

@@ -28,6 +28,7 @@ interface UseCotizacionReturn {
   editarPrecio: (id: number, precioActual: number) => Promise<void>;
   eliminar: (id: number) => void;
   vaciar: () => void;
+  cargarCotizacion: (items: ItemCotizacion[]) => void;
   total: number;
 }
 
@@ -136,6 +137,10 @@ export function useCotizacion(): UseCotizacionReturn {
 
   const vaciar = useCallback(() => setItems([]), []);
 
+  const cargarCotizacion = useCallback((itemsCargados: ItemCotizacion[]) => {
+    setItems(itemsCargados);
+  }, []);
+
   const total = items.reduce(
     (sum, i) => sum + i.precioUnitario * i.cantidad,
     0
@@ -153,6 +158,7 @@ export function useCotizacion(): UseCotizacionReturn {
     editarPrecio,
     eliminar,
     vaciar,
+    cargarCotizacion,
     total,
   };
 }

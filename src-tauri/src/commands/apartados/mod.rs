@@ -43,11 +43,13 @@ pub async fn crear_apartado(
 
     conn.execute_batch("BEGIN;").map_err(|e| e.to_string())?;
 
+    let fecha_local = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
     // Insertar cabecera del apartado
     let insert_result = conn.execute(
-        "INSERT INTO apartado (cliente_id, total, monto_pendiente, notas, estado)
-         VALUES (?1, ?2, ?2, ?3, 'activo')",
-        params![apartado.cliente_id, total, apartado.notas],
+        "INSERT INTO apartado (cliente_id, total, monto_pendiente, notas, estado, fecha)
+         VALUES (?1, ?2, ?2, ?3, 'activo', ?4)",
+        params![apartado.cliente_id, total, apartado.notas, fecha_local],
     );
 
     if let Err(e) = insert_result {
@@ -56,6 +58,13 @@ pub async fn crear_apartado(
     }
 
     let apartado_id = conn.last_insert_rowid();
+
+    // Crear cuenta por cobrar 
+    conn.execute(
+        "INSERT INTO cuenta_por_cobrar (cliente_id, concepto, monto_original, monto_pendiente, estado, fecha)
+         VALUES (?1, ?2, ?3, ?3, 'pendiente', ?4)",
+        params![apartado.cliente_id, format!("Apartado #{}", apartado_id), total, fecha_local],
+    ).map_err(|e| e.to_string())?;
 
     // Insertar productos y actualizar stock
     for item in &apartado.items {
@@ -263,16 +272,18 @@ pub async fn abonar_apartado(
 
     conn.execute_batch("BEGIN;").map_err(|e| e.to_string())?;
 
+    let fecha_local = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
     // Registrar el abono en la tabla de historial
     conn.execute(
-        "INSERT INTO abono (cuenta_id, monto, metodo_pago, notas)
-         SELECT cpc.id, ?1, ?2, ?3
+        "INSERT INTO abono (cuenta_id, monto, metodo_pago, notas, fecha)
+         SELECT cpc.id, ?1, ?2, ?3, ?5
          FROM cuenta_por_cobrar cpc
          WHERE cpc.id = (
              SELECT MIN(id) FROM cuenta_por_cobrar
              WHERE concepto LIKE '%Apartado #' || ?4 || '%' AND estado != 'saldado'
          )",
-        params![abono.monto, abono.metodo_pago, abono.notas, abono.apartado_id],
+        params![abono.monto, abono.metodo_pago, abono.notas, abono.apartado_id, fecha_local],
     ).ok(); // Opcional: puede no existir CXC vinculada, no bloqueamos
 
     // Calcular nuevo pendiente
@@ -354,11 +365,13 @@ pub async fn liquidar_apartado(
     // Generar folio fiscal único
     let folio = format!("APT-{}-{}", apartado_id, chrono::Local::now().format("%Y%m%d%H%M%S"));
 
+    let fecha_local = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
     // Crear el ticket
     conn.execute(
-        "INSERT INTO ticket (folio_fiscal, metodo_pago, total, nombre_local, direccion_local, dinero_recibido, cambio)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?3, 0.0)",
-        params![folio, metodo_pago, total, nombre_local, direccion_local],
+        "INSERT INTO ticket (folio_fiscal, metodo_pago, total, nombre_local, direccion_local, dinero_recibido, cambio, fecha)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?3, 0.0, ?6)",
+        params![folio, metodo_pago, total, nombre_local, direccion_local, fecha_local],
     ).map_err(|e| e.to_string())?;
     
     let ticket_id = conn.last_insert_rowid();
@@ -388,14 +401,16 @@ pub async fn liquidar_apartado(
         // NOTA: El stock real YA se descontó al crear el crédito. No descontamos de nuevo.
     }
 
+    let fecha_local = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
     // Cerrar el apartado
     conn.execute(
         "UPDATE apartado
          SET estado = 'liquidado',
              ticket_id = ?1,
-             fecha_liquidado = CURRENT_TIMESTAMP
+             fecha_liquidado = ?3
          WHERE id = ?2",
-        params![ticket_id, apartado_id],
+        params![ticket_id, apartado_id, fecha_local],
     ).map_err(|e| e.to_string())?;
 
     conn.execute_batch("COMMIT;").map_err(|e| e.to_string())?;
