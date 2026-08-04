@@ -49,6 +49,18 @@ export function TicketsConfig() {
     }
   }
 
+  async function handleForzarActualizacion() {
+    setSaving(true);
+    try {
+      await api.actualizarNombreLocalTickets();
+      notify.success({ title: "Actualizado", description: "Toda la información del local ha sido forzada en todos los tickets." });
+    } catch (error) {
+      notify.error({ title: "Error", description: "No se pudo forzar la actualización de los tickets." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const handleChange = (key: string, value: string) => {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
@@ -67,14 +79,23 @@ export function TicketsConfig() {
               <p className="text-sm text-slate-400">Información fiscal y dirección para los recibos</p>
             </div>
           </div>
-          <button 
-            onClick={handleGuardar}
-            disabled={loading || saving}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-            Guardar
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleForzarActualizacion}
+              disabled={loading || saving}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              Forzar Nombres
+            </button>
+            <button 
+              onClick={handleGuardar}
+              disabled={loading || saving}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+              Guardar
+            </button>
+          </div>
         </div>
 
         <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex flex-col gap-4">

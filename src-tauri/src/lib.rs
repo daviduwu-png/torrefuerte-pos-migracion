@@ -92,6 +92,7 @@ pub fn run() {
             commands::restaurar_base_datos,
             commands::obtener_configuracion,
             commands::guardar_configuracion,
+            commands::actualizar_nombre_local_tickets,
             commands::probar_conexion_r2,
 
             // Clientes — Directorio

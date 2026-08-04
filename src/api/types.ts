@@ -98,6 +98,9 @@ export interface Ticket {
   metodo_pago: string;
   total: number;
   direccion_local: string;
+  direccion_local_2: string;
+  direccion_local_3: string;
+  rfc: string;
   nombre_local: string;
   dinero_recibido: number;
   cambio: number;

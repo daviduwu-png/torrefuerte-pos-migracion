@@ -568,7 +568,10 @@ export default function SalesHistory() {
                   {selectedTicket.ticket.nombre_local}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  {selectedTicket.ticket.direccion_local}
+                  {selectedTicket.ticket.rfc && <>RFC: {selectedTicket.ticket.rfc}<br/></>}
+                  {selectedTicket.ticket.direccion_local && <>{selectedTicket.ticket.direccion_local}<br/></>}
+                  {selectedTicket.ticket.direccion_local_2 && <>{selectedTicket.ticket.direccion_local_2}<br/></>}
+                  {selectedTicket.ticket.direccion_local_3 && <>{selectedTicket.ticket.direccion_local_3}</>}
                 </p>
                 <p className="text-xs text-slate-400 mt-2">
                   {formatFechaHoraCorta(selectedTicket.ticket.fecha)}

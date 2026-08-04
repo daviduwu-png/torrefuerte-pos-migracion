@@ -267,6 +267,37 @@ pub fn guardar_configuracion(
 }
 
 #[tauri::command]
+pub fn actualizar_nombre_local_tickets(state: State<AppState>) -> ApiResponse<()> {
+    let conn = state.db.conn.lock().unwrap();
+    // Obtener configuración
+    let mut stmt = match conn.prepare("SELECT clave, valor FROM configuracion WHERE clave LIKE 'ticket_%'") {
+        Ok(s) => s,
+        Err(e) => return ApiResponse::error(&format!("Error preparando consulta: {}", e)),
+    };
+    
+    let config_map: std::collections::HashMap<String, String> = match stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?))) {
+        Ok(rows) => rows.filter_map(|r| r.ok()).collect(),
+        Err(_) => std::collections::HashMap::new(),
+    };
+
+    let nombre_local = config_map.get("ticket_nombre_local").cloned().unwrap_or_else(|| "NOMBRE DEL LOCAL".to_string());
+    let rfc = config_map.get("ticket_rfc").cloned().unwrap_or_else(|| "".to_string());
+    let direccion_local = config_map.get("ticket_direccion_1").cloned().unwrap_or_else(|| "".to_string());
+    let direccion_local_2 = config_map.get("ticket_direccion_2").cloned().unwrap_or_else(|| "".to_string());
+    let direccion_local_3 = config_map.get("ticket_direccion_3").cloned().unwrap_or_else(|| "".to_string());
+    
+    // update all tickets
+    match conn.execute(
+        "UPDATE ticket SET nombre_local = ?1, rfc = ?2, direccion_local = ?3, direccion_local_2 = ?4, direccion_local_3 = ?5", 
+        [&nombre_local, &rfc, &direccion_local, &direccion_local_2, &direccion_local_3]
+    ) {
+        Ok(_) => ApiResponse::success("Tickets actualizados", ()),
+        Err(e) => ApiResponse::error(&format!("Error actualizando tickets: {}", e)),
+    }
+}
+
+
+#[tauri::command]
 pub async fn probar_conexion_r2(
     access_key: String,
     secret_key: String,
