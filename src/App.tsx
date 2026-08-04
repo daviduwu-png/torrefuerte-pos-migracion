@@ -9,7 +9,6 @@ import {
   Reportes,
   Ventas,
   Productos,
-  RellenarStock,
   BaseDatos,
   Etiquetas,
   Gestion,
@@ -46,7 +45,6 @@ function App() {
           <Route path="productos" element={<Productos />} />
           <Route path="devoluciones" element={<Devoluciones />} />
           <Route path="importar-productos" element={<ImportarProductos />} />
-          <Route path="rellenar-stock" element={<RellenarStock />} />
           <Route path="reportes" element={<Reportes />} />
           <Route path="ventas" element={<Ventas />} />
           <Route path="base-datos" element={<BaseDatos />} />

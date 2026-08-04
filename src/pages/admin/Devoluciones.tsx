@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api, Devolucion } from "../../api/tauri";
-import { Search, Loader2, RotateCcw } from "lucide-react";
+import { Search, Loader2, RotateCcw, Clock, Calendar } from "lucide-react";
 import { StyledSwal as Swal } from "../../utils/swal";
 import { formatFechaHoraCorta, getFechaHoy } from "../../utils/dateFormat";
 import DatePicker from "../../components/ui/DatePicker";
@@ -86,63 +86,76 @@ export default function Devoluciones() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-6 animate-in fade-in duration-300">
-      <div className="glass-panel rounded-2xl p-6 border border-white/10 shrink-0 relative z-20">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
-                Desde
-              </label>
-              <DatePicker
-                value={fechaInicio}
-                onChange={setFechaInicio}
-                className="w-full"
-              />
+    <div className="flex flex-col lg:flex-row h-full gap-6 animate-in fade-in duration-300">
+      {/* Panel de Filtros (Izquierda) */}
+      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 shrink-0 w-full lg:w-72 flex flex-col relative z-20">
+        <div className="p-4 sm:p-5 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar">
+          
+          {/* Quick Filters */}
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5" />
+              Filtros Rápidos
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {["hoy", "semana", "mes", "anio"].map((period) => (
+                <button
+                  key={period}
+                  onClick={() => handleQuickFilter(period as any)}
+                  className={`px-2 py-2 text-xs font-bold rounded-xl transition-all border text-center ${
+                    activeFilter === period
+                      ? "bg-amber-500/20 border-amber-500 text-amber-400 shadow-lg shadow-amber-900/20"
+                      : "bg-slate-900/50 border-white/5 text-slate-400 hover:bg-slate-800 hover:text-white"
+                  }`}
+                >
+                  {period === "anio" ? "Este Año" : (period === "hoy" ? "Hoy" : (period === "semana" ? "Semana" : "Mes"))}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
-                Hasta
-              </label>
-              <DatePicker
-                value={fechaFin}
-                onChange={setFechaFin}
-                className="w-full"
-              />
-            </div>
-            <div>
+          </div>
+
+          <div className="border-t border-white/5"></div>
+
+          {/* Custom Date Range */}
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5" />
+              Rango Personalizado
+            </h3>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 tracking-wider">
+                  Desde
+                </label>
+                <DatePicker
+                  value={fechaInicio}
+                  onChange={setFechaInicio}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 tracking-wider">
+                  Hasta
+                </label>
+                <DatePicker
+                  value={fechaFin}
+                  onChange={setFechaFin}
+                  className="w-full"
+                />
+              </div>
               <button
                 onClick={handleSearch}
                 disabled={loading}
-                className="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-white/10"
+                className="w-full mt-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all shadow-lg shadow-amber-900/20"
               >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                {loading && activeFilter === "custom" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Search className="w-5 h-5" />
+                  <Search className="w-4 h-4" />
                 )}
                 Buscar Registros
               </button>
             </div>
-          </div>
-
-          {/* Quick Buttons */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 border-t border-white/5 pt-4">
-            {["hoy", "semana", "mes", "anio"].map((period) => (
-              <button
-                key={period}
-                onClick={() => handleQuickFilter(period as any)}
-                className={`py-2.5 px-4 rounded-xl border text-sm font-medium transition-all capitalize shadow-sm ${
-                  activeFilter === period
-                    ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                    : "bg-white/5 border-white/5 text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400"
-                }`}
-              >
-                {period === "anio"
-                  ? "Año Actual"
-                  : period.charAt(0).toUpperCase() + period.slice(1)}
-              </button>
-            ))}
           </div>
         </div>
       </div>

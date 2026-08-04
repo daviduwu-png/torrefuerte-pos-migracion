@@ -1,7 +1,7 @@
 mod commands;
 mod db;
 mod models;
-
+mod cloud;
 // Aliases for Tauri's generate_handler! — it needs the exact module path
 // where each #[command] function (and its __cmd__* helper) lives.
 use commands::impresion::ticket::imprimir_ticket;
@@ -54,7 +54,6 @@ pub fn run() {
             commands::guardar_producto,
             commands::eliminar_producto,
             commands::importar_productos_truper,
-            commands::rellenar_stock_masivo,
             imprimir_ticket,
             imprimir_corte,
             imprimir_test,
@@ -93,6 +92,8 @@ pub fn run() {
             commands::restaurar_base_datos,
             commands::obtener_configuracion,
             commands::guardar_configuracion,
+            commands::actualizar_nombre_local_tickets,
+            commands::probar_conexion_r2,
 
             // Clientes — Directorio
             commands::listar_clientes,

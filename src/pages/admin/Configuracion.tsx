@@ -72,8 +72,8 @@ export default function Configuracion() {
     <div className="flex flex-col gap-6 animate-in fade-in duration-300 h-full min-h-0">
       {portalTarget && createPortal(tabsContent, portalTarget)}
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-6 max-w-6xl pb-6">
+      <div className="flex-1 overflow-hidden">
+        <div className="w-full h-full pb-6">
           {activeTab === "impresoras" && <ImpresorasConfig />}
           {activeTab === "tickets" && <TicketsConfig />}
           {activeTab === "sistema" && <SistemaConfig />}

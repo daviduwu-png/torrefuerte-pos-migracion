@@ -65,7 +65,7 @@ export default function VendedorDashboard() {
 
   return (
     <>
-      <div className="flex-1 min-h-0 w-full grid grid-cols-1 md:grid-cols-12 md:grid-rows-[minmax(0,1fr)] gap-4 p-1">
+      <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0 w-full animate-in fade-in duration-300">
         <BusquedaPanel
           busqueda={busqueda}
           resultados={resultados}

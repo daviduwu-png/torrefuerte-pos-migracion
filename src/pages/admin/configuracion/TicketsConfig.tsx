@@ -49,14 +49,26 @@ export function TicketsConfig() {
     }
   }
 
+  async function handleForzarActualizacion() {
+    setSaving(true);
+    try {
+      await api.actualizarNombreLocalTickets();
+      notify.success({ title: "Actualizado", description: "Toda la información del local ha sido forzada en todos los tickets." });
+    } catch (error) {
+      notify.error({ title: "Error", description: "No se pudo forzar la actualización de los tickets." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const handleChange = (key: string, value: string) => {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col lg:flex-row gap-6">
+    <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col lg:flex-row gap-6 h-full min-h-0">
       {/* Formulario */}
-      <div className="flex-1 flex flex-col gap-6">
+      <div className="flex-1 flex flex-col gap-6 overflow-y-auto custom-scrollbar min-h-0 pr-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-900/30 flex items-center justify-center text-emerald-400">
@@ -67,14 +79,23 @@ export function TicketsConfig() {
               <p className="text-sm text-slate-400">Información fiscal y dirección para los recibos</p>
             </div>
           </div>
-          <button 
-            onClick={handleGuardar}
-            disabled={loading || saving}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-            Guardar
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleForzarActualizacion}
+              disabled={loading || saving}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              Forzar Nombres
+            </button>
+            <button 
+              onClick={handleGuardar}
+              disabled={loading || saving}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+              Guardar
+            </button>
+          </div>
         </div>
 
         <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex flex-col gap-4">
@@ -136,7 +157,7 @@ export function TicketsConfig() {
       </div>
 
       {/* Previsualización del Ticket */}
-      <div className="w-full lg:w-80 shrink-0 flex flex-col items-center">
+      <div className="w-full lg:w-80 shrink-0 flex flex-col items-center overflow-y-auto custom-scrollbar min-h-0 pb-4">
         <h3 className="text-sm font-bold text-slate-300 mb-4 self-start">Previsualización (58mm)</h3>
         
         <div className="bg-[#fcfcfc] text-black w-64 p-4 rounded-sm shadow-xl font-mono text-[10px] leading-tight select-none">

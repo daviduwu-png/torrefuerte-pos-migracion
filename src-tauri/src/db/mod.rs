@@ -98,6 +98,9 @@ impl Database {
                 metodo_pago TEXT NOT NULL,
                 total NUMERIC(10, 2) NOT NULL,
                 direccion_local TEXT NOT NULL,
+                direccion_local_2 TEXT NOT NULL DEFAULT '',
+                direccion_local_3 TEXT NOT NULL DEFAULT '',
+                rfc TEXT NOT NULL DEFAULT '',
                 nombre_local TEXT NOT NULL,
                 dinero_recibido NUMERIC(10, 2),
                 cambio NUMERIC(10, 2),
@@ -333,6 +336,11 @@ impl Database {
 
         // 3. Reserva de stock para apartados
         let _ = conn.execute("ALTER TABLE producto ADD COLUMN stock_reservado INTEGER NOT NULL DEFAULT 0", []);
+        
+        // 4. Datos fiscales en tickets
+        let _ = conn.execute("ALTER TABLE ticket ADD COLUMN rfc TEXT NOT NULL DEFAULT ''", []);
+        let _ = conn.execute("ALTER TABLE ticket ADD COLUMN direccion_local_2 TEXT NOT NULL DEFAULT ''", []);
+        let _ = conn.execute("ALTER TABLE ticket ADD COLUMN direccion_local_3 TEXT NOT NULL DEFAULT ''", []);
         
         let _ = conn.execute_batch("PRAGMA foreign_keys = ON;");
 

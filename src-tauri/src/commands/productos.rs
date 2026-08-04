@@ -732,17 +732,3 @@ pub fn importar_productos_truper(
     }
 }
 
-/// Rellenar stock masivo (Herramienta de desarrollo)
-#[tauri::command]
-pub fn rellenar_stock_masivo(state: State<AppState>) -> ApiResponse<String> {
-    let conn = state.db.conn.lock().unwrap();
-
-    // Ejecutar UPDATE masivo
-    match conn.execute("UPDATE producto SET stock = 100", []) {
-        Ok(rows) => ApiResponse::success(
-            &format!("Stock actualizado correctamente en {} productos", rows),
-            format!("Updated: {}", rows),
-        ),
-        Err(e) => ApiResponse::error(&format!("Error al actualizar stock: {}", e)),
-    }
-}

@@ -11,7 +11,7 @@ pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<A
 
     // 1. Obtener cabecera
     let ticket_res = conn.query_row(
-        "SELECT id, folio_fiscal, metodo_pago, total, direccion_local, nombre_local, dinero_recibido, cambio, fecha FROM ticket WHERE id = ?",
+        "SELECT id, folio_fiscal, metodo_pago, total, direccion_local, direccion_local_2, direccion_local_3, rfc, nombre_local, dinero_recibido, cambio, fecha FROM ticket WHERE id = ?",
         params![ticket_id],
         |row| {
             Ok(Ticket {
@@ -20,11 +20,14 @@ pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<A
                 metodo_pago: row.get(2)?,
                 total: row.get(3)?,
                 direccion_local: row.get(4)?,
-                nombre_local: row.get(5)?,
-                dinero_recibido: row.get(6)?,
-                cambio: row.get(7)?,
+                direccion_local_2: row.get(5)?,
+                direccion_local_3: row.get(6)?,
+                rfc: row.get(7)?,
+                nombre_local: row.get(8)?,
+                dinero_recibido: row.get(9)?,
+                cambio: row.get(10)?,
                 usuario_id: None,
-                fecha: row.get(8)?,
+                fecha: row.get(11)?,
             })
         },
     );
@@ -88,15 +91,30 @@ pub fn imprimir_ticket(ticket_id: i64, impresora: Option<String>, state: State<A
     p.text(&format!("{}\n", ticket.nombre_local));
     p.double_size(false);
     
-    if !rfc.is_empty() { p.text(&format!("RFC: {}\n", rfc)); }
+    if !ticket.rfc.is_empty() { 
+        p.text(&format!("RFC: {}\n", ticket.rfc)); 
+    } else if !rfc.is_empty() { 
+        p.text(&format!("RFC: {}\n", rfc)); 
+    }
+    
     // Usa la direccion_local histórica si existe, sino la actual
     if !ticket.direccion_local.is_empty() { 
         p.text(&format!("{}\n", ticket.direccion_local)); 
     } else if !dir1.is_empty() { 
         p.text(&format!("{}\n", dir1)); 
     }
-    if !dir2.is_empty() { p.text(&format!("{}\n", dir2)); }
-    if !dir3.is_empty() { p.text(&format!("{}\n", dir3)); }
+
+    if !ticket.direccion_local_2.is_empty() {
+        p.text(&format!("{}\n", ticket.direccion_local_2));
+    } else if !dir2.is_empty() {
+        p.text(&format!("{}\n", dir2));
+    }
+
+    if !ticket.direccion_local_3.is_empty() {
+        p.text(&format!("{}\n", ticket.direccion_local_3));
+    } else if !dir3.is_empty() {
+        p.text(&format!("{}\n", dir3));
+    }
     p.feed(1);
 
     // Datos del ticket

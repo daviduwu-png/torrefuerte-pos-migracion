@@ -18,7 +18,7 @@ pub fn listar_clientes(
         SELECT id, nombre, telefono, email, direccion, rfc, notas, activo, fecha_alta
         FROM cliente
         WHERE activo = 1
-          AND (?1 IS NULL OR nombre LIKE ?1 OR telefono LIKE ?1 OR email LIKE ?1)
+          AND (?1 IS NULL OR nombre LIKE ?1 OR telefono LIKE ?1)
         ORDER BY nombre ASC
         LIMIT 200
     "#;

@@ -22,7 +22,7 @@ export function BusquedaPanel({
     onVerificarPrecios,
 }: BusquedaPanelProps) {
     return (
-        <div className="md:col-span-5 flex flex-col gap-4 h-full min-h-0">
+        <div className="shrink-0 w-full lg:w-[40%] xl:w-[450px] flex flex-col gap-4 h-full min-h-0 relative z-20">
             <div className="glass-panel rounded-3xl flex-1 flex flex-col min-h-0 overflow-hidden border border-white/10 shadow-2xl">
                 {/* Header del panel */}
                 <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between gap-3 shrink-0">

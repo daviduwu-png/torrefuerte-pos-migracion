@@ -9,7 +9,6 @@ import {
   Receipt,
   RotateCcw,
   Upload,
-  Archive,
   BarChart3,
   Database,
   Monitor,
@@ -62,13 +61,6 @@ const getPageInfo = (pathname: string) => {
       subtitle: "Carga Masiva",
       icon: Upload,
       color: "cyan",
-    };
-  if (pathname.includes("/admin/rellenar-stock"))
-    return {
-      title: "Stock",
-      subtitle: "Reabastecimiento",
-      icon: Archive,
-      color: "violet",
     };
   if (pathname.includes("/admin/reportes"))
     return {

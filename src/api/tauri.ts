@@ -225,14 +225,22 @@ export const api = {
   restaurarBaseDatos: async (contenido: string): Promise<ApiResponse<void>> =>
     invoke("restaurar_base_datos", { contenido }),
 
-  rellenarStockMasivo: async (): Promise<ApiResponse<string>> =>
-    invoke("rellenar_stock_masivo", {}),
-
   obtenerConfiguracion: async (): Promise<ApiResponse<Record<string, string>>> =>
     invoke("obtener_configuracion"),
 
   guardarConfiguracion: async (config: Record<string, string>): Promise<ApiResponse<void>> =>
     invoke("guardar_configuracion", { config }),
+
+  actualizarNombreLocalTickets: async (): Promise<ApiResponse<void>> =>
+    invoke("actualizar_nombre_local_tickets"),
+
+  probarConexionR2: async (
+    accessKey: string,
+    secretKey: string,
+    endpoint: string,
+    bucketName: string,
+  ): Promise<ApiResponse<string>> =>
+    invoke("probar_conexion_r2", { accessKey, secretKey, endpoint, bucketName }),
 
   // ── Importación ──────────────────────────────────────────
   importarProductosTruper: async (

@@ -38,18 +38,24 @@ pub fn generar_ticket(
         .collect();
 
     let nombre_local = config_map.get("ticket_nombre_local").cloned().unwrap_or_else(|| "NOMBRE DEL LOCAL".to_string());
+    let rfc = config_map.get("ticket_rfc").cloned().unwrap_or_else(|| "".to_string());
     let direccion_local = config_map.get("ticket_direccion_1").cloned().unwrap_or_else(|| "".to_string());
+    let direccion_local_2 = config_map.get("ticket_direccion_2").cloned().unwrap_or_else(|| "".to_string());
+    let direccion_local_3 = config_map.get("ticket_direccion_3").cloned().unwrap_or_else(|| "".to_string());
 
     // Insertar ticket
     let result = conn.execute(
-        r#"INSERT INTO ticket (folio_fiscal, metodo_pago, total, direccion_local, nombre_local, 
+        r#"INSERT INTO ticket (folio_fiscal, metodo_pago, total, direccion_local, direccion_local_2, direccion_local_3, rfc, nombre_local, 
                                dinero_recibido, cambio, usuario_id, fecha)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
         params![
             folio_fiscal,
             ticket_input.metodo_pago,
             ticket_input.total,
             direccion_local,
+            direccion_local_2,
+            direccion_local_3,
+            rfc,
             nombre_local,
             ticket_input.dinero_recibido,
             ticket_input.cambio,
@@ -117,6 +123,9 @@ pub fn generar_ticket(
         metodo_pago: ticket_input.metodo_pago,
         total: ticket_input.total,
         direccion_local,
+        direccion_local_2,
+        direccion_local_3,
+        rfc,
         nombre_local,
         dinero_recibido: ticket_input.dinero_recibido,
         cambio: ticket_input.cambio,
@@ -136,7 +145,7 @@ pub fn buscar_ticket(query: String, state: State<AppState>) -> ApiResponse<Vec<T
     let id_query: i64 = query.parse().unwrap_or(0);
     
     let mut stmt = conn.prepare(
-        r#"SELECT id, folio_fiscal, metodo_pago, total, direccion_local, nombre_local, 
+        r#"SELECT id, folio_fiscal, metodo_pago, total, direccion_local, direccion_local_2, direccion_local_3, rfc, nombre_local, 
                   dinero_recibido, cambio, usuario_id, fecha
            FROM ticket 
            WHERE id = ?1 OR folio_fiscal LIKE ?2
@@ -155,11 +164,14 @@ pub fn buscar_ticket(query: String, state: State<AppState>) -> ApiResponse<Vec<T
                 metodo_pago: row.get(2)?,
                 total: row.get(3)?,
                 direccion_local: row.get(4)?,
-                nombre_local: row.get(5)?,
-                dinero_recibido: row.get::<_, Option<f64>>(6)?.unwrap_or(0.0),
-                cambio: row.get::<_, Option<f64>>(7)?.unwrap_or(0.0),
-                usuario_id: row.get(8)?,
-                fecha: row.get(9)?,
+                direccion_local_2: row.get(5)?,
+                direccion_local_3: row.get(6)?,
+                rfc: row.get(7)?,
+                nombre_local: row.get(8)?,
+                dinero_recibido: row.get::<_, Option<f64>>(9)?.unwrap_or(0.0),
+                cambio: row.get::<_, Option<f64>>(10)?.unwrap_or(0.0),
+                usuario_id: row.get(11)?,
+                fecha: row.get(12)?,
             })
         })
         .unwrap()
@@ -224,7 +236,7 @@ pub fn listar_tickets(
     };
     
     let mut stmt = conn.prepare(
-        r#"SELECT id, folio_fiscal, metodo_pago, total, direccion_local, nombre_local,
+        r#"SELECT id, folio_fiscal, metodo_pago, total, direccion_local, direccion_local_2, direccion_local_3, rfc, nombre_local,
                   dinero_recibido, cambio, usuario_id, fecha
            FROM ticket 
            WHERE fecha BETWEEN ?1 AND ?2
@@ -239,11 +251,14 @@ pub fn listar_tickets(
                 metodo_pago: row.get(2)?,
                 total: row.get(3)?,
                 direccion_local: row.get(4)?,
-                nombre_local: row.get(5)?,
-                dinero_recibido: row.get::<_, Option<f64>>(6)?.unwrap_or(0.0),
-                cambio: row.get::<_, Option<f64>>(7)?.unwrap_or(0.0),
-                usuario_id: row.get(8)?,
-                fecha: row.get(9)?,
+                direccion_local_2: row.get(5)?,
+                direccion_local_3: row.get(6)?,
+                rfc: row.get(7)?,
+                nombre_local: row.get(8)?,
+                dinero_recibido: row.get::<_, Option<f64>>(9)?.unwrap_or(0.0),
+                cambio: row.get::<_, Option<f64>>(10)?.unwrap_or(0.0),
+                usuario_id: row.get(11)?,
+                fecha: row.get(12)?,
             })
         })
         .unwrap()
