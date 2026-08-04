@@ -45,34 +45,45 @@ export default function DirectorioClientes() {
   };
 
   return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-300 h-full min-h-0">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h3 className="text-lg font-semibold text-white">
-          Listado de Clientes
-          <span className="ml-2 text-sm font-normal text-slate-400">({clientes.length})</span>
-        </h3>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar cliente..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-            />
+    <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0">
+      {/* Sidebar (Left) */}
+      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 shrink-0 w-full lg:w-72 flex flex-col relative z-20">
+        <div className="p-4 sm:p-5 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar min-h-0">
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <Search className="w-3.5 h-3.5" />
+              Búsqueda y Filtros
+            </h3>
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Buscar cliente..."
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-900/50 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors shadow-inner"
+              />
+            </div>
           </div>
-          <button
-            onClick={handleOpenNuevo}
-            className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 whitespace-nowrap shadow-lg shadow-blue-900/20"
-          >
-            <UserPlus className="w-4 h-4" />
-            Nuevo Cliente
-          </button>
+          
+          <div className="mt-auto pt-4 border-t border-white/5 flex flex-col gap-3">
+            <div className="flex items-center justify-between px-3 py-2 bg-slate-900/50 border border-white/5 rounded-xl">
+               <span className="text-xs font-bold text-slate-400">Total de Clientes</span>
+               <span className="text-sm font-bold text-white">{clientes.length}</span>
+            </div>
+            <button
+              onClick={handleOpenNuevo}
+              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              Nuevo Cliente
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto rounded-xl border border-white/5 bg-slate-900/30 custom-scrollbar relative">
+      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 flex-1 flex flex-col min-h-0 relative z-10">
+        <div className="flex-1 overflow-auto custom-scrollbar relative">
         {loading ? (
           <div className="h-full flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
@@ -135,6 +146,7 @@ export default function DirectorioClientes() {
             </tbody>
           </table>
         )}
+        </div>
       </div>
 
       <ClienteModal

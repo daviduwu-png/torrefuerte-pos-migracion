@@ -204,162 +204,177 @@ export default function PedidosTab() {
     }
   }, [activeTab]);
 
-  const headerActions = (
-    <div className="flex flex-col gap-3 mb-4 shrink-0 animate-in fade-in slide-in-from-top-2 duration-300">
-      <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 p-1 bg-slate-900/50 border border-white/5 rounded-xl">
-            {tabsConfig.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => handleCambiarTab(tab.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.key ? tab.color : tab.inactive
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-                <span
-                  className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
-                    activeTab === tab.key ? "bg-white/20" : "bg-white/10"
+  return (
+    <div className="flex flex-col lg:flex-row animate-in fade-in duration-300 h-full min-h-0 overflow-hidden gap-6">
+      {/* Sidebar Panel (Left) */}
+      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 shrink-0 w-full lg:w-72 flex flex-col relative z-20">
+        <div className="p-4 sm:p-5 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar min-h-0">
+          
+          {/* Tabs */}
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <Filter className="w-3.5 h-3.5" />
+              Estado de Inventario
+            </h3>
+            <div className="flex flex-col gap-2">
+              {tabsConfig.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => handleCambiarTab(tab.key)}
+                  className={`flex items-center justify-between gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                    activeTab === tab.key
+                      ? tab.color + " border-transparent ring-1 ring-white/10"
+                      : "bg-slate-900/50 border-white/5 text-slate-400 hover:bg-slate-800 hover:text-white"
                   }`}
                 >
-                  {tab.count.toLocaleString()}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="hidden sm:block w-px h-6 bg-white/10 mx-1" />
-
-          {/* Filtro Proveedor */}
-          <div className="relative group min-w-[200px]">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="w-full flex items-center justify-between pl-10 pr-3 py-2 bg-slate-900/50 border border-white/10 rounded-xl text-sm text-white hover:border-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all shadow-inner"
-            >
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                <Filter
-                  className={`w-4 h-4 transition-colors ${dropdownOpen ? "text-emerald-400" : "text-slate-400 group-hover:text-emerald-400"}`}
-                />
-              </div>
-              <span className="truncate pr-2">
-                {filtroProveedor || "Todos los proveedores"}
-              </span>
-              <ChevronDown
-                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {dropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setDropdownOpen(false)}
-                />
-                <div className="absolute top-full left-0 right-0 mt-2 py-2 bg-slate-800 border border-white/10 rounded-xl shadow-xl z-20 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
-                  <button
-                    onClick={() => {
-                      setFiltroProveedor("");
-                      setPage(1);
-                      setSeleccionados(new Set());
-                      setDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                      !filtroProveedor
-                        ? "bg-emerald-500/20 text-emerald-400 font-bold border-l-2 border-emerald-500"
-                        : "text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
+                  <div className="flex items-center gap-2">
+                    {tab.icon}
+                    {tab.label}
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                      activeTab === tab.key ? "bg-white/20 text-white" : "bg-white/10"
                     }`}
                   >
-                    Todos los proveedores
-                  </button>
-                  {proveedores.map((prov) => (
+                    {tab.count.toLocaleString()}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-white/5"></div>
+
+          {/* Filtro Proveedor */}
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <TrendingUp className="w-3.5 h-3.5" />
+              Proveedor
+            </h3>
+            <div className="relative group w-full">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-full flex items-center justify-between pl-3 pr-3 py-2.5 bg-slate-900/50 border border-white/10 rounded-xl text-sm text-white hover:border-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all shadow-inner"
+              >
+                <span className="truncate pr-2 text-xs font-medium">
+                  {filtroProveedor || "Todos los proveedores"}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {dropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 right-0 mt-2 py-2 bg-slate-800 border border-white/10 rounded-xl shadow-xl z-20 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                     <button
-                      key={prov}
                       onClick={() => {
-                        setFiltroProveedor(prov);
+                        setFiltroProveedor("");
                         setPage(1);
                         setSeleccionados(new Set());
                         setDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                        filtroProveedor === prov
+                      className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${
+                        !filtroProveedor
                           ? "bg-emerald-500/20 text-emerald-400 font-bold border-l-2 border-emerald-500"
                           : "text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
                       }`}
                     >
-                      {prov}
+                      Todos los proveedores
                     </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Segunda fila: Buscador y Acciones */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Buscador */}
-        <div className="relative group flex-1 min-w-[250px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-emerald-400 transition-colors" />
-          <input
-            type="text"
-            placeholder="Buscar por código interno, código de barras o nombre..."
-            value={busqueda}
-            onChange={(e) => {
-              setBusqueda(e.target.value);
-              setPage(1);
-            }}
-            className="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all shadow-inner"
-          />
-        </div>
-
-        {/* Right Group: Actions */}
-        <div className="flex items-center justify-center gap-2 shrink-0">
-          {seleccionados.size > 0 && (
-            <div className="flex items-center gap-2 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-              <span className="text-sm text-emerald-400 font-bold">
-                {seleccionados.size}
-              </span>
-              <span className="text-xs text-emerald-500/70">sel.</span>
-              <button
-                onClick={() => setSeleccionados(new Set())}
-                className="text-xs text-slate-500 hover:text-white transition-colors border-l border-emerald-500/30 pl-2"
-              >
-                ✕
-              </button>
+                    {proveedores.map((prov) => (
+                      <button
+                        key={prov}
+                        onClick={() => {
+                          setFiltroProveedor(prov);
+                          setPage(1);
+                          setSeleccionados(new Set());
+                          setDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${
+                          filtroProveedor === prov
+                            ? "bg-emerald-500/20 text-emerald-400 font-bold border-l-2 border-emerald-500"
+                            : "text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
+                        }`}
+                      >
+                        {prov}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
-          )}
+          </div>
 
-          <button
-            onClick={handleRefresh}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-            title="Recargar datos"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+          <div className="border-t border-white/5"></div>
 
-          {seleccionados.size > 0 && (
+          {/* Búsqueda */}
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <Search className="w-3.5 h-3.5" />
+              Búsqueda Rápida
+            </h3>
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-emerald-400 transition-colors" />
+              <input
+                type="text"
+                placeholder="Buscar código o nombre..."
+                value={busqueda}
+                onChange={(e) => {
+                  setBusqueda(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-900/50 border border-white/10 rounded-xl text-xs text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all shadow-inner"
+              />
+            </div>
+          </div>
+
+          {/* Botones de acción inferiores */}
+          <div className="mt-auto flex flex-col gap-3 pt-4 border-t border-white/5">
+            {seleccionados.size > 0 && (
+              <div className="flex items-center justify-between px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-emerald-400 font-bold">
+                    {seleccionados.size}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold text-emerald-500/70">seleccionados</span>
+                </div>
+                <button
+                  onClick={() => setSeleccionados(new Set())}
+                  className="text-emerald-400 hover:text-emerald-300 px-2 py-1 bg-emerald-500/20 rounded-md transition-colors text-[10px] font-bold"
+                  title="Limpiar selección"
+                >
+                  Limpiar
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={handleRefresh}
+              className="w-full flex items-center justify-center gap-2 p-2.5 text-slate-400 hover:text-white bg-slate-900/50 hover:bg-slate-800 border border-white/10 rounded-xl text-xs font-bold transition-all shadow-sm"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Recargar Datos
+            </button>
+
             <button
               onClick={handleAbrirPedido}
-              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              disabled={seleccionados.size === 0}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShoppingCart className="w-4 h-4" />
               Generar Pedido
             </button>
-          )}
+          </div>
         </div>
       </div>
-    </div>
-  );
 
-  return (
-    <div className="flex flex-col animate-in fade-in duration-300 h-full min-h-0 overflow-hidden">
-      {headerActions}
-
-      {/* Main Content */}
-      <div className="flex-1 min-h-0 bg-slate-900/40 p-4 rounded-xl border border-white/5 backdrop-blur-md">
+      {/* Main Content (Table) */}
+      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 flex-1 flex flex-col min-h-0 relative z-10">
         <ProductosTabla
           productos={productosFiltrados}
           loading={loading}

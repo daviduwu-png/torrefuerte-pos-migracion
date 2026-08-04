@@ -54,7 +54,6 @@ pub fn run() {
             commands::guardar_producto,
             commands::eliminar_producto,
             commands::importar_productos_truper,
-            commands::rellenar_stock_masivo,
             imprimir_ticket,
             imprimir_corte,
             imprimir_test,

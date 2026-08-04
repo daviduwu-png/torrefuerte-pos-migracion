@@ -225,9 +225,6 @@ export const api = {
   restaurarBaseDatos: async (contenido: string): Promise<ApiResponse<void>> =>
     invoke("restaurar_base_datos", { contenido }),
 
-  rellenarStockMasivo: async (): Promise<ApiResponse<string>> =>
-    invoke("rellenar_stock_masivo", {}),
-
   obtenerConfiguracion: async (): Promise<ApiResponse<Record<string, string>>> =>
     invoke("obtener_configuracion"),
 

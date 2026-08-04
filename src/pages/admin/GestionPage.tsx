@@ -73,7 +73,7 @@ export default function Gestion() {
       {portalTarget && createPortal(tabsContent, portalTarget)}
 
       {/* Main Content */}
-      <div className="flex-1 bg-slate-900/40 border border-white/5 rounded-2xl p-2 sm:p-6 relative overflow-hidden flex flex-col min-h-0 min-w-0 backdrop-blur-sm">
+      <div className="flex-1 relative overflow-hidden flex flex-col min-h-0 min-w-0">
         {/* Decorative elements inside the tab container */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
 

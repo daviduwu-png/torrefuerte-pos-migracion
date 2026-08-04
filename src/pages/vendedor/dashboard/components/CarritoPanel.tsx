@@ -34,7 +34,7 @@ export function CarritoPanel({
     onProcesarVenta,
 }: CarritoPanelProps) {
     return (
-        <div className="md:col-span-7 h-full min-h-0 flex flex-col">
+        <div className="flex-1 h-full min-h-0 flex flex-col relative z-10">
             <div className="glass-panel rounded-3xl flex-1 flex flex-col min-h-0 overflow-hidden border border-white/10 shadow-2xl relative">
                 {/* Header */}
                 <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between z-10 relative shrink-0">

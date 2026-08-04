@@ -288,148 +288,110 @@ export default function CotizacionesTab() {
   };
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in duration-300 min-h-0">
-      {/* Header */}
-      <div className="shrink-0 pb-3 border-b border-white/10 mb-3">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 shrink-0">
+    <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0 animate-in fade-in duration-300">
+      {/* Lado izquierdo: Sidebar */}
+      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 shrink-0 w-full lg:w-1/3 flex flex-col relative z-20">
+        <div className="p-4 sm:p-5 flex flex-col gap-5 h-full overflow-y-auto custom-scrollbar min-h-0">
+          
+          {/* Header del sidebar */}
+          <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
               <FileText className="w-5 h-5 text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight leading-tight">
-                Generador de Cotizaciones
+              <h2 className="text-sm font-bold text-white tracking-tight leading-tight">
+                Nueva Cotización
               </h2>
-              <p className="text-xs text-slate-400">
-                Crea cotizaciones con precios preferenciales y expórtalas a PDF.
-              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={handleConvertirApartado}
-              disabled={creandoApartado || items.length === 0 || !clienteId}
-              title={
-                !clienteId
-                  ? "Selecciona un cliente registrado para apartar mercancía"
-                  : undefined
-              }
-              className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {creandoApartado ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Package className="w-3.5 h-3.5" />
-              )}
-              {creandoApartado ? "Apartando..." : "Convertir"}
-            </button>
-            <button
-              onClick={handleGuardarYGenerar}
-              disabled={
-                guardandoEnSistema || generandoPdf || items.length === 0
-              }
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
-            >
-              {guardandoEnSistema || generandoPdf ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <FileDown className="w-3.5 h-3.5" />
-              )}
-              {guardandoEnSistema || generandoPdf
-                ? "Procesando..."
-                : "Guardar y Exportar"}
-            </button>
-          </div>
-        </div>
-      </div>
+          <div className="border-t border-white/5"></div>
 
-      <div className="flex flex-col md:flex-row flex-1 gap-6 min-h-0 overflow-hidden">
-        {/* Lado izquierdo: Búsqueda y Cliente */}
-        <div className="w-full md:w-[350px] shrink-0 flex flex-col gap-4 min-h-0">
-          <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4 flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Cliente
-              </label>
+          {/* Selector de Cliente */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <User className="w-3.5 h-3.5" />
+              Cliente
+            </label>
 
-              <div className="relative group">
-                <button
-                  type="button"
-                  onClick={() => setClienteDropdownOpen(!clienteDropdownOpen)}
-                  disabled={cargandoClientes}
-                  className="w-full flex items-center justify-between px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white hover:border-blue-500/50 focus:border-blue-500/50 outline-none transition-all disabled:opacity-50 text-left"
+            <div className="relative group">
+              <button
+                type="button"
+                onClick={() => setClienteDropdownOpen(!clienteDropdownOpen)}
+                disabled={cargandoClientes}
+                className="w-full flex items-center justify-between px-3 py-2.5 bg-slate-900/50 border border-white/10 rounded-xl text-xs text-white hover:border-blue-500/50 focus:border-blue-500/50 outline-none transition-all disabled:opacity-50 text-left shadow-inner"
+              >
+                <span className="truncate font-medium">
+                  {cargandoClientes
+                    ? "Cargando..."
+                    : clienteId
+                      ? `CL-${String(clienteId).padStart(3, "0")} - ${clientes.find((c) => c.id.toString() === clienteId)?.nombre || ""}`
+                      : "-- Cliente de Mostrador --"}
+                </span>
+                <svg
+                  className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${clienteDropdownOpen ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <span className="truncate">
-                    {cargandoClientes
-                      ? "Cargando..."
-                      : clienteId
-                        ? `CL-${String(clienteId).padStart(3, "0")} - ${clientes.find((c) => c.id.toString() === clienteId)?.nombre || ""}`
-                        : "-- Cliente de Mostrador --"}
-                  </span>
-                  <svg
-                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${clienteDropdownOpen ? "rotate-180" : ""}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
 
-                {clienteDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setClienteDropdownOpen(false)}
-                    />
-                    <div className="absolute top-full left-0 right-0 mt-2 py-2 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-20 animate-in fade-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto custom-scrollbar">
+              {clienteDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setClienteDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 right-0 mt-2 py-2 bg-slate-800 border border-white/10 rounded-xl shadow-xl z-20 animate-in fade-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto custom-scrollbar">
+                    <button
+                      onClick={() => {
+                        setClienteId("");
+                        setClienteDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${
+                        !clienteId
+                          ? "bg-blue-500/20 text-blue-400 font-bold border-l-2 border-blue-500"
+                          : "text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
+                      }`}
+                    >
+                      -- Cliente de Mostrador --
+                    </button>
+
+                    {clientes.map((c) => (
                       <button
+                        key={c.id}
                         onClick={() => {
-                          setClienteId("");
+                          setClienteId(c.id.toString());
                           setClienteDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                          !clienteId
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${
+                          clienteId === c.id.toString()
                             ? "bg-blue-500/20 text-blue-400 font-bold border-l-2 border-blue-500"
                             : "text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
                         }`}
                       >
-                        -- Cliente de Mostrador --
+                        <span className="font-mono text-[10px] opacity-60 mr-2">
+                          CL-{String(c.id).padStart(3, "0")}
+                        </span>
+                        {c.nombre}
                       </button>
-
-                      {clientes.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => {
-                            setClienteId(c.id.toString());
-                            setClienteDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                            clienteId === c.id.toString()
-                              ? "bg-blue-500/20 text-blue-400 font-bold border-l-2 border-blue-500"
-                              : "text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
-                          }`}
-                        >
-                          <span className="font-mono text-xs opacity-60 mr-2">
-                            CL-{String(c.id).padStart(3, "0")}
-                          </span>
-                          {c.nombre}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
+          <div className="border-t border-white/5"></div>
+
+          {/* Buscador de Productos */}
           <BusquedaCotizacion
             busqueda={busqueda}
             resultados={resultados}
@@ -438,44 +400,80 @@ export default function CotizacionesTab() {
             onBusquedaChange={setBusqueda}
             onSeleccionar={agregarProducto}
           />
+
+        </div>
+      </div>
+
+      {/* Lado derecho: Lista de productos en cotización */}
+      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 flex-1 flex flex-col min-h-0 relative z-10">
+        <div className="p-4 border-b border-white/5 flex justify-between items-center shrink-0 bg-slate-900/50">
+          <h3 className="text-sm font-semibold text-white">
+            Productos Seleccionados{" "}
+            <span className="text-slate-400 font-normal">
+              ({items.length})
+            </span>
+          </h3>
+          <div className="text-lg font-bold text-emerald-400">
+            Total: ${total.toFixed(2)}
+          </div>
         </div>
 
-        {/* Lado derecho: Lista de productos en cotización */}
-        <div className="w-full md:flex-1 bg-slate-900/50 border border-white/5 rounded-xl flex flex-col min-h-0 min-w-0">
-          <div className="p-4 border-b border-white/5 flex justify-between items-center shrink-0">
-            <h3 className="text-sm font-semibold text-white">
-              Productos Seleccionados{" "}
-              <span className="text-slate-400 font-normal">
-                ({items.length})
-              </span>
-            </h3>
-            <div className="text-lg font-bold text-emerald-400">
-              Total: ${total.toFixed(2)}
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          {items.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center gap-3 text-slate-500 border-2 border-dashed border-white/5 rounded-xl">
+              <FileX className="w-10 h-10 opacity-40" />
+              <p className="text-sm">
+                Agrega productos para armar la cotización.
+              </p>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {items.map((item) => (
+                <ItemCotizacionRow
+                  key={item.id}
+                  item={item}
+                  onEliminar={eliminar}
+                  onActualizarCantidad={actualizarCantidad}
+                  onEditarPrecio={editarPrecio}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-            {items.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center gap-3 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
-                <FileX className="w-10 h-10 opacity-40" />
-                <p className="text-sm">
-                  Agrega productos para armar la cotización.
-                </p>
-              </div>
+        {/* Acciones de Cotización */}
+        <div className="p-4 border-t border-white/5 bg-slate-900/50 flex flex-col sm:flex-row items-center justify-end gap-3 shrink-0">
+          <button
+            onClick={handleConvertirApartado}
+            disabled={creandoApartado || items.length === 0 || !clienteId}
+            title={
+              !clienteId
+                ? "Selecciona un cliente registrado para apartar mercancía"
+                : undefined
+            }
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-amber-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {creandoApartado ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <div className="flex flex-col gap-3">
-                {items.map((item) => (
-                  <ItemCotizacionRow
-                    key={item.id}
-                    item={item}
-                    onEliminar={eliminar}
-                    onActualizarCantidad={actualizarCantidad}
-                    onEditarPrecio={editarPrecio}
-                  />
-                ))}
-              </div>
+              <Package className="w-4 h-4" />
             )}
-          </div>
+            {creandoApartado ? "Apartando..." : "Convertir a Apartado"}
+          </button>
+          <button
+            onClick={handleGuardarYGenerar}
+            disabled={guardandoEnSistema || generandoPdf || items.length === 0}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {guardandoEnSistema || generandoPdf ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4" />
+            )}
+            {guardandoEnSistema || generandoPdf
+              ? "Procesando..."
+              : "Guardar y Exportar"}
+          </button>
         </div>
       </div>
     </div>

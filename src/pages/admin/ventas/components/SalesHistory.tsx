@@ -9,6 +9,8 @@ import {
   Loader2,
   RotateCcw,
   Printer,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import { StyledSwal as Swal } from "../../../../utils/swal";
 import { formatFechaHoraCorta, getFechaHoy } from "../../../../utils/dateFormat";
@@ -339,14 +341,45 @@ export default function SalesHistory() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-6 animate-in fade-in duration-300">
-      {/* Panel de Filtros */}
-      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 shrink-0 relative z-20">
-        <div className="p-4 sm:p-5">
-          <div className="w-full max-w-4xl mx-auto space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 items-end">
+    <div className="flex flex-col lg:flex-row h-full gap-6 animate-in fade-in duration-300">
+      {/* Panel de Filtros (Izquierda) */}
+      <div className="glass-panel rounded-2xl shadow-lg border border-white/10 shrink-0 w-full lg:w-72 flex flex-col relative z-20">
+        <div className="p-4 sm:p-5 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar">
+          
+          {/* Quick Filters */}
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5" />
+              Filtros Rápidos
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {["hoy", "semana", "mes", "anio"].map((period) => (
+                <button
+                  key={period}
+                  onClick={() => fetchTickets(period as any)}
+                  className={`px-2 py-2 text-xs font-bold rounded-xl transition-all border text-center ${
+                    activeFilter === period
+                      ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 shadow-lg shadow-cyan-900/20"
+                      : "bg-slate-900/50 border-white/5 text-slate-400 hover:bg-slate-800 hover:text-white"
+                  }`}
+                >
+                  {period === "anio" ? "Este Año" : (period === "hoy" ? "Hoy" : (period === "semana" ? "Semana" : "Mes"))}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-white/5"></div>
+
+          {/* Custom Date Range */}
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5" />
+              Rango Personalizado
+            </h3>
+            <div className="flex flex-col gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 tracking-wider">
                   Desde
                 </label>
                 <DatePicker
@@ -356,7 +389,7 @@ export default function SalesHistory() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 tracking-wider">
                   Hasta
                 </label>
                 <DatePicker
@@ -365,51 +398,39 @@ export default function SalesHistory() {
                   className="w-full"
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-2">
-                <button
-                  onClick={handleCustomFilter}
-                  disabled={loading}
-                  className="w-full px-3 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-all shadow-lg shadow-cyan-900/20"
-                >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Filter className="w-4 h-4" />
-                  )}{" "}
-                  Filtrar
-                </button>
-                <button
-                  onClick={handleSearchById}
-                  disabled={loading}
-                  className="w-full px-3 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-all"
-                >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Search className="w-4 h-4" />
-                  )}{" "}
-                  Buscar ID
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3 border-t border-white/5">
-              {["hoy", "semana", "mes", "anio"].map((period) => (
-                <button
-                  key={period}
-                  onClick={() => fetchTickets(period as any)}
-                  className={`px-3 py-2 text-xs font-bold rounded-xl transition-colors shadow-sm border ${
-                    activeFilter === period
-                      ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-400"
-                      : "bg-white/5 border-white/5 text-slate-400 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-400"
-                  }`}
-                >
-                  {period === "anio" ? "Año" : period.charAt(0).toUpperCase() + period.slice(1)}
-                </button>
-              ))}
+              <button
+                onClick={handleCustomFilter}
+                disabled={loading}
+                className="w-full mt-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all shadow-lg shadow-cyan-900/20"
+              >
+                {loading && activeFilter === "custom" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Filter className="w-4 h-4" />
+                )}
+                Filtrar Rango
+              </button>
             </div>
           </div>
+
+          <div className="border-t border-white/5 mt-auto pt-4 lg:pt-0 lg:border-t-0"></div>
+
+          {/* Search by ID */}
+          <div className="lg:mt-auto">
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest flex items-center gap-2">
+              <Search className="w-3.5 h-3.5" />
+              Búsqueda Directa
+            </h3>
+            <button
+              onClick={handleSearchById}
+              disabled={loading}
+              className="w-full px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white border border-white/10 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all shadow-md"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              Buscar Folio / ID
+            </button>
+          </div>
+          
         </div>
       </div>
 

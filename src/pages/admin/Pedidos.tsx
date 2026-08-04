@@ -42,7 +42,7 @@ export default function Pedidos() {
   );
 
   return (
-    <div className="h-full flex flex-col min-h-0 min-w-0 bg-slate-900/40 border border-white/5 rounded-2xl p-2 sm:p-6 relative overflow-hidden backdrop-blur-sm">
+    <div className="w-full h-full pb-8 relative overflow-hidden">
       {portalTarget && createPortal(switchContent, portalTarget)}
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
       {mode === "generar" ? <PedidosTab /> : <HistorialPedidos />}

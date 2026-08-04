@@ -280,7 +280,7 @@ export function ImpresorasConfig() {
   }
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col gap-6 relative">
+    <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col gap-6 relative h-full">
       {/* ADD PRINTER MODAL */}
       {showAddModal &&
         createPortal(
@@ -406,9 +406,9 @@ export function ImpresorasConfig() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 min-w-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0 flex-1 min-h-0">
         {/* Asignaciones */}
-        <div className="flex flex-col gap-4 min-w-0">
+        <div className="flex flex-col gap-4 min-w-0 overflow-y-auto custom-scrollbar">
           <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
             <label className="block text-sm font-semibold text-slate-200 mb-2">
               Impresora para Tickets / Cortes
@@ -471,7 +471,7 @@ export function ImpresorasConfig() {
         </div>
 
         {/* Diagnóstico */}
-        <div className="bg-slate-950 rounded-xl border border-slate-800 flex flex-col overflow-hidden min-w-0 h-[400px] xl:h-auto">
+        <div className="bg-slate-950 rounded-xl border border-slate-800 flex flex-col overflow-hidden min-w-0 h-full">
           <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/50 shrink-0">
             <h3 className="text-sm font-bold text-slate-300 flex items-center gap-2">
               Diagnóstico del Sistema

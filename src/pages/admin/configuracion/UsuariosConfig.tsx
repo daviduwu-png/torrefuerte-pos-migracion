@@ -129,7 +129,7 @@ export function UsuariosConfig() {
   };
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col gap-6">
+    <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col gap-6 h-full min-h-0">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-orange-900/30 flex items-center justify-center text-orange-400">
@@ -153,7 +153,7 @@ export function UsuariosConfig() {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto custom-scrollbar flex-1 min-h-0 border border-slate-800/50 rounded-lg">
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-slate-400 uppercase bg-slate-800/50 border-y border-slate-700/50">
             <tr>

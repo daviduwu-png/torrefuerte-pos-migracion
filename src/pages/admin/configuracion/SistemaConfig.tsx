@@ -72,7 +72,7 @@ export function SistemaConfig() {
   };
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col gap-6">
+    <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col gap-6 h-full min-h-0">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-indigo-900/30 flex items-center justify-center text-indigo-400">
@@ -93,7 +93,7 @@ export function SistemaConfig() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 overflow-y-auto custom-scrollbar min-h-0">
         {/* Apariencia */}
         <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
           <h3 className="text-sm font-bold text-slate-200 mb-4">Apariencia</h3>

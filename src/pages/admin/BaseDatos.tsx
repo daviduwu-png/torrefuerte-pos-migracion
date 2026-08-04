@@ -221,19 +221,19 @@ export default function BaseDatos() {
   };
 
   return (
-    <div className="space-y-6 pb-10">
-      <div className="max-w-5xl space-y-6">
+    <div className="w-full h-full pb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full items-stretch animate-in fade-in duration-300">
         
-        {/* Main Operations Card */}
-        <div className="glass-panel rounded-2xl overflow-hidden border border-amber-500/20">
-          <div className="px-6 py-4 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2">
+        {/* Main Operations Card (Left) */}
+        <div className="glass-panel rounded-2xl overflow-hidden border border-amber-500/20 flex flex-col">
+          <div className="px-6 py-4 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 shrink-0">
             <Database className="w-5 h-5 text-amber-500" />
             <h3 className="font-bold text-amber-500">Gestión Local de Base de Datos</h3>
           </div>
 
-          <div className="p-6 space-y-8">
-            {/* Fila 1: Respaldo Manual e Información Automática */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-8 border-b border-white/5">
+          <div className="p-6 space-y-6 flex-1 flex flex-col overflow-y-auto custom-scrollbar min-h-0">
+            {/* Manual Backup & Auto Info stacked */}
+            <div className="flex flex-col gap-6 pb-6 border-b border-white/5">
               {/* Manual Backup Section */}
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-emerald-500/20 rounded-xl flex-shrink-0">
@@ -266,7 +266,7 @@ export default function BaseDatos() {
               </div>
 
               {/* Automatic Info Section */}
-              <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 flex items-start gap-4 h-full">
+              <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 flex items-start gap-4">
                 <Info className="w-6 h-6 text-blue-400 shrink-0 mt-0.5" />
                 <div>
                   <h6 className="font-bold text-blue-400 mb-2">
@@ -288,12 +288,12 @@ export default function BaseDatos() {
             </div>
 
             {/* Restore Section */}
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
+            <div className="pt-2 flex-1 flex flex-col">
+              <div className="flex items-start gap-4 flex-1">
                 <div className="p-3 bg-red-500/20 rounded-xl flex-shrink-0">
                   <RotateCcw className="w-6 h-6 text-red-400" />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex flex-col">
                   <h4 className="text-lg font-bold text-red-400 mb-2">
                     Restaurar Sistema
                   </h4>
@@ -303,14 +303,13 @@ export default function BaseDatos() {
                     <span className="text-red-400 font-bold">
                       ADVERTENCIA:
                     </span>{" "}
-                    Esta acción reemplazará todos los datos actuales
-                    (inventario, ventas, etc).
+                    Esta acción reemplazará todos los datos actuales.
                   </p>
 
-                  <div className="flex flex-col gap-4 mt-2 max-w-2xl">
+                  <div className="flex flex-col gap-4 mt-auto">
                     <div className="w-full">
                       <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">
-                        Seleccionar archivo de respaldo
+                        Seleccionar archivo
                       </label>
                       <div className="relative group cursor-pointer">
                         <input
@@ -332,20 +331,18 @@ export default function BaseDatos() {
                       </div>
                     </div>
 
-                    <div className="flex justify-end">
-                      <button
-                        onClick={handleRestore}
-                        disabled={loading}
-                        className="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold shadow-lg shadow-red-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {loading ? (
-                          <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <Upload className="w-5 h-5" />
-                        )}
-                        Restaurar Ahora
-                      </button>
-                    </div>
+                    <button
+                      onClick={handleRestore}
+                      disabled={loading}
+                      className="w-full px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold shadow-lg shadow-red-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                    >
+                      {loading ? (
+                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Upload className="w-5 h-5" />
+                      )}
+                      Restaurar Ahora
+                    </button>
                   </div>
                 </div>
               </div>
@@ -353,14 +350,14 @@ export default function BaseDatos() {
           </div>
         </div>
 
-        {/* Cloud Integration Card */}
-        <div className="glass-panel rounded-2xl overflow-hidden border border-cyan-500/20">
-          <div className="px-6 py-4 bg-cyan-500/10 border-b border-cyan-500/20 flex items-center justify-between">
+        {/* Cloud Integration Card (Right) */}
+        <div className="glass-panel rounded-2xl overflow-hidden border border-cyan-500/20 flex flex-col">
+          <div className="px-6 py-4 bg-cyan-500/10 border-b border-cyan-500/20 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <Cloud className="w-5 h-5 text-cyan-500" />
-              <h3 className="font-bold text-cyan-500">Sincronización en la Nube (S3 / R2)</h3>
+              <h3 className="font-bold text-cyan-500 truncate">Sincronización en Nube (S3 / R2)</h3>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
               <input
                 type="checkbox"
                 className="sr-only peer"
@@ -368,21 +365,20 @@ export default function BaseDatos() {
                 onChange={(e) => setR2Config({ ...r2Config, enabled: e.target.checked })}
               />
               <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
-              <span className="ml-3 text-sm font-medium text-slate-300">Activar Respaldo a Nube</span>
             </label>
           </div>
 
-          <div className="p-6 space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-cyan-500/20 rounded-xl flex-shrink-0">
+          <div className="p-6 flex-1 flex flex-col overflow-y-auto custom-scrollbar min-h-0">
+            <div className="flex items-start gap-4 flex-1">
+              <div className="p-3 bg-cyan-500/20 rounded-xl flex-shrink-0 hidden sm:block">
                 <Server className="w-6 h-6 text-cyan-400" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-slate-400 leading-relaxed mb-4">
-                  Configura tus credenciales de Cloudflare R2 (o cualquier bucket compatible con S3) para subir automáticamente los respaldos diarios y manuales.
+              <div className="flex-1 flex flex-col">
+                <p className="text-sm text-slate-400 leading-relaxed mb-6">
+                  Configura tus credenciales de Cloudflare R2 o S3 para respaldar tus bases de datos automáticamente en la nube de manera silenciosa.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 flex-1">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
                       Endpoint (URL)
@@ -391,8 +387,8 @@ export default function BaseDatos() {
                       type="text"
                       value={r2Config.endpoint}
                       onChange={(e) => setR2Config({ ...r2Config, endpoint: e.target.value })}
-                      placeholder="ej. https://<account_id>.r2.cloudflarestorage.com"
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:border-cyan-500 focus:outline-none transition-colors"
+                      placeholder="ej. https://<id>.r2.cloudflarestorage.com"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-cyan-500 focus:outline-none transition-colors"
                       disabled={!r2Config.enabled}
                     />
                   </div>
@@ -405,7 +401,7 @@ export default function BaseDatos() {
                       value={r2Config.bucketName}
                       onChange={(e) => setR2Config({ ...r2Config, bucketName: e.target.value })}
                       placeholder="ej. torrefuerte-backups"
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:border-cyan-500 focus:outline-none transition-colors"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-cyan-500 focus:outline-none transition-colors"
                       disabled={!r2Config.enabled}
                     />
                   </div>
@@ -417,7 +413,7 @@ export default function BaseDatos() {
                       type="text"
                       value={r2Config.accessKey}
                       onChange={(e) => setR2Config({ ...r2Config, accessKey: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:border-cyan-500 focus:outline-none transition-colors"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-cyan-500 focus:outline-none transition-colors"
                       disabled={!r2Config.enabled}
                     />
                   </div>
@@ -429,17 +425,17 @@ export default function BaseDatos() {
                       type="password"
                       value={r2Config.secretKey}
                       onChange={(e) => setR2Config({ ...r2Config, secretKey: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:border-cyan-500 focus:outline-none transition-colors"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-cyan-500 focus:outline-none transition-colors"
                       disabled={!r2Config.enabled}
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 mt-6 justify-end border-t border-white/5 pt-6">
+                <div className="flex flex-col sm:flex-row items-center gap-3 mt-6 pt-6 border-t border-white/5">
                   <button
                     onClick={handleTestR2}
                     disabled={!r2Config.enabled || testingR2 || !r2Config.accessKey}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {testingR2 ? (
                       <span className="w-4 h-4 border-2 border-slate-400/30 border-t-slate-400 rounded-full animate-spin" />
@@ -451,7 +447,7 @@ export default function BaseDatos() {
                   <button
                     onClick={handleSaveR2}
                     disabled={savingR2}
-                    className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-cyan-900/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                    className="w-full sm:flex-1 px-5 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-cyan-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {savingR2 ? (
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
