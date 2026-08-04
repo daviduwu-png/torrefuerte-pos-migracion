@@ -60,6 +60,49 @@ pub fn crear_respaldo(
             // Limpieza de backups viejos
             limpiar_backups_antiguos(&backup_dir, if tipo == "auto" { 7 } else { 10 });
 
+            // INTENTO DE SUBIDA A CLOUDFLARE R2
+            let mut r2_access = String::new();
+            let mut r2_secret = String::new();
+            let mut r2_endpoint = String::new();
+            let mut r2_bucket = String::new();
+            let mut r2_enabled = false;
+            
+            if let Ok(mut stmt) = conn.prepare("SELECT clave, valor FROM configuracion WHERE clave LIKE 'r2_%'") {
+                let rows = stmt.query_map([], |row| {
+                    Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                });
+                if let Ok(iter) = rows {
+                    for row in iter.flatten() {
+                        match row.0.as_str() {
+                            "r2_access" => r2_access = row.1,
+                            "r2_secret" => r2_secret = row.1,
+                            "r2_endpoint" => r2_endpoint = row.1,
+                            "r2_bucket" => r2_bucket = row.1,
+                            "r2_enabled" => r2_enabled = row.1 == "true",
+                            _ => {}
+                        }
+                    }
+                }
+            }
+
+            if r2_enabled && !r2_access.is_empty() && !r2_secret.is_empty() {
+                let backup_path_clone = backup_path.clone();
+                tauri::async_runtime::spawn(async move {
+                    println!("Iniciando subida de backup a R2...");
+                    if let Err(e) = crate::cloud::upload_backup_to_r2(
+                        &backup_path_clone, 
+                        &r2_access, 
+                        &r2_secret, 
+                        &r2_endpoint, 
+                        &r2_bucket
+                    ).await {
+                        eprintln!("Error al subir backup a R2: {}", e);
+                    } else {
+                        println!("Backup subido exitosamente a R2");
+                    }
+                });
+            }
+
             ApiResponse::success("Respaldo creado exitosamente", backup_path_str)
         }
         Err(e) => ApiResponse::error(&format!("Error al generar respaldo base de datos: {}", e)),
@@ -220,6 +263,26 @@ pub fn guardar_configuracion(
     match tx.commit() {
         Ok(_) => ApiResponse::success("Configuración guardada", ()),
         Err(e) => ApiResponse::error(&format!("Error guardando configuración: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn probar_conexion_r2(
+    access_key: String,
+    secret_key: String,
+    endpoint: String,
+    bucket_name: String,
+) -> ApiResponse<String> {
+    use crate::cloud::upload_backup_to_r2;
+    // archivo temporal pequeño
+    let temp_dir = std::env::temp_dir();
+    let temp_file = temp_dir.join("test_r2_connection.txt");
+    if let Err(_) = std::fs::write(&temp_file, b"test de conexion torrefuerte pos") {
+        return ApiResponse::error("No se pudo crear archivo temporal para prueba");
+    }
+    match upload_backup_to_r2(&temp_file, &access_key, &secret_key, &endpoint, &bucket_name).await {
+        Ok(_) => ApiResponse::success("Conexión a R2 exitosa", "OK".to_string()),
+        Err(e) => ApiResponse::error(&format!("Falló la conexión a R2: {}", e)),
     }
 }
 

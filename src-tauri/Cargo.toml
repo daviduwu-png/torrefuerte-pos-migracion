@@ -34,6 +34,9 @@ uuid = { version = "1", features = ["v4"] }
 rust_xlsxwriter = "0.64"
 base64 = "0.22.1"
 
+# S3 y Cloudflare R2
+rust-s3 = "0.33"
+tokio = { version = "1", features = ["full"] }
 # Windows API para impresión
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = ["Win32_Foundation", "Win32_Graphics_Printing", "Win32_Graphics_Gdi", "Win32_Storage_FileSystem", "Win32_System_IO"] }
