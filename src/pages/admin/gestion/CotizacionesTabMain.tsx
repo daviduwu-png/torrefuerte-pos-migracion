@@ -6,6 +6,7 @@ import {
   FileX,
   Loader2,
   Package,
+  History,
 } from "lucide-react";
 import { notify } from "../../../utils/sileo";
 import jsPDF from "jspdf";
@@ -17,6 +18,7 @@ import { useClientes } from "./clientes/hooks/useClientes";
 import { useCotizacion } from "./cotizaciones/hooks/useCotizacion";
 import { BusquedaCotizacion } from "./cotizaciones/components/BusquedaCotizacion";
 import { ItemCotizacionRow } from "./cotizaciones/components/ItemCotizacionRow";
+import { HistorialCotizacionesModal } from "./cotizaciones/components/HistorialCotizacionesModal";
 
 export default function CotizacionesTab() {
   const [clienteId, setClienteId] = useState("");
@@ -24,6 +26,7 @@ export default function CotizacionesTab() {
   const [guardandoEnSistema, setGuardandoEnSistema] = useState(false);
   const [creandoApartado, setCreandoApartado] = useState(false);
   const [clienteDropdownOpen, setClienteDropdownOpen] = useState(false);
+  const [historialOpen, setHistorialOpen] = useState(false);
   const { clientes, loading: cargandoClientes } = useClientes();
 
   const {
@@ -43,19 +46,30 @@ export default function CotizacionesTab() {
   } = useCotizacion();
 
   useEffect(() => {
-    const data = localStorage.getItem("cotizacion_a_cargar");
-    if (data) {
-      try {
-        const parsed = JSON.parse(data);
-        if (parsed.items && Array.isArray(parsed.items)) {
-          cargarCotizacion(parsed.items);
-          if (parsed.clienteId) {
-            setClienteId(parsed.clienteId.toString());
+    const checkLocalStorage = () => {
+      const data = localStorage.getItem("cotizacion_a_cargar");
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.items && Array.isArray(parsed.items)) {
+            cargarCotizacion(parsed.items);
+            if (parsed.clienteId) {
+              setClienteId(parsed.clienteId.toString());
+            } else {
+              setClienteId("");
+            }
           }
-        }
-      } catch (e) {}
-      localStorage.removeItem("cotizacion_a_cargar");
-    }
+        } catch (e) {}
+        localStorage.removeItem("cotizacion_a_cargar");
+      }
+    };
+
+    // Verificar al montar
+    checkLocalStorage();
+
+    // Como el componente ya no se desmonta, escuchamos el evento para volver a verificar
+    window.addEventListener("cambiarTabGestion", checkLocalStorage);
+    return () => window.removeEventListener("cambiarTabGestion", checkLocalStorage);
   }, [cargarCotizacion]);
 
   const getBase64Image = async (url: string) => {
@@ -294,15 +308,25 @@ export default function CotizacionesTab() {
         <div className="p-4 sm:p-5 flex flex-col gap-5 h-full overflow-y-auto custom-scrollbar min-h-0">
           
           {/* Header del sidebar */}
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
-              <FileText className="w-5 h-5 text-blue-500" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                <FileText className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-white tracking-tight leading-tight">
+                  Nueva Cotización
+                </h2>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-white tracking-tight leading-tight">
-                Nueva Cotización
-              </h2>
-            </div>
+            
+            <button
+              onClick={() => setHistorialOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-xs font-bold text-slate-300 transition-colors shadow-sm"
+            >
+              <History className="w-3.5 h-3.5" />
+              Historial
+            </button>
           </div>
 
           <div className="border-t border-white/5"></div>
@@ -476,6 +500,11 @@ export default function CotizacionesTab() {
           </button>
         </div>
       </div>
+      
+      <HistorialCotizacionesModal 
+        open={historialOpen}
+        onClose={() => setHistorialOpen(false)}
+      />
     </div>
   );
 }

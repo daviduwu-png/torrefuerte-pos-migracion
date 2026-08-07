@@ -106,11 +106,23 @@ export function ApartadoDetalleModal({
     setProcesando(true);
     try {
       const res = await api.liquidarApartado(apartadoId, metodo);
-      if (res.success) {
+      if (res.success && res.data) {
         notify.success({
           title: "Liquidado",
           description: "Ticket generado correctamente.",
         });
+        
+        // Imprimir el ticket generado
+        try {
+          await api.imprimirTicket(res.data);
+        } catch (e) {
+          console.error("Error al imprimir:", e);
+          notify.error({
+            title: "Error de impresión",
+            description: "No se pudo imprimir el ticket automáticamente.",
+          });
+        }
+
         onApartadoActualizado();
         onClose();
       } else {
