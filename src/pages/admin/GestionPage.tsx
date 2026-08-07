@@ -77,10 +77,15 @@ export default function Gestion() {
         {/* Decorative elements inside the tab container */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
 
-        {activeTab === "clientes" && <ClientesTab />}
-
-        {activeTab === "cotizaciones" && <CotizacionesTab />}
-        {activeTab === "apartados" && <ApartadosTab />}
+        <div className={activeTab === "clientes" ? "contents" : "hidden"}>
+          <ClientesTab />
+        </div>
+        <div className={activeTab === "cotizaciones" ? "contents" : "hidden"}>
+          <CotizacionesTab />
+        </div>
+        <div className={activeTab === "apartados" ? "contents" : "hidden"}>
+          <ApartadosTab />
+        </div>
       </div>
     </div>
   );

@@ -45,7 +45,12 @@ export default function Pedidos() {
     <div className="w-full h-full pb-8 relative overflow-hidden">
       {portalTarget && createPortal(switchContent, portalTarget)}
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
-      {mode === "generar" ? <PedidosTab /> : <HistorialPedidos />}
+      <div className={mode === "generar" ? "contents" : "hidden"}>
+        <PedidosTab />
+      </div>
+      <div className={mode === "historial" ? "contents" : "hidden"}>
+        <HistorialPedidos />
+      </div>
     </div>
   );
 }
