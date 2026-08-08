@@ -395,10 +395,6 @@ fn get_timestamp_file_for(tipo: &str) -> PathBuf {
     db_path.parent().unwrap().join(filename)
 }
 
-// Mantener compatibilidad hacia atrás
-fn get_timestamp_file() -> PathBuf {
-    get_timestamp_file_for("auto")
-}
 
 fn get_last_backup_date_for(tipo: &str) -> Option<String> {
     let file = get_timestamp_file_for(tipo);
@@ -410,9 +406,6 @@ fn get_last_backup_date_for(tipo: &str) -> Option<String> {
     None
 }
 
-fn get_last_backup_date() -> Option<String> {
-    get_last_backup_date_for("auto")
-}
 
 fn update_last_backup_timestamp_for(tipo: &str) {
     let file = get_timestamp_file_for(tipo);
@@ -420,9 +413,6 @@ fn update_last_backup_timestamp_for(tipo: &str) {
     let _ = fs::write(file, today);
 }
 
-fn update_last_backup_timestamp() {
-    update_last_backup_timestamp_for("auto");
-}
 
 fn limpiar_backups_antiguos(dir: &Path, max_files: usize) {
     if let Ok(entries) = fs::read_dir(dir) {
