@@ -21,10 +21,17 @@ pub async fn upload_backup_to_r2(
         .to_str()
         .unwrap_or("backup.db");
 
-    // Cloudflare R2 usa la región "auto" o cualquiera dummy (usualmente "auto")
-    let region = Region::Custom {
-        region: "auto".to_string(),
-        endpoint: endpoint.to_string(),
+    // Extraer el Account ID del endpoint provisto por el usuario
+    let account_id = endpoint
+        .replace("https://", "")
+        .replace("http://", "")
+        .replace(".r2.cloudflarestorage.com", "")
+        .trim_end_matches('/')
+        .to_string();
+
+    // rust-s3 tiene soporte nativo para Cloudflare R2
+    let region = Region::R2 {
+        account_id,
     };
 
     let credentials = Credentials::new(
