@@ -219,7 +219,7 @@ export const api = {
 
   // ── Sistema / Backups ────────────────────────────────────
   crearRespaldo: async (
-    tipo: "auto" | "manual",
+    tipo: "auto" | "manual" | "corte",
   ): Promise<ApiResponse<string>> => invoke("crear_respaldo", { tipo }),
 
   restaurarBaseDatos: async (contenido: string): Promise<ApiResponse<void>> =>
