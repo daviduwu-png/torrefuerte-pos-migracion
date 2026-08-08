@@ -23,22 +23,23 @@ pub fn crear_respaldo(
 
     // 2. Generar nombre de archivo
     let fecha = Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
-    let prefix = if tipo == "auto" {
-        "auto_backup_"
-    } else {
-        "backup_"
+    let prefix = match tipo.as_str() {
+        "auto"  => "auto_backup_",
+        "corte" => "corte_backup_",
+        _       => "backup_",
     };
     let filename = format!("{}{}.db", prefix, fecha);
     let backup_path = backup_dir.join(&filename);
     let backup_path_str = backup_path.to_string_lossy().to_string();
 
-    // 3. Verificar intervalo para backups automáticos (1 por día)
-    if tipo == "auto" {
+    // 3. Verificar intervalo — "auto" y "corte" tienen límite de 1 por día cada uno
+    //    "manual" siempre se genera sin restricción
+    if tipo == "auto" || tipo == "corte" {
         let today = Local::now().format("%Y-%m-%d").to_string();
-        if let Some(last_date) = get_last_backup_date() {
+        if let Some(last_date) = get_last_backup_date_for(&tipo) {
             if last_date == today {
                 return ApiResponse::success(
-                    "Respaldo automático al día (omitido)",
+                    &format!("Respaldo '{}' al día (omitido)", tipo),
                     "SKIPPED".to_string(),
                 );
             }
@@ -52,13 +53,18 @@ pub fn crear_respaldo(
 
     match conn.execute(&sql, []) {
         Ok(_) => {
-            // Actualizar timestamp si es auto
-            if tipo == "auto" {
-                update_last_backup_timestamp();
+            // Actualizar timestamp si es auto o corte
+            if tipo == "auto" || tipo == "corte" {
+                update_last_backup_timestamp_for(&tipo);
             }
 
-            // Limpieza de backups viejos
-            limpiar_backups_antiguos(&backup_dir, if tipo == "auto" { 7 } else { 10 });
+            // Limpieza de backups viejos por tipo
+            let max = match tipo.as_str() {
+                "auto"  => 7,
+                "corte" => 7,
+                _       => 10,
+            };
+            limpiar_backups_antiguos(&backup_dir, max);
 
             // INTENTO DE SUBIDA A CLOUDFLARE R2
             let mut r2_access = String::new();
@@ -312,8 +318,14 @@ pub async fn probar_conexion_r2(
         return ApiResponse::error("No se pudo crear archivo temporal para prueba");
     }
     match upload_backup_to_r2(&temp_file, &access_key, &secret_key, &endpoint, &bucket_name).await {
-        Ok(_) => ApiResponse::success("Conexión a R2 exitosa", "OK".to_string()),
-        Err(e) => ApiResponse::error(&format!("Falló la conexión a R2: {}", e)),
+        Ok(_) => {
+            let _ = std::fs::remove_file(&temp_file);
+            ApiResponse::success("Conexión a R2 exitosa", "OK".to_string())
+        },
+        Err(e) => {
+            let _ = std::fs::remove_file(&temp_file);
+            ApiResponse::error(&format!("Falló la conexión a R2: {}", e))
+        },
     }
 }
 
@@ -367,20 +379,25 @@ fn get_backup_root_dir() -> PathBuf {
 
 fn get_backup_dir(tipo: &str) -> PathBuf {
     let root = get_backup_root_dir();
-    if tipo == "auto" {
-        root.join("Automaticos")
-    } else {
-        root.join("Manuales")
+    match tipo {
+        "auto"  => root.join("Automaticos"),
+        "corte" => root.join("Corte"),
+        _       => root.join("Manuales"),
     }
 }
 
-fn get_timestamp_file() -> PathBuf {
+fn get_timestamp_file_for(tipo: &str) -> PathBuf {
     let db_path = get_db_path();
-    db_path.parent().unwrap().join("last_auto_backup.txt")
+    let filename = match tipo {
+        "corte" => "last_corte_backup.txt",
+        _       => "last_auto_backup.txt",
+    };
+    db_path.parent().unwrap().join(filename)
 }
 
-fn get_last_backup_date() -> Option<String> {
-    let file = get_timestamp_file();
+
+fn get_last_backup_date_for(tipo: &str) -> Option<String> {
+    let file = get_timestamp_file_for(tipo);
     if file.exists() {
         if let Ok(content) = fs::read_to_string(&file) {
             return Some(content.trim().to_string());
@@ -389,11 +406,13 @@ fn get_last_backup_date() -> Option<String> {
     None
 }
 
-fn update_last_backup_timestamp() {
-    let file = get_timestamp_file();
+
+fn update_last_backup_timestamp_for(tipo: &str) {
+    let file = get_timestamp_file_for(tipo);
     let today = Local::now().format("%Y-%m-%d").to_string();
     let _ = fs::write(file, today);
 }
+
 
 fn limpiar_backups_antiguos(dir: &Path, max_files: usize) {
     if let Ok(entries) = fs::read_dir(dir) {

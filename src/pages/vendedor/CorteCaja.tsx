@@ -54,6 +54,15 @@ export default function CorteCaja() {
       const res = await api.obtenerCorteCaja(fechaSeleccionada);
       if (res.success && res.data) {
         setCorte(res.data);
+
+        // Backup automático al cierre del día (solo si es el día de hoy, no históricos)
+        // Usa tipo "corte" para que sea independiente del backup del login (sin límite diario)
+        if (esHoy) {
+          api.crearRespaldo("corte").catch((err) => {
+            console.error("Error al generar backup en corte de caja:", err);
+          });
+        }
+
         try {
           const printRes = await api.imprimirCorte(res.data);
           if (printRes.success) {

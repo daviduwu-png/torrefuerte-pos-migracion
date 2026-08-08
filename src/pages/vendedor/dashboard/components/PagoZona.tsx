@@ -82,11 +82,11 @@ export function PagoZona({
                             <button
                                 key={value}
                                 onClick={() => onMetodoPagoChange(value)}
-                                className={`flex flex-col items-center justify-center min-w-[80px] py-2 rounded-lg border transition-all duration-300 ${metodoPago === value ? activeColor : hoverColor
+                                title={label}
+                                className={`flex items-center justify-center w-[52px] h-[52px] rounded-lg border transition-all duration-300 ${metodoPago === value ? activeColor : hoverColor
                                     }`}
                             >
-                                <Icon className="w-5 h-5 mb-0.5" />
-                                <span className="text-[10px] font-bold">{label}</span>
+                                <Icon className="w-6 h-6" />
                             </button>
                         ))}
                     </div>
