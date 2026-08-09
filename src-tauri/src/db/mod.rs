@@ -344,6 +344,38 @@ impl Database {
         
         let _ = conn.execute_batch("PRAGMA foreign_keys = ON;");
 
+        // MIGRACIÓN DE SEGURIDAD: credenciales R2 en texto plano
+        // Si se restaura una BD antigua que todavía tiene r2_access/r2_secret en claro,
+        // los migramos al archivo cifrado y los borramos de la BD.
+        let legacy_access: Option<String> = conn
+            .query_row(
+                "SELECT valor FROM configuracion WHERE clave = 'r2_access' AND valor != ''",
+                [],
+                |row| row.get(0),
+            )
+            .ok();
+        let legacy_secret: Option<String> = conn
+            .query_row(
+                "SELECT valor FROM configuracion WHERE clave = 'r2_secret' AND valor != ''",
+                [],
+                |row| row.get(0),
+            )
+            .ok();
+
+        if let (Some(access), Some(secret)) = (legacy_access, legacy_secret) {
+            // Migrar al archivo cifrado (solo si todavía no existe uno más reciente)
+            let (current_access, _) = crate::credentials::load_r2_credentials();
+            if current_access.is_empty() {
+                let _ = crate::credentials::save_r2_credentials(&access, &secret);
+                println!("[migration] Credenciales R2 migradas al almacén cifrado.");
+            }
+            // Limpiar de la BD en cualquier caso
+            let _ = conn.execute_batch(
+                "UPDATE configuracion SET valor = '' WHERE clave IN ('r2_access', 'r2_secret');"
+            );
+            println!("[migration] Credenciales R2 eliminadas de la BD (texto plano).");
+        }
+
         Ok(())
     }
 }

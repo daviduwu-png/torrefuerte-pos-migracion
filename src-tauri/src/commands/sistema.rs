@@ -3,7 +3,7 @@ use crate::models::ApiResponse;
 use chrono::Local;
 use std::fs;
 use std::path::{Path, PathBuf};
-use tauri::State;
+use tauri::{State, Emitter};
 use std::collections::HashMap;
 
 // ==================== SISTEMA / BACKUPS ====================
@@ -11,8 +11,9 @@ use std::collections::HashMap;
 /// Crear un respaldo de la base de datos de manera segura (usando VACUUM INTO)
 #[tauri::command]
 pub fn crear_respaldo(
-    tipo: String, // "auto" o "manual"
+    tipo: String, // "auto" | "corte" | "manual"
     state: State<AppState>,
+    app_handle: tauri::AppHandle,
 ) -> ApiResponse<String> {
     // 1. Definir carpeta de destino
     let backup_dir = get_backup_dir(&tipo);
@@ -46,73 +47,61 @@ pub fn crear_respaldo(
         }
     }
 
-    // 4. Ejecutar VACUUM INTO para respaldo seguro en caliente
-    let conn = state.db.conn.lock().unwrap();
-    // VACUUM INTO crea una copia consistente de la BD incluso si está en uso
+    // 4. Ejecutar VACUUM INTO y leer config R2 dentro de un bloque con scope
+    //    limitado para que el lock del Mutex se libere ANTES del spawn async.
     let sql = format!("VACUUM INTO '{}'", backup_path_str.replace("'", "''"));
 
-    match conn.execute(&sql, []) {
-        Ok(_) => {
-            // Actualizar timestamp si es auto o corte
-            if tipo == "auto" || tipo == "corte" {
-                update_last_backup_timestamp_for(&tipo);
-            }
+    let r2_config = {
+        let conn = state.db.conn.lock().unwrap();
+        // VACUUM INTO crea una copia consistente de la BD incluso si está en uso
+        if let Err(e) = conn.execute(&sql, []) {
+            return ApiResponse::error(&format!("Error al generar respaldo base de datos: {}", e));
+        }
+        // Leer config R2 mientras tenemos el lock, antes de soltarlo
+        read_r2_config(&conn)
+    }; // Lock del Mutex liberado aquí, antes del spawn
 
-            // Limpieza de backups viejos por tipo
-            let max = match tipo.as_str() {
-                "auto"  => 7,
-                "corte" => 7,
-                _       => 10,
-            };
-            limpiar_backups_antiguos(&backup_dir, max);
+    // Actualizar timestamp si es auto o corte
+    if tipo == "auto" || tipo == "corte" {
+        update_last_backup_timestamp_for(&tipo);
+    }
 
-            // INTENTO DE SUBIDA A CLOUDFLARE R2
-            let mut r2_access = String::new();
-            let mut r2_secret = String::new();
-            let mut r2_endpoint = String::new();
-            let mut r2_bucket = String::new();
-            let mut r2_enabled = false;
-            
-            if let Ok(mut stmt) = conn.prepare("SELECT clave, valor FROM configuracion WHERE clave LIKE 'r2_%'") {
-                let rows = stmt.query_map([], |row| {
-                    Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-                });
-                if let Ok(iter) = rows {
-                    for row in iter.flatten() {
-                        match row.0.as_str() {
-                            "r2_access" => r2_access = row.1,
-                            "r2_secret" => r2_secret = row.1,
-                            "r2_endpoint" => r2_endpoint = row.1,
-                            "r2_bucket" => r2_bucket = row.1,
-                            "r2_enabled" => r2_enabled = row.1 == "true",
-                            _ => {}
-                        }
-                    }
+    // Limpieza de backups viejos por tipo
+    let max = match tipo.as_str() {
+        "auto"  => 7,
+        "corte" => 7,
+        _       => 10,
+    };
+    limpiar_backups_antiguos(&backup_dir, max);
+
+    // SUBIDA A CLOUDFLARE R2 (lock ya liberado — sin riesgo de deadlock)
+    if r2_config.enabled && !r2_config.access.is_empty() && !r2_config.secret.is_empty() {
+        let backup_path_clone = backup_path.clone();
+        let tipo_clone = tipo.clone();
+        let handle = app_handle.clone();
+        tauri::async_runtime::spawn(async move {
+            println!("Iniciando subida de backup '{}' a R2...", tipo_clone);
+            match crate::cloud::upload_backup_to_r2(
+                &backup_path_clone,
+                &tipo_clone,
+                &r2_config.access,
+                &r2_config.secret,
+                &r2_config.endpoint,
+                &r2_config.bucket,
+            ).await {
+                Ok(_) => {
+                    println!("Backup '{}' subido exitosamente a R2", tipo_clone);
+                    let _ = handle.emit("r2-upload-ok", &tipo_clone);
+                }
+                Err(e) => {
+                    eprintln!("Error al subir backup '{}' a R2: {}", tipo_clone, e);
+                    let _ = handle.emit("r2-upload-error", &e);
                 }
             }
-
-            if r2_enabled && !r2_access.is_empty() && !r2_secret.is_empty() {
-                let backup_path_clone = backup_path.clone();
-                tauri::async_runtime::spawn(async move {
-                    println!("Iniciando subida de backup a R2...");
-                    if let Err(e) = crate::cloud::upload_backup_to_r2(
-                        &backup_path_clone, 
-                        &r2_access, 
-                        &r2_secret, 
-                        &r2_endpoint, 
-                        &r2_bucket
-                    ).await {
-                        eprintln!("Error al subir backup a R2: {}", e);
-                    } else {
-                        println!("Backup subido exitosamente a R2");
-                    }
-                });
-            }
-
-            ApiResponse::success("Respaldo creado exitosamente", backup_path_str)
-        }
-        Err(e) => ApiResponse::error(&format!("Error al generar respaldo base de datos: {}", e)),
+        });
     }
+
+    ApiResponse::success("Respaldo creado exitosamente", backup_path_str)
 }
 
 use base64::{engine::general_purpose, Engine as _};
@@ -238,9 +227,17 @@ pub fn obtener_configuracion(state: State<AppState>) -> ApiResponse<HashMap<Stri
         Ok(iter) => {
             for row in iter {
                 if let Ok((k, v)) = row {
-                    config.insert(k, v);
+                    // Ignorar los campos sensibles que ahora viven cifrados en disco
+                    if k != "r2_access" && k != "r2_secret" {
+                        config.insert(k, v);
+                    }
                 }
             }
+            // Inyectar credenciales R2 desde el archivo cifrado
+            let (access, secret) = crate::credentials::load_r2_credentials();
+            config.insert("r2_access".to_string(), access);
+            config.insert("r2_secret".to_string(), secret);
+
             ApiResponse::success("Configuración obtenida", config)
         },
         Err(e) => ApiResponse::error(&format!("Error leyendo configuración: {}", e))
@@ -252,13 +249,39 @@ pub fn guardar_configuracion(
     config: HashMap<String, String>,
     state: State<AppState>
 ) -> ApiResponse<()> {
+    // Interceptar credenciales sensibles ANTES de tocar la BD
+    let r2_access = config.get("r2_access").cloned().unwrap_or_default();
+    let r2_secret = config.get("r2_secret").cloned().unwrap_or_default();
+    let r2_enabled = config.get("r2_enabled").map(|v| v == "true").unwrap_or(false);
+
+    // Si se están enviando credenciales no vacías, cifrarlas en disco
+    if !r2_access.is_empty() || !r2_secret.is_empty() {
+        if let Err(e) = crate::credentials::save_r2_credentials(&r2_access, &r2_secret) {
+            eprintln!("[credentials] Advertencia al cifrar credenciales R2: {}", e);
+        }
+    }
+
+    // Si R2 se deshabilita explícitamente, borrar las credenciales del disco
+    if !r2_enabled {
+        // Solo borramos si ambas claves llegaron vacías (el usuario las limpió)
+        if r2_access.is_empty() && r2_secret.is_empty() {
+            crate::credentials::clear_r2_credentials();
+        }
+    }
+
+    // Filtrar r2_access y r2_secret del mapa, no deben ir a la BD
+    let db_config: HashMap<String, String> = config
+        .into_iter()
+        .filter(|(k, _)| k != "r2_access" && k != "r2_secret")
+        .collect();
+
     let mut conn = state.db.conn.lock().unwrap();
     let tx = match conn.transaction() {
         Ok(t) => t,
         Err(e) => return ApiResponse::error(&format!("Error iniciando transacción: {}", e)),
     };
     
-    for (k, v) in config {
+    for (k, v) in db_config {
         let _ = tx.execute(
             "INSERT INTO configuracion (clave, valor) VALUES (?1, ?2) 
              ON CONFLICT(clave) DO UPDATE SET valor=excluded.valor",
@@ -310,16 +333,20 @@ pub async fn probar_conexion_r2(
     endpoint: String,
     bucket_name: String,
 ) -> ApiResponse<String> {
-    use crate::cloud::upload_backup_to_r2;
-    // archivo temporal pequeño
+    use crate::cloud::{upload_backup_to_r2, delete_object_from_r2};
+    const TEST_KEY: &str = "/test/test_r2_connection.txt";
+
     let temp_dir = std::env::temp_dir();
     let temp_file = temp_dir.join("test_r2_connection.txt");
-    if let Err(_) = std::fs::write(&temp_file, b"test de conexion torrefuerte pos") {
+    if std::fs::write(&temp_file, b"test de conexion torrefuerte pos").is_err() {
         return ApiResponse::error("No se pudo crear archivo temporal para prueba");
     }
-    match upload_backup_to_r2(&temp_file, &access_key, &secret_key, &endpoint, &bucket_name).await {
+
+    match upload_backup_to_r2(&temp_file, "test", &access_key, &secret_key, &endpoint, &bucket_name).await {
         Ok(_) => {
             let _ = std::fs::remove_file(&temp_file);
+            // Eliminar el archivo de prueba del bucket para no acumular basura
+            let _ = delete_object_from_r2(TEST_KEY, &access_key, &secret_key, &endpoint, &bucket_name).await;
             ApiResponse::success("Conexión a R2 exitosa", "OK".to_string())
         },
         Err(e) => {
@@ -433,3 +460,55 @@ fn limpiar_backups_antiguos(dir: &Path, max_files: usize) {
         }
     }
 }
+
+// ==================== R2 CONFIG HELPER ====================
+
+/// Config de R2. Las credenciales sensibles vienen del archivo cifrado;
+/// el resto (endpoint, bucket, enabled) viene de la BD.
+struct R2Config {
+    enabled: bool,
+    access: String,
+    secret: String,
+    endpoint: String,
+    bucket: String,
+}
+
+/// Construye la config R2 completa:
+/// - `access` y `secret` → descifrados desde `~/.torrefuerte_data/.r2_credentials`
+/// - `endpoint`, `bucket`, `enabled` → leídos de SQLite
+/// Invocar dentro de un bloque `{}` para liberar el lock antes de cualquier `spawn`.
+fn read_r2_config(conn: &rusqlite::Connection) -> R2Config {
+    // Leer campos no sensibles de la BD
+    let mut cfg = R2Config {
+        enabled: false,
+        access: String::new(),
+        secret: String::new(),
+        endpoint: String::new(),
+        bucket: String::new(),
+    };
+
+    if let Ok(mut stmt) = conn.prepare(
+        "SELECT clave, valor FROM configuracion WHERE clave IN ('r2_enabled', 'r2_endpoint', 'r2_bucket')",
+    ) {
+        if let Ok(rows) = stmt.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        }) {
+            for row in rows.flatten() {
+                match row.0.as_str() {
+                    "r2_endpoint" => cfg.endpoint = row.1,
+                    "r2_bucket"   => cfg.bucket   = row.1,
+                    "r2_enabled"  => cfg.enabled  = row.1 == "true",
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    // Cargar credenciales desde el archivo cifrado
+    let (access, secret) = crate::credentials::load_r2_credentials();
+    cfg.access = access;
+    cfg.secret = secret;
+
+    cfg
+}
+

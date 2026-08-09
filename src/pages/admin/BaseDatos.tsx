@@ -169,6 +169,17 @@ export default function BaseDatos() {
   };
 
   const handleTestR2 = async () => {
+    // Validar todos los campos antes de intentar la conexión
+    if (!r2Config.accessKey || !r2Config.secretKey || !r2Config.endpoint || !r2Config.bucketName) {
+      Swal.fire({
+        title: "Campos incompletos",
+        text: "Completa el Endpoint, Bucket Name, Access Key y Secret Key antes de probar la conexión.",
+        icon: "warning",
+        confirmButtonColor: "#f59e0b",
+      });
+      return;
+    }
+
     setTestingR2(true);
     try {
       const res = await api.probarConexionR2(
