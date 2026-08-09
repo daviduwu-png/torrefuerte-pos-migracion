@@ -1,5 +1,8 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sileo";
+import { listen } from "@tauri-apps/api/event";
+import { notify } from "./utils/sileo";
 import { MainLayout } from "./components/layout";
 import Login from "./pages/Login";
 import {
@@ -18,6 +21,31 @@ import {
 import { VendedorDashboard, CorteCaja } from "./pages/vendedor";
 
 function App() {
+  // Listener global para notificar silenciosamente el resultado del upload a R2
+  useEffect(() => {
+    const unlistenOk = listen<string>("r2-upload-ok", (event) => {
+      const tipo = event.payload;
+      notify.success({
+        title: "Nube sincronizada",
+        description: `Respaldo (${tipo}) subido a R2 correctamente.`,
+        duration: 5000,
+      });
+    });
+
+    const unlistenErr = listen<string>("r2-upload-error", (event) => {
+      notify.error({
+        title: "Error en nube",
+        description: `No se pudo subir el respaldo a R2: ${event.payload}`,
+        duration: 12000,
+      });
+    });
+
+    return () => {
+      unlistenOk.then((f) => f());
+      unlistenErr.then((f) => f());
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <Toaster
