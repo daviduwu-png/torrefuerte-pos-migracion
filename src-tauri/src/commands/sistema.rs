@@ -227,9 +227,17 @@ pub fn obtener_configuracion(state: State<AppState>) -> ApiResponse<HashMap<Stri
         Ok(iter) => {
             for row in iter {
                 if let Ok((k, v)) = row {
-                    config.insert(k, v);
+                    // Ignorar los campos sensibles que ahora viven cifrados en disco
+                    if k != "r2_access" && k != "r2_secret" {
+                        config.insert(k, v);
+                    }
                 }
             }
+            // Inyectar credenciales R2 desde el archivo cifrado
+            let (access, secret) = crate::credentials::load_r2_credentials();
+            config.insert("r2_access".to_string(), access);
+            config.insert("r2_secret".to_string(), secret);
+
             ApiResponse::success("Configuración obtenida", config)
         },
         Err(e) => ApiResponse::error(&format!("Error leyendo configuración: {}", e))
@@ -241,13 +249,39 @@ pub fn guardar_configuracion(
     config: HashMap<String, String>,
     state: State<AppState>
 ) -> ApiResponse<()> {
+    // Interceptar credenciales sensibles ANTES de tocar la BD
+    let r2_access = config.get("r2_access").cloned().unwrap_or_default();
+    let r2_secret = config.get("r2_secret").cloned().unwrap_or_default();
+    let r2_enabled = config.get("r2_enabled").map(|v| v == "true").unwrap_or(false);
+
+    // Si se están enviando credenciales no vacías, cifrarlas en disco
+    if !r2_access.is_empty() || !r2_secret.is_empty() {
+        if let Err(e) = crate::credentials::save_r2_credentials(&r2_access, &r2_secret) {
+            eprintln!("[credentials] Advertencia al cifrar credenciales R2: {}", e);
+        }
+    }
+
+    // Si R2 se deshabilita explícitamente, borrar las credenciales del disco
+    if !r2_enabled {
+        // Solo borramos si ambas claves llegaron vacías (el usuario las limpió)
+        if r2_access.is_empty() && r2_secret.is_empty() {
+            crate::credentials::clear_r2_credentials();
+        }
+    }
+
+    // Filtrar r2_access y r2_secret del mapa, no deben ir a la BD
+    let db_config: HashMap<String, String> = config
+        .into_iter()
+        .filter(|(k, _)| k != "r2_access" && k != "r2_secret")
+        .collect();
+
     let mut conn = state.db.conn.lock().unwrap();
     let tx = match conn.transaction() {
         Ok(t) => t,
         Err(e) => return ApiResponse::error(&format!("Error iniciando transacción: {}", e)),
     };
     
-    for (k, v) in config {
+    for (k, v) in db_config {
         let _ = tx.execute(
             "INSERT INTO configuracion (clave, valor) VALUES (?1, ?2) 
              ON CONFLICT(clave) DO UPDATE SET valor=excluded.valor",
@@ -429,8 +463,8 @@ fn limpiar_backups_antiguos(dir: &Path, max_files: usize) {
 
 // ==================== R2 CONFIG HELPER ====================
 
-/// Config de R2 leída desde la BD. Tipo de retorno de `read_r2_config` que permite
-/// liberar el Mutex antes de cualquier `spawn` async.
+/// Config de R2. Las credenciales sensibles vienen del archivo cifrado;
+/// el resto (endpoint, bucket, enabled) viene de la BD.
 struct R2Config {
     enabled: bool,
     access: String,
@@ -439,10 +473,12 @@ struct R2Config {
     bucket: String,
 }
 
-/// Lee la configuración R2 desde una conexión ya abierta.
-/// Invocar dentro de un bloque `{}` para que el lock se libere
-/// antes de hacer cualquier `spawn`.
+/// Construye la config R2 completa:
+/// - `access` y `secret` → descifrados desde `~/.torrefuerte_data/.r2_credentials`
+/// - `endpoint`, `bucket`, `enabled` → leídos de SQLite
+/// Invocar dentro de un bloque `{}` para liberar el lock antes de cualquier `spawn`.
 fn read_r2_config(conn: &rusqlite::Connection) -> R2Config {
+    // Leer campos no sensibles de la BD
     let mut cfg = R2Config {
         enabled: false,
         access: String::new(),
@@ -450,16 +486,15 @@ fn read_r2_config(conn: &rusqlite::Connection) -> R2Config {
         endpoint: String::new(),
         bucket: String::new(),
     };
+
     if let Ok(mut stmt) = conn.prepare(
-        "SELECT clave, valor FROM configuracion WHERE clave LIKE 'r2_%'",
+        "SELECT clave, valor FROM configuracion WHERE clave IN ('r2_enabled', 'r2_endpoint', 'r2_bucket')",
     ) {
         if let Ok(rows) = stmt.query_map([], |row| {
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
         }) {
             for row in rows.flatten() {
                 match row.0.as_str() {
-                    "r2_access"   => cfg.access   = row.1,
-                    "r2_secret"   => cfg.secret   = row.1,
                     "r2_endpoint" => cfg.endpoint = row.1,
                     "r2_bucket"   => cfg.bucket   = row.1,
                     "r2_enabled"  => cfg.enabled  = row.1 == "true",
@@ -468,5 +503,12 @@ fn read_r2_config(conn: &rusqlite::Connection) -> R2Config {
             }
         }
     }
+
+    // Cargar credenciales desde el archivo cifrado
+    let (access, secret) = crate::credentials::load_r2_credentials();
+    cfg.access = access;
+    cfg.secret = secret;
+
     cfg
 }
+
