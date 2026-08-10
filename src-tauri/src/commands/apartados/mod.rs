@@ -356,11 +356,21 @@ pub async fn liquidar_apartado(
     conn.execute_batch("BEGIN;").map_err(|e| e.to_string())?;
 
     // Obtener info del local para el ticket
-    let (nombre_local, direccion_local): (String, String) = conn.query_row(
-        "SELECT nombre, direccion FROM configuracion LIMIT 1",
-        [],
-        |r: &rusqlite::Row| Ok((r.get(0)?, r.get(1)?)),
-    ).unwrap_or_else(|_| ("TorreFuerte".to_string(), "".to_string()));
+    let mut config_stmt = conn.prepare("SELECT clave, valor FROM configuracion WHERE clave LIKE 'ticket_%'").map_err(|e| e.to_string())?;
+    let config_map: std::collections::HashMap<String, String> = config_stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+        .unwrap()
+        .filter_map(|r| r.ok())
+        .collect();
+
+    let nombre_local = config_map.get("ticket_nombre_local").cloned().unwrap_or_else(|| "TorreFuerte".to_string());
+    let rfc = config_map.get("ticket_rfc").cloned().unwrap_or_else(|| "".to_string());
+    let direccion_local = config_map.get("ticket_direccion_1").cloned().unwrap_or_else(|| "".to_string());
+    let direccion_local_2 = config_map.get("ticket_direccion_2").cloned().unwrap_or_else(|| "".to_string());
+    let direccion_local_3 = config_map.get("ticket_direccion_3").cloned().unwrap_or_else(|| "".to_string());
+
+    // Obtener usuario_id del state
+    let usuario_id = state.current_user.lock().unwrap().as_ref().map(|u| u.id);
 
     // Generar folio fiscal único
     let folio = format!("APT-{}-{}", apartado_id, chrono::Local::now().format("%Y%m%d%H%M%S"));
@@ -369,9 +379,22 @@ pub async fn liquidar_apartado(
 
     // Crear el ticket
     conn.execute(
-        "INSERT INTO ticket (folio_fiscal, metodo_pago, total, nombre_local, direccion_local, dinero_recibido, cambio, fecha)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?3, 0.0, ?6)",
-        params![folio, metodo_pago, total, nombre_local, direccion_local, fecha_local],
+        r#"INSERT INTO ticket (folio_fiscal, metodo_pago, total, direccion_local, direccion_local_2, direccion_local_3, rfc, nombre_local, dinero_recibido, cambio, usuario_id, fecha)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+        params![
+            folio, 
+            metodo_pago, 
+            total, 
+            direccion_local, 
+            direccion_local_2, 
+            direccion_local_3, 
+            rfc, 
+            nombre_local, 
+            total, 
+            0.0, 
+            usuario_id, 
+            fecha_local
+        ],
     ).map_err(|e| e.to_string())?;
     
     let ticket_id = conn.last_insert_rowid();
