@@ -150,6 +150,8 @@ export interface CorteCaja {
   total_efectivo: number;
   total_tarjeta: number;
   total_transferencia: number;
+  total_facturable: number;
+  total_no_facturable: number;
   ticket_inicial?: number;
   ticket_final?: number;
   fecha: string;

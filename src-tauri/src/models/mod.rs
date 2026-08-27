@@ -176,6 +176,8 @@ pub struct CorteCaja {
     pub total_efectivo: f64,
     pub total_tarjeta: f64,
     pub total_transferencia: f64,
+    pub total_facturable: f64,
+    pub total_no_facturable: f64,
     pub ticket_inicial: Option<i64>,
     pub ticket_final: Option<i64>,
     pub fecha: String,

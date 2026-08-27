@@ -131,7 +131,6 @@ pub fn imprimir_codigos_barras(items: Vec<ItemEtiqueta>, impresora: Option<Strin
     let mut p = EscPos::new();
     p.init();
     p.padding();
-    p.feed(1);
 
     for item in &items {
         let copias = item.copias.max(1);
@@ -140,8 +139,8 @@ pub fn imprimir_codigos_barras(items: Vec<ItemEtiqueta>, impresora: Option<Strin
         }
     }
 
-    // Avance final para que la última etiqueta salga completamente del cabezal
-    p.feed(4);
+    
+    p.feed_dots(16);
     // Sin corte: las etiquetas suelen imprimirse en rollo continuo.
     // Si se desea corte por etiqueta, mover p.cut() dentro del loop.
 
@@ -173,9 +172,9 @@ fn imprimir_etiqueta(p: &mut EscPos, item: &ItemEtiqueta) {
         p.center();
         p.barcode_code128(&item.codigo);
         p.text_raw(&format!("{}\n", item.codigo));
-        p.feed(1);
+        // Sin espacio extra post-barcode
     }
 
     // ── Separador entre etiquetas ─────────────────────────────────────────────
-    p.feed(2);
+    p.feed_dots(32);
 }
