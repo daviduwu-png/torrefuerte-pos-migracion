@@ -16,6 +16,8 @@ import {
   Settings,
 } from "lucide-react";
 import torreLogo from "../../assets/torre.png";
+import { notify } from "../../utils/sileo";
+import { globalPendingState } from "../../utils/pendingState";
 
 interface NavItem {
   path: string;
@@ -133,6 +135,28 @@ export default function Sidebar({ userType }: SidebarProps) {
               key={item.path}
               to={item.path}
               title={item.label}
+              onClick={(e) => {
+                if (
+                  globalPendingState.count > 0 &&
+                  location.pathname === "/admin/productos" &&
+                  item.path !== "/admin/productos"
+                ) {
+                  e.preventDefault();
+                  const notifId = notify.warning({
+                    title: "¿Salir sin guardar?",
+                    description: `Tienes ${globalPendingState.count} cambio(s) sin aplicar. Haz clic aquí para descartarlos y salir.`,
+                    duration: 15000,
+                    button: {
+                      title: "Descartar y salir",
+                      onClick: () => {
+                        notify.dismiss(notifId);
+                        globalPendingState.discard();
+                        navigate(item.path);
+                      },
+                    },
+                  });
+                }
+              }}
               className={({ isActive }) => `
                 flex items-center justify-center w-12 h-12 [@media(max-height:900px)]:w-10 [@media(max-height:900px)]:h-10 [@media(max-height:768px)]:w-9 [@media(max-height:768px)]:h-9 rounded-xl shrink-0
                 transition-all duration-300 group relative

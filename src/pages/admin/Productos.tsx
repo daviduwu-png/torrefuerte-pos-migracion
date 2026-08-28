@@ -1,138 +1,68 @@
-import { useEffect, useState } from "react";
-import {
-  useProductos,
-  useProductosFiltros,
-  ProductosSidebar,
-  ProductosToolbar,
-  ProductosTable,
-  ProductoModal,
-  EMPTY_FORM,
-} from "./productos";
-import { Producto, ProductoInput } from "./productos/types";
+import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { Settings2, BookOpen } from "lucide-react";
+import GestionProductos from "./productos/GestionProductos";
+import CatalogoProductos from "./productos/CatalogoProductos";
+
+
+type Mode = "gestion" | "catalogo";
 
 export default function Productos() {
-  const {
-    productos,
-    categorias,
-    marcas,
-    proveedores,
-    loading,
-    cargarDatos,
-    handleSave,
-    handleDelete,
-    saving,
-  } = useProductos();
-
-  const {
-    busqueda,
-    setBusqueda,
-    filtrosMarcas,
-    filtrosProveedores,
-    busquedaMarca,
-    setBusquedaMarca,
-    busquedaProveedor,
-    setBusquedaProveedor,
-    toggleMarca,
-    toggleProveedor,
-    limpiarFiltros,
-    currentPage,
-    goToPage,
-    totalPages,
-    filteredProductos,
-    currentProductos,
-  } = useProductosFiltros(productos);
-
-  // Modal State
-  const [modalOpen, setModalOpen] = useState(false);
-  const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
-  const [formData, setFormData] = useState<ProductoInput>(EMPTY_FORM);
+  const [mode, setMode] = useState<Mode>("gestion");
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const [pendingChangesCount, setPendingChangesCount] = useState(0);
 
   useEffect(() => {
-    cargarDatos();
-  }, [cargarDatos]);
+    setPortalTarget(document.getElementById("header-actions-portal"));
+  }, []);
 
-  const openEditModal = (producto: Producto) => {
-    setProductoEditando(producto);
-    setFormData({
-      id: producto.id,
-      codigo_barras: producto.codigo_barras,
-      codigo_interno: producto.codigo_interno,
-      nombre: producto.nombre,
-      descripcion: producto.descripcion,
-      marca: producto.marca,
-      proveedor: producto.proveedor,
-      tipo_medida: producto.tipo_medida,
-      categoria_id: producto.categoria_id,
-      precio_compra: producto.precio_compra,
-      precio_venta: producto.precio_venta,
-      precio_mayoreo: producto.precio_mayoreo,
-      precio_distribuidor: producto.precio_distribuidor,
-      facturable: producto.facturable,
-      stock: producto.stock,
-      precio_compra_incluye_iva: producto.precio_compra_incluye_iva,
-    });
-    setModalOpen(true);
-  };
+  const handleModeChange = useCallback((next: Mode) => {
+    if (next === mode) return;
+    setMode(next);
+  }, [mode]);
 
-  const openNewModal = () => {
-    setProductoEditando(null);
-    setFormData(EMPTY_FORM);
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setProductoEditando(null);
-  };
+  const switchContent = (
+    <div className="flex items-center p-1 bg-slate-900/80 border border-white/5 rounded-xl shadow-lg ml-2">
+      <button
+        onClick={() => handleModeChange("gestion")}
+        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
+          mode === "gestion"
+            ? "bg-amber-500 text-slate-900 shadow-sm shadow-amber-900/20"
+            : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+        }`}
+      >
+        <Settings2 className="w-4 h-4" />
+        Gestión
+      </button>
+      <button
+        onClick={() => handleModeChange("catalogo")}
+        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
+          mode === "catalogo"
+            ? "bg-indigo-600 text-white shadow-sm shadow-indigo-900/20"
+            : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+        }`}
+      >
+        <BookOpen className="w-4 h-4" />
+        Facturables
+        {pendingChangesCount > 0 && (
+          <span className="ml-1 px-1.5 py-0.5 bg-violet-500 text-white text-[9px] font-black rounded-full shadow-sm shadow-violet-900/20">
+            {pendingChangesCount}
+          </span>
+        )}
+      </button>
+    </div>
+  );
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex gap-2 xl:gap-4 flex-1 min-h-0">
-        <ProductosSidebar
-          marcas={marcas}
-          proveedores={proveedores}
-          filtrosMarcas={filtrosMarcas}
-          filtrosProveedores={filtrosProveedores}
-          busquedaMarca={busquedaMarca}
-          busquedaProveedor={busquedaProveedor}
-          onBusquedaMarcaChange={setBusquedaMarca}
-          onBusquedaProveedorChange={setBusquedaProveedor}
-          onToggleMarca={toggleMarca}
-          onToggleProveedor={toggleProveedor}
-          onLimpiarFiltros={limpiarFiltros}
-        />
-
-        <div className="flex-1 bg-slate-900 rounded-xl border border-slate-800 flex flex-col min-w-0 overflow-hidden">
-          <ProductosToolbar
-            busqueda={busqueda}
-            totalFiltrados={filteredProductos.length}
-            onBusquedaChange={setBusqueda}
-            onNuevoProducto={openNewModal}
-          />
-          <ProductosTable
-            productos={currentProductos}
-            loading={loading}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onGoToPage={goToPage}
-            onEdit={openEditModal}
-            onDelete={handleDelete}
-          />
-        </div>
+    <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
+      {portalTarget && createPortal(switchContent, portalTarget)}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
+      <div className={mode === "gestion" ? "contents" : "hidden"}>
+        <GestionProductos />
       </div>
-
-      <ProductoModal
-        open={modalOpen}
-        productoEditando={productoEditando}
-        formData={formData}
-        saving={saving}
-        categorias={categorias}
-        marcas={marcas}
-        proveedores={proveedores}
-        onClose={closeModal}
-        onFormChange={setFormData}
-        onSave={handleSave}
-      />
+      <div className={mode === "catalogo" ? "contents" : "hidden"}>
+        <CatalogoProductos onPendingChangesChange={setPendingChangesCount} />
+      </div>
     </div>
   );
 }

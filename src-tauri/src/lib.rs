@@ -50,6 +50,9 @@ pub fn run() {
             // Productos
             commands::buscar_producto,
             commands::consultar_productos,
+            commands::consultar_productos_paginado,
+            commands::conteo_productos_facturable,
+            commands::actualizar_facturable_producto,
             commands::obtener_producto,
             commands::ingresar_producto,
             commands::guardar_producto,

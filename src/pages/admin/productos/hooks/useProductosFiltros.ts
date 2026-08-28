@@ -1,7 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useDeferredValue } from "react";
 import { Producto } from "../types";
 
 const ITEMS_PER_PAGE = 20;
+
+const normalize = (str: string) =>
+    str
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
 interface UseProductosFiltrosReturn {
     busqueda: string;
@@ -27,6 +33,7 @@ export function useProductosFiltros(
     productos: Producto[]
 ): UseProductosFiltrosReturn {
     const [busqueda, setBusquedaRaw] = useState("");
+    const deferredBusqueda = useDeferredValue(busqueda);
     const [filtrosMarcas, setFiltrosMarcas] = useState<string[]>([]);
     const [filtrosProveedores, setFiltrosProveedores] = useState<string[]>([]);
     const [busquedaMarca, setBusquedaMarca] = useState("");
@@ -60,13 +67,7 @@ export function useProductosFiltros(
     };
 
     const filteredProductos = useMemo(() => {
-        const normalize = (str: string) =>
-            str
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
-
-        const searchNormalized = normalize(busqueda.trim());
+        const searchNormalized = normalize(deferredBusqueda.trim());
 
         const baseFilter = productos.filter((p) => {
             const matchesMarca =
@@ -105,7 +106,7 @@ export function useProductosFiltros(
             .filter((item) => item.score > 0)
             .sort((a, b) => b.score - a.score)
             .map((item) => item.p);
-    }, [productos, busqueda, filtrosMarcas, filtrosProveedores]);
+    }, [productos, deferredBusqueda, filtrosMarcas, filtrosProveedores]);
 
     const totalPages = Math.ceil(filteredProductos.length / ITEMS_PER_PAGE);
 

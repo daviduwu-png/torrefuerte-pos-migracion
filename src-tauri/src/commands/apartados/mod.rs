@@ -1,6 +1,6 @@
 use tauri::State;
 use rusqlite::params;
-use crate::AppState;
+use crate::commands::AppState;
 use crate::models::{
     Apartado, ApartadoProducto, ApartadoConProductos,
     ApartadoInput, AbonoApartadoInput, Abono,
@@ -298,6 +298,16 @@ pub async fn abonar_apartado(
         params![abono.monto, nuevo_pendiente, abono.apartado_id],
     ).map_err(|e| e.to_string())?;
 
+    // Actualizar la cuenta por cobrar vinculada
+    let nuevo_estado_cxc = if nuevo_pendiente <= 0.001 { "saldado" } else { "abonado" };
+    conn.execute(
+        "UPDATE cuenta_por_cobrar
+         SET monto_pendiente = ?1,
+             estado = ?2
+         WHERE concepto LIKE 'Apartado #' || ?3 || '%' AND estado != 'saldado'",
+        params![nuevo_pendiente, nuevo_estado_cxc, abono.apartado_id],
+    ).ok();
+
     conn.execute_batch("COMMIT;").map_err(|e| e.to_string())?;
 
     let msg: String;
@@ -436,6 +446,16 @@ pub async fn liquidar_apartado(
         params![ticket_id, apartado_id, fecha_local],
     ).map_err(|e| e.to_string())?;
 
+    // Asegurar que la cuenta por cobrar quede saldada y vinculada al ticket
+    conn.execute(
+        "UPDATE cuenta_por_cobrar
+         SET monto_pendiente = 0,
+             estado = 'saldado',
+             ticket_id = ?1
+         WHERE concepto LIKE 'Apartado #' || ?2 || '%' AND estado != 'saldado'",
+        params![ticket_id, apartado_id],
+    ).ok();
+
     conn.execute_batch("COMMIT;").map_err(|e| e.to_string())?;
 
     Ok(ok(
@@ -489,6 +509,16 @@ pub async fn cancelar_apartado(
         "UPDATE apartado SET estado = 'cancelado' WHERE id = ?1",
         params![apartado_id],
     ).map_err(|e| e.to_string())?;
+
+    // Cancelar/Saldar la cuenta por cobrar asociada
+    conn.execute(
+        "UPDATE cuenta_por_cobrar
+         SET monto_pendiente = 0,
+             estado = 'saldado',
+             concepto = concepto || ' (CANCELADO)'
+         WHERE concepto LIKE 'Apartado #' || ?1 || '%' AND estado != 'saldado'",
+        params![apartado_id],
+    ).ok();
 
     conn.execute_batch("COMMIT;").map_err(|e| e.to_string())?;
 

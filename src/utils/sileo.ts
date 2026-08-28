@@ -58,4 +58,5 @@ export const notify = {
     }
     return showWithDismiss(sileo.warning, coloredOpts);
   },
+  dismiss: (id: string) => sileo.dismiss(id),
 };

@@ -61,15 +61,22 @@ export function ProductosSidebar({
                             .map((m) => (
                                 <label
                                     key={m}
-                                    className="flex items-center gap-2 text-sm text-slate-300 hover:text-white cursor-pointer select-none py-1"
+                                    className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-white cursor-pointer select-none py-1.5 group transition-colors"
                                 >
-                                    <input
-                                        type="checkbox"
-                                        checked={filtrosMarcas.includes(m)}
-                                        onChange={() => onToggleMarca(m)}
-                                        className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900"
-                                    />
-                                    <span className="truncate">{m}</span>
+                                    <div className="relative flex items-center justify-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={filtrosMarcas.includes(m)}
+                                            onChange={() => onToggleMarca(m)}
+                                            className="peer sr-only"
+                                        />
+                                        <div className="w-4 h-4 rounded-full border border-slate-600 bg-slate-800 peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-all flex items-center justify-center group-hover:border-amber-500/50">
+                                            <svg className="w-2.5 h-2.5 text-slate-900 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <span className="truncate group-hover:text-amber-100 transition-colors">{m}</span>
                                 </label>
                             ))}
                     </div>
@@ -100,15 +107,22 @@ export function ProductosSidebar({
                             .map((p) => (
                                 <label
                                     key={p}
-                                    className="flex items-center gap-2 text-sm text-slate-300 hover:text-white cursor-pointer select-none py-1"
+                                    className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-white cursor-pointer select-none py-1.5 group transition-colors"
                                 >
-                                    <input
-                                        type="checkbox"
-                                        checked={filtrosProveedores.includes(p)}
-                                        onChange={() => onToggleProveedor(p)}
-                                        className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900"
-                                    />
-                                    <span className="truncate">{p}</span>
+                                    <div className="relative flex items-center justify-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={filtrosProveedores.includes(p)}
+                                            onChange={() => onToggleProveedor(p)}
+                                            className="peer sr-only"
+                                        />
+                                        <div className="w-4 h-4 rounded-full border border-slate-600 bg-slate-800 peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-all flex items-center justify-center group-hover:border-amber-500/50">
+                                            <svg className="w-2.5 h-2.5 text-slate-900 opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <span className="truncate group-hover:text-amber-100 transition-colors">{p}</span>
                                 </label>
                             ))}
                     </div>

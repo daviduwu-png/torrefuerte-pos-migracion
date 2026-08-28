@@ -56,6 +56,14 @@ impl EscPos {
         self.buffer.extend_from_slice(&[0x1B, 0x64, n]);
     }
 
+    /// ESC J n — avanza el papel n puntos (resolución nativa ~203 DPI).
+    ///
+    /// Conversión: 1 mm ≈ 8 puntos  →  p.feed_dots(40) ≈ 5 mm.
+    /// Rango útil: 0–255 puntos (0–31 mm aprox.).
+    pub fn feed_dots(&mut self, dots: u8) {
+        self.buffer.extend_from_slice(&[0x1B, 0x4A, dots]);
+    }
+
     /// GS V 0 — corte de papel.
     pub fn cut(&mut self) {
         self.buffer.extend_from_slice(&[0x1D, 0x56, 0x00]);

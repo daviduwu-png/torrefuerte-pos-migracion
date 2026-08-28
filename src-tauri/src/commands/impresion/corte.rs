@@ -44,12 +44,19 @@ pub fn imprimir_corte(corte: CorteCaja, impresora: Option<String>) -> ApiRespons
 
     p.right();
     p.bold(true);
-    p.text(&format!("TOTAL VENTA: ${:.2}\n", corte.total_venta));
+    p.text(&format!("FACTURABLES:    ${:.2}\n", corte.total_facturable));
+    p.bold(false);
+    p.text(&format!("NO FACTURABLES: ${:.2}\n", corte.total_no_facturable));
+    p.text_raw("--------------------------------\n");
+    p.text(&format!("Total Abonos:   ${:.2}\n", corte.total_abonos));
+    p.text_raw("--------------------------------\n");
+    p.bold(true);
+    p.text(&format!("TOTAL INGRESOS: ${:.2}\n", corte.total_venta));
+    p.bold(false);
     p.feed(1);
 
     p.left();
-    p.bold(false);
-    p.text("Desglose:\n");
+    p.text("Desglose por metodo de pago:\n");
     p.text(&format!("Efectivo:      ${:.2}\n", corte.total_efectivo));
     p.text(&format!("Tarjeta:       ${:.2}\n", corte.total_tarjeta));
     p.text(&format!(

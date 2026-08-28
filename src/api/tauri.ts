@@ -11,6 +11,10 @@ import type {
   Producto,
   ProductoInput,
   ProductoFiltros,
+  ProductoFiltrosPaginado,
+  ProductosPaginados,
+  ConteoFacturable,
+  ActualizarFacturableInput,
   // Ventas
   TicketInput,
   Ticket,
@@ -55,6 +59,10 @@ export type {
   Producto,
   ProductoInput,
   ProductoFiltros,
+  ProductoFiltrosPaginado,
+  ProductosPaginados,
+  ConteoFacturable,
+  ActualizarFacturableInput,
   ItemCarrito,
   TicketInput,
   Ticket,
@@ -133,6 +141,19 @@ export const api = {
     filtros?: ProductoFiltros,
   ): Promise<ApiResponse<Producto[]>> =>
     invoke("consultar_productos", { filtros }),
+
+  consultarProductosPaginado: async (
+    filtros?: ProductoFiltrosPaginado,
+  ): Promise<ApiResponse<ProductosPaginados>> =>
+    invoke("consultar_productos_paginado", { filtros }),
+
+  conteoProductosFacturable: async (): Promise<ApiResponse<ConteoFacturable>> =>
+    invoke("conteo_productos_facturable"),
+
+  actualizarFacturableProducto: async (
+    cambios: ActualizarFacturableInput[],
+  ): Promise<ApiResponse<number>> =>
+    invoke("actualizar_facturable_producto", { cambios }),
 
   obtenerProducto: async (id: number): Promise<ApiResponse<Producto>> =>
     invoke("obtener_producto", { id }),

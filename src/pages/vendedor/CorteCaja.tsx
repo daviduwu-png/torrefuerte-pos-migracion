@@ -159,9 +159,9 @@ export default function CorteCaja() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center p-4 md:p-6 xl:p-10 bg-transparent overflow-y-auto">
+    <div className="h-full w-full flex flex-col items-center justify-center p-2 md:p-4 xl:p-6 bg-transparent overflow-y-auto">
       {!corte ? (
-        <div className="w-full max-w-6xl glass-panel rounded-3xl border border-white/10 shadow-2xl relative my-auto animate-in fade-in zoom-in duration-300">
+        <div className="w-full max-w-screen-2xl glass-panel rounded-3xl border border-white/10 shadow-2xl relative my-auto animate-in fade-in zoom-in duration-300">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             <div className="bg-gradient-to-b from-slate-900/95 to-slate-900/60 p-6 md:p-8 xl:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/5 relative rounded-t-3xl lg:rounded-l-3xl lg:rounded-tr-none">
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
@@ -271,119 +271,184 @@ export default function CorteCaja() {
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-6xl glass-panel rounded-3xl border border-white/10 overflow-hidden animate-in fade-in zoom-in duration-300 shadow-2xl my-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            <div className="bg-gradient-to-b from-slate-900/95 to-slate-900/60 p-6 md:p-8 xl:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/5 relative">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+        <div className="w-full h-full max-w-screen-2xl glass-panel rounded-3xl border border-white/10 overflow-hidden animate-in fade-in zoom-in duration-300 shadow-2xl flex flex-col lg:flex-row relative">
+          {/* Línea decorativa superior */}
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent z-20" />
 
-              <div>
-                {!esHoy && (
-                  <div className="mb-4 inline-flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold px-3 py-1 rounded-full">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Corte histórico · {fechaLegible(fechaSeleccionada)}
-                  </div>
-                )}
+          {/* Panel Izquierdo: Resumen y Acciones */}
+          <div className="w-full lg:w-1/3 xl:w-1/4 p-6 md:p-8 xl:p-10 bg-gradient-to-b from-slate-900/95 to-slate-900/60 border-b lg:border-b-0 lg:border-r border-white/5 flex flex-col relative z-10">
+            <div className="flex-1">
+              {!esHoy && (
+                <div className="mb-4 inline-flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Corte histórico · {fechaLegible(fechaSeleccionada)}
+                </div>
+              )}
+              <p className="text-sm text-emerald-400 uppercase font-black tracking-widest mb-2 mt-2">
+                Total Recaudado
+              </p>
+              <h2 className="text-5xl lg:text-6xl font-black text-white tracking-tighter drop-shadow-lg mb-8">
+                ${corte.total_venta.toFixed(2)}
+              </h2>
 
-                <p className="text-xs text-emerald-400 uppercase font-black tracking-widest mb-2">
-                  Total Recaudado
-                </p>
-                <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter drop-shadow-lg mb-6">
-                  ${corte.total_venta.toFixed(2)}
-                </h2>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2 text-xs text-slate-300 font-mono bg-white/5 px-3.5 py-2 rounded-xl border border-white/5">
-                    <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{formatFechaHoraCorta(corte.fecha)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-300 font-mono bg-white/5 px-3.5 py-2 rounded-xl border border-white/5">
-                    <span>Tickets: {corte.total_tickets}</span>
-                    <span className="text-slate-500">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-sm text-slate-300 font-mono bg-white/5 px-4 py-3.5 rounded-2xl border border-white/5">
+                  <Calendar className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <span className="font-semibold">
+                    {formatFechaHoraCorta(corte.fecha)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-300 font-mono bg-white/5 px-4 py-3.5 rounded-2xl border border-white/5">
+                  <div className="flex flex-row items-center justify-center gap-2">
+                    <span className="text-white font-bold text-base mb-0.5">
+                      Tickets: {corte.total_tickets}
+                    </span>
+                    <span className="text-slate-500 text-xs">
                       (#{corte.ticket_inicial} - #{corte.ticket_final})
                     </span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-white/10">
-                <button
-                  onClick={() => setCorte(null)}
-                  className="py-4 px-3 flex items-center justify-center border border-white/15 rounded-2xl font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-md active:scale-[0.98] text-sm md:text-base"
-                >
-                  <ArrowLeft className="w-5 h-5 mr-2 text-slate-400" />
-                  Volver atrás
-                </button>
-                <button
-                  onClick={imprimirCorte}
-                  className="py-4 px-3 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold transition-all shadow-md active:scale-[0.98] text-sm md:text-base"
-                >
-                  <Printer className="w-5 h-5 mr-2" />
-                  Reimprimir Corte
-                </button>
+            <div className="mt-8 pt-6 border-t border-white/10 space-y-3">
+              <button
+                onClick={imprimirCorte}
+                className="w-full py-4 px-5 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold transition-all shadow-md shadow-blue-900/20 active:scale-[0.98] text-sm"
+              >
+                <Printer className="w-5 h-5 mr-2" />
+                Reimprimir Corte
+              </button>
+              <button
+                onClick={() => setCorte(null)}
+                className="w-full py-4 px-5 flex items-center justify-center border border-white/15 rounded-2xl font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-md active:scale-[0.98] text-sm bg-white/[0.02]"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2 text-slate-400" />
+                Volver atrás
+              </button>
+            </div>
+          </div>
+
+          {/* Panel Derecho: Desgloses */}
+          <div className="w-full lg:w-2/3 xl:w-3/4 p-6 md:p-8 xl:p-10 bg-slate-900/40 flex flex-col gap-6 xl:gap-8 overflow-y-auto z-10">
+            {/* Tipo de Producto */}
+            <div className="flex-1 flex flex-col">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2 shrink-0">
+                Desglose por tipo de producto
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                <div className="glass-card rounded-3xl p-6 xl:p-8 flex flex-col justify-center border border-white/5 hover:border-teal-500/30 transition-all bg-white/[0.02] hover:bg-white/[0.04] group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3.5 bg-teal-500/10 group-hover:bg-teal-500/20 transition-colors rounded-2xl text-teal-400 shrink-0">
+                      <CreditCard className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <span className="text-slate-200 font-bold text-xl block mb-1">
+                        Facturables
+                      </span>
+                      <span className="text-sm text-slate-500 font-mono block">
+                        Productos con IVA / factura
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-auto">
+                    <span className="font-black text-white text-4xl xl:text-5xl font-mono tracking-tight text-teal-400 drop-shadow-md">
+                      ${corte.total_facturable.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="glass-card rounded-3xl p-6 xl:p-8 flex flex-col justify-center border border-white/5 hover:border-orange-500/30 transition-all bg-white/[0.02] hover:bg-white/[0.04] group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3.5 bg-orange-500/10 group-hover:bg-orange-500/20 transition-colors rounded-2xl text-orange-400 shrink-0">
+                      <Banknote className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <span className="text-slate-200 font-bold text-xl block mb-1">
+                        No Facturables
+                      </span>
+                      <span className="text-sm text-slate-500 font-mono block">
+                        Productos sin factura
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-auto">
+                    <span className="font-black text-white text-4xl xl:text-5xl font-mono tracking-tight text-orange-400 drop-shadow-md">
+                      ${corte.total_no_facturable.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="p-6 md:p-8 xl:p-12 bg-slate-900/40 flex flex-col justify-center space-y-4">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            {/* Método de Pago */}
+            <div className="flex-1 flex flex-col">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2 shrink-0">
                 Desglose por método de pago
               </h3>
-
-              <div className="glass-card p-5 rounded-2xl flex items-center justify-between border border-white/5 hover:border-emerald-500/20 transition-colors bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400">
-                    <Banknote className="w-6 h-6" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                <div className="glass-card rounded-3xl p-6 xl:p-8 flex flex-col justify-center border border-white/5 hover:border-emerald-500/30 transition-all bg-white/[0.02] hover:bg-white/[0.04] group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors rounded-xl text-emerald-400 shrink-0">
+                      <Banknote className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <span className="text-slate-200 font-bold text-lg block mb-0.5">
+                        Efectivo
+                      </span>
+                      <span className="text-xs text-slate-500 font-mono block">
+                        Pagos en caja
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-slate-200 font-bold block">
-                      Efectivo
-                    </span>
-                    <span className="text-xs text-slate-500 font-mono">
-                      Pagos en caja
-                    </span>
-                  </div>
-                </div>
-                <span className="font-extrabold text-white text-2xl font-mono tracking-tight">
-                  ${corte.total_efectivo.toFixed(2)}
-                </span>
-              </div>
-
-              <div className="glass-card p-5 rounded-2xl flex items-center justify-between border border-white/5 hover:border-blue-500/20 transition-colors bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-blue-500/20 rounded-xl text-blue-400">
-                    <CreditCard className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <span className="text-slate-200 font-bold block">
-                      Tarjeta
-                    </span>
-                    <span className="text-xs text-slate-500 font-mono">
-                      Débito / Crédito
+                  <div className="mt-auto">
+                    <span className="font-black text-white text-3xl xl:text-4xl font-mono tracking-tight text-emerald-400 drop-shadow-md">
+                      ${corte.total_efectivo.toFixed(2)}
                     </span>
                   </div>
                 </div>
-                <span className="font-extrabold text-white text-2xl font-mono tracking-tight">
-                  ${corte.total_tarjeta.toFixed(2)}
-                </span>
-              </div>
 
-              <div className="glass-card p-5 rounded-2xl flex items-center justify-between border border-white/5 hover:border-purple-500/20 transition-colors bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-purple-500/20 rounded-xl text-purple-400">
-                    <ArrowRightLeft className="w-6 h-6" />
+                <div className="glass-card rounded-3xl p-6 xl:p-8 flex flex-col justify-center border border-white/5 hover:border-blue-500/30 transition-all bg-white/[0.02] hover:bg-white/[0.04] group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors rounded-xl text-blue-400 shrink-0">
+                      <CreditCard className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <span className="text-slate-200 font-bold text-lg block mb-0.5">
+                        Tarjeta
+                      </span>
+                      <span className="text-xs text-slate-500 font-mono block">
+                        Débito / Crédito
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-slate-200 font-bold block">
-                      Transferencia
-                    </span>
-                    <span className="text-xs text-slate-500 font-mono">
-                      SPEI / Electrónico
+                  <div className="mt-auto">
+                    <span className="font-black text-white text-3xl xl:text-4xl font-mono tracking-tight text-blue-400 drop-shadow-md">
+                      ${corte.total_tarjeta.toFixed(2)}
                     </span>
                   </div>
                 </div>
-                <span className="font-extrabold text-white text-2xl font-mono tracking-tight">
-                  ${corte.total_transferencia.toFixed(2)}
-                </span>
+
+                <div className="glass-card rounded-3xl p-6 xl:p-8 flex flex-col justify-center border border-white/5 hover:border-purple-500/30 transition-all bg-white/[0.02] hover:bg-white/[0.04] group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors rounded-xl text-purple-400 shrink-0">
+                      <ArrowRightLeft className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <span className="text-slate-200 font-bold text-lg block mb-0.5">
+                        Transferencia
+                      </span>
+                      <span className="text-xs text-slate-500 font-mono block">
+                        SPEI / Electrónico
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-auto">
+                    <span className="font-black text-white text-3xl xl:text-4xl font-mono tracking-tight text-purple-400 drop-shadow-md">
+                      ${corte.total_transferencia.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
