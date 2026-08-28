@@ -77,6 +77,35 @@ export interface ProductoFiltros {
   limit?: number;
 }
 
+export interface ProductoFiltrosPaginado {
+  facturable?: boolean;
+  categoria_id?: number;
+  marca?: string;
+  proveedor?: string;
+  busqueda?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface ProductosPaginados {
+  productos: Producto[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface ConteoFacturable {
+  facturables: number;
+  no_facturables: number;
+  total: number;
+}
+
+export interface ActualizarFacturableInput {
+  id: number;
+  facturable: boolean;
+}
+
 // ── Ventas / Tickets ──────────────────────────────────────
 export interface ItemCarrito {
   id: number;
@@ -152,6 +181,7 @@ export interface CorteCaja {
   total_transferencia: number;
   total_facturable: number;
   total_no_facturable: number;
+  total_abonos: number;
   ticket_inicial?: number;
   ticket_final?: number;
   fecha: string;

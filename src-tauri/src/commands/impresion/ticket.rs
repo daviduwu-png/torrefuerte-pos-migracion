@@ -1,4 +1,4 @@
-use crate::commands::productos::AppState;
+use crate::commands::AppState;
 use crate::models::{ApiResponse, Ticket, TicketProducto};
 use crate::commands::impresion::{driver::send_to_printer, escpos::{sanitize_text, EscPos}};
 use rusqlite::params;

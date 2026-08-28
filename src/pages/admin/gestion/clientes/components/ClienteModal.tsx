@@ -4,6 +4,14 @@ import { createPortal } from "react-dom";
 import { notify } from "../../../../../utils/sileo";
 import { api, Cliente, ClienteInput } from "../../../../../api/tauri";
 
+const formatPhoneInput = (val: string) => {
+  const cleaned = val.replace(/\D/g, "").slice(0, 10);
+  if (cleaned.length === 0) return "";
+  if (cleaned.length <= 3) return cleaned;
+  if (cleaned.length <= 6) return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+  return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
+};
+
 interface ClienteModalProps {
   open: boolean;
   onClose: () => void;
@@ -24,7 +32,7 @@ export function ClienteModal({ open, onClose, clienteEditando, onSuccess }: Clie
   useEffect(() => {
     if (clienteEditando) {
       setNombre(clienteEditando.nombre);
-      setTelefono(clienteEditando.telefono ?? "");
+      setTelefono(formatPhoneInput(clienteEditando.telefono ?? ""));
       setCorreo(clienteEditando.email ?? "");
       setDireccion(clienteEditando.direccion ?? "");
       setRfc(clienteEditando.rfc ?? "");
@@ -117,9 +125,9 @@ export function ClienteModal({ open, onClose, clienteEditando, onSuccess }: Clie
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">Teléfono</label>
                 <input
-                  type="text" value={telefono} onChange={(e) => setTelefono(e.target.value)}
+                  type="text" value={telefono} onChange={(e) => setTelefono(formatPhoneInput(e.target.value))}
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none"
-                  placeholder="Ej. 555-1234"
+                  placeholder="Ej. 244 110 2030"
                 />
               </div>
               <div>

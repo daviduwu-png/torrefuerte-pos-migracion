@@ -1,3 +1,5 @@
+pub mod state;
+pub mod auth;
 pub mod productos;
 pub mod ventas;
 pub mod reportes;
@@ -9,6 +11,8 @@ pub mod pedidos;
 pub mod apartados;
 pub mod usuarios;
 
+pub use state::*;
+pub use auth::*;
 pub use productos::*;
 pub use ventas::*;
 pub use reportes::*;

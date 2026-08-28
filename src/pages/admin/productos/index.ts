@@ -5,5 +5,8 @@ export { ProductoModal } from "./components/ProductoModal";
 export { ProductoForm } from "./components/ProductoForm";
 export { useProductos } from "./hooks/useProductos";
 export { useProductosFiltros } from "./hooks/useProductosFiltros";
+export { useCatalogo } from "./hooks/useCatalogo";
 export { EMPTY_FORM, UNIDADES_MEDIDA } from "./types";
 export type { Producto, ProductoInput } from "./types";
+export { default as GestionProductos } from "./GestionProductos";
+export { default as CatalogoProductos } from "./CatalogoProductos";

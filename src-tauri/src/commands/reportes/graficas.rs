@@ -1,4 +1,4 @@
-use crate::commands::productos::AppState;
+use crate::commands::AppState;
 use crate::models::*;
 use chrono::{Datelike, Duration, Local};
 use rusqlite::params;

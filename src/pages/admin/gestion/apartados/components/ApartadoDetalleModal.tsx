@@ -86,6 +86,33 @@ export function ApartadoDetalleModal({
     }
   };
 
+  const handleCancelar = () => {
+    notify.warning({
+      title: "¿Estás seguro?",
+      description: "Esta acción cancelará el apartado permanentemente y devolverá los productos al stock.",
+      button: {
+        title: "Sí, cancelar",
+        onClick: async () => {
+          setProcesando(true);
+          try {
+            const res = await api.cancelarApartado(apartadoId);
+            if (res.success) {
+              notify.success({ title: "Cancelado", description: "Apartado cancelado con éxito." });
+              onApartadoActualizado();
+              onClose();
+            } else {
+              notify.error({ title: "Error", description: res.message });
+            }
+          } catch (e) {
+            notify.error({ title: "Error", description: "Fallo de conexión." });
+          } finally {
+            setProcesando(false);
+          }
+        },
+      },
+    });
+  };
+
   const handleLiquidar = async () => {
     const result = await StyledSwal.fire({
       title: "¿Liquidar apartado?",
@@ -301,11 +328,18 @@ export function ApartadoDetalleModal({
             </div>
           )}
 
-          {/* Abonar Section */}
-          {apartado.estado === "activo" &&
-            apartado.monto_pendiente > 0 &&
-            !modoAbono && (
-              <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+          {/* Actions Section */}
+          {apartado.estado === "activo" && !modoAbono && (
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+              <button
+                onClick={handleCancelar}
+                disabled={procesando}
+                className="px-6 py-2 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 font-semibold rounded-xl border border-rose-500/20 flex items-center gap-2 transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Cancelar Apartado
+              </button>
+              {apartado.monto_pendiente > 0 && (
                 <button
                   onClick={() => setModoAbono(true)}
                   className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg flex items-center gap-2"
@@ -313,8 +347,9 @@ export function ApartadoDetalleModal({
                   <DollarSign className="w-4 h-4" />
                   Registrar Abono
                 </button>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
           {modoAbono && (
             <div className="bg-blue-950/30 p-5 rounded-xl border border-blue-500/20 animate-in fade-in slide-in-from-bottom-2 mt-4">

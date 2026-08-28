@@ -1,4 +1,4 @@
-use crate::commands::productos::AppState;
+use crate::commands::AppState;
 use crate::models::*;
 use chrono::Local;
 use rusqlite::params;
@@ -32,13 +32,31 @@ pub fn obtener_corte_caja(
         Local::now().format("%H:%M:%S")
     );
 
+    // 1. Sumar ingresos por abonos del día
+    let (abonos_efectivo, abonos_tarjeta, abonos_transferencia, total_abonos): (f64, f64, f64, f64) = conn.query_row(
+        r#"SELECT 
+               COALESCE(SUM(CASE WHEN metodo_pago = 'Efectivo' THEN monto ELSE 0 END), 0),
+               COALESCE(SUM(CASE WHEN metodo_pago = 'Tarjeta' THEN monto ELSE 0 END), 0),
+               COALESCE(SUM(CASE WHEN metodo_pago = 'Transferencia' THEN monto ELSE 0 END), 0),
+               COALESCE(SUM(monto), 0)
+           FROM abono
+           WHERE DATE(fecha) = ?"#,
+        params![fecha_consulta],
+        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+    ).unwrap_or((0.0, 0.0, 0.0, 0.0));
+
+    // 2. Obtener estadísticas de los tickets, excluyendo montos de tickets derivados de apartados liquidados 
+    // (porque su dinero ya entró vía la tabla de abonos a lo largo del tiempo)
     let result = conn.query_row(
         r#"SELECT 
                COUNT(DISTINCT t.id) as total_tickets,
-               COALESCE(SUM(DISTINCT t.total), 0) as total_venta,
-               COALESCE(SUM(CASE WHEN t.metodo_pago = 'Efectivo' THEN t.total ELSE 0 END), 0) as total_efectivo,
-               COALESCE(SUM(CASE WHEN t.metodo_pago = 'Tarjeta' THEN t.total ELSE 0 END), 0) as total_tarjeta,
-               COALESCE(SUM(CASE WHEN t.metodo_pago = 'Transferencia' THEN t.total ELSE 0 END), 0) as total_transferencia,
+               
+               -- Dinero directo de tickets (Ignoramos los que vienen de liquidar apartado: a.id IS NULL)
+               COALESCE(SUM(CASE WHEN a.id IS NULL AND t.metodo_pago = 'Efectivo' THEN t.total ELSE 0 END), 0) as total_efectivo_tickets,
+               COALESCE(SUM(CASE WHEN a.id IS NULL AND t.metodo_pago = 'Tarjeta' THEN t.total ELSE 0 END), 0) as total_tarjeta_tickets,
+               COALESCE(SUM(CASE WHEN a.id IS NULL AND t.metodo_pago = 'Transferencia' THEN t.total ELSE 0 END), 0) as total_transferencia_tickets,
+               
+               -- El facturable y no facturable SÍ debe incluir todo (inclusive apartados) porque son ventas de mercancía que se registran hoy fiscalmente
                COALESCE((
                    SELECT SUM(tp2.subtotal)
                    FROM ticket t2
@@ -46,6 +64,7 @@ pub fn obtener_corte_caja(
                    JOIN producto p2 ON tp2.producto_id = p2.id
                    WHERE DATE(t2.fecha) = ? AND p2.facturable = 1
                ), 0) as total_facturable,
+               
                COALESCE((
                    SELECT SUM(tp3.subtotal)
                    FROM ticket t3
@@ -53,22 +72,39 @@ pub fn obtener_corte_caja(
                    JOIN producto p3 ON tp3.producto_id = p3.id
                    WHERE DATE(t3.fecha) = ? AND p3.facturable = 0
                ), 0) as total_no_facturable,
+               
                MIN(t.id) as ticket_inicial,
                MAX(t.id) as ticket_final
            FROM ticket t
+           LEFT JOIN apartado a ON a.ticket_id = t.id
            WHERE DATE(t.fecha) = ?"#,
         params![fecha_consulta, fecha_consulta, fecha_consulta],
         |row| {
+            let total_tickets: i64 = row.get(0)?;
+            let t_efectivo: f64 = row.get(1)?;
+            let t_tarjeta: f64 = row.get(2)?;
+            let t_transferencia: f64 = row.get(3)?;
+            let total_facturable: f64 = row.get(4)?;
+            let total_no_facturable: f64 = row.get(5)?;
+            let ticket_inicial: Option<i64> = row.get(6)?;
+            let ticket_final: Option<i64> = row.get(7)?;
+
+            let total_efectivo = t_efectivo + abonos_efectivo;
+            let total_tarjeta = t_tarjeta + abonos_tarjeta;
+            let total_transferencia = t_transferencia + abonos_transferencia;
+            let total_venta = total_efectivo + total_tarjeta + total_transferencia;
+
             Ok(CorteCaja {
-                total_tickets: row.get(0)?,
-                total_venta: row.get(1)?,
-                total_efectivo: row.get(2)?,
-                total_tarjeta: row.get(3)?,
-                total_transferencia: row.get(4)?,
-                total_facturable: row.get(5)?,
-                total_no_facturable: row.get(6)?,
-                ticket_inicial: row.get(7)?,
-                ticket_final: row.get(8)?,
+                total_tickets,
+                total_venta,
+                total_efectivo,
+                total_tarjeta,
+                total_transferencia,
+                total_facturable,
+                total_no_facturable,
+                total_abonos,
+                ticket_inicial,
+                ticket_final,
                 fecha: fecha_hora_resultado.clone(),
             })
         },

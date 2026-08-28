@@ -81,6 +81,13 @@ pub struct ProductoInput {
     pub precio_compra_incluye_iva: bool,
 }
 
+/// Input para actualizar facturable en batch
+#[derive(Debug, Deserialize)]
+pub struct ActualizarFacturableInput {
+    pub id: i64,
+    pub facturable: bool,
+}
+
 /// Filtros para buscar productos
 #[derive(Debug, Deserialize, Default)]
 pub struct ProductoFiltros {
@@ -88,6 +95,36 @@ pub struct ProductoFiltros {
     pub marca: Option<String>,
     pub proveedor: Option<String>,
     pub limit: Option<i64>,
+}
+
+/// Filtros para consulta paginada server-side (optimizado para grandes volúmenes)
+#[derive(Debug, Deserialize, Default)]
+pub struct ProductoFiltrosPaginado {
+    pub facturable: Option<bool>,
+    pub categoria_id: Option<i64>,
+    pub marca: Option<String>,
+    pub proveedor: Option<String>,
+    pub busqueda: Option<String>,
+    pub page: Option<i64>,
+    pub page_size: Option<i64>,
+}
+
+/// Respuesta paginada de productos
+#[derive(Debug, Serialize)]
+pub struct ProductosPaginados {
+    pub productos: Vec<Producto>,
+    pub total: i64,
+    pub page: i64,
+    pub page_size: i64,
+    pub total_pages: i64,
+}
+
+/// Conteo de productos facturables / no facturables
+#[derive(Debug, Serialize)]
+pub struct ConteoFacturable {
+    pub facturables: i64,
+    pub no_facturables: i64,
+    pub total: i64,
 }
 
 /// Item en el carrito de compras
@@ -178,6 +215,7 @@ pub struct CorteCaja {
     pub total_transferencia: f64,
     pub total_facturable: f64,
     pub total_no_facturable: f64,
+    pub total_abonos: f64,
     pub ticket_inicial: Option<i64>,
     pub ticket_final: Option<i64>,
     pub fecha: String,

@@ -7,6 +7,14 @@ import { Cliente } from "../../../../api/tauri";
 import { api } from "../../../../api/tauri";
 import { notify } from "../../../../utils/sileo";
 
+const formatPhoneDisplay = (phone: string | null | undefined) => {
+  if (!phone) return "—";
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.length === 10) {
+    return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
+  }
+  return phone;
+};
 export default function DirectorioClientes() {
   const { clientes, loading, busqueda, setBusqueda, recargar } = useClientes();
   const [modalOpen, setModalOpen] = useState(false);
@@ -114,7 +122,7 @@ export default function DirectorioClientes() {
                       <span className="text-xs text-slate-400 font-mono mt-0.5">#CL-{String(cliente.id).padStart(3, "0")}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-400">{cliente.telefono || "—"}</td>
+                  <td className="px-4 py-3 text-slate-400">{formatPhoneDisplay(cliente.telefono)}</td>
                   <td className="px-4 py-3 text-slate-400">{cliente.email || "—"}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1">

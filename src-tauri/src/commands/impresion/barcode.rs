@@ -16,7 +16,7 @@
 //! - `asignar_codigo_barras`   — asigna un código a un producto en la BD
 //!                               de forma atómica, garantizando integridad.
 
-use crate::commands::productos::AppState;
+use crate::commands::AppState;
 use crate::models::ApiResponse;
 use crate::commands::impresion::{driver::send_to_printer, escpos::EscPos};
 use rusqlite::params;
