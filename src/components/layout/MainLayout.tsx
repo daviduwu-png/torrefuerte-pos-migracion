@@ -258,7 +258,7 @@ export default function MainLayout({ userType }: MainLayoutProps) {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/10 pointer-events-none -z-10" />
 
         <header
-          className={`w-full pt-3 pb-1.5 z-10 shrink-0 ${isVendedor ? "px-2.5 lg:px-4" : "px-4 lg:px-8"}`}
+          className={`w-full pt-3 pb-1.5 relative z-50 shrink-0 ${isVendedor ? "px-2.5 lg:px-4" : "px-4 lg:px-8"}`}
         >
           <div className="w-full px-4 py-3 rounded-2xl flex items-center justify-between bg-slate-900/60 border border-white/5 shadow-lg">
             <div className="flex items-center gap-3">

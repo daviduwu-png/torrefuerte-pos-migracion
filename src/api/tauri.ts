@@ -223,20 +223,20 @@ export const api = {
   ): Promise<ApiResponse<string>> =>
     invoke("exportar_reporte_financiero", { fechaInicio, fechaFin }),
 
-  reporteVentasDiarias: async (): Promise<ApiResponse<VentasDiarias>> =>
-    invoke("reporte_ventas_diarias"),
+  reporteVentasDiarias: async (facturable?: boolean | null, fechaBase?: string | null): Promise<ApiResponse<VentasDiarias>> =>
+    invoke("reporte_ventas_diarias", { facturable: facturable ?? null, fechaBase: fechaBase ?? null }),
 
-  reporteVentasSemanales: async (): Promise<ApiResponse<VentasDiarias>> =>
-    invoke("reporte_ventas_semanales"),
+  reporteVentasSemanales: async (facturable?: boolean | null, fechaBase?: string | null): Promise<ApiResponse<VentasDiarias>> =>
+    invoke("reporte_ventas_semanales", { facturable: facturable ?? null, fechaBase: fechaBase ?? null }),
 
-  reporteVentasMensuales: async (): Promise<ApiResponse<VentasDiarias>> =>
-    invoke("reporte_ventas_mensuales"),
+  reporteVentasMensuales: async (facturable?: boolean | null, fechaBase?: string | null): Promise<ApiResponse<VentasDiarias>> =>
+    invoke("reporte_ventas_mensuales", { facturable: facturable ?? null, fechaBase: fechaBase ?? null }),
 
-  reporteVentasAnuales: async (): Promise<ApiResponse<VentasDiarias>> =>
-    invoke("reporte_ventas_anuales"),
+  reporteVentasAnuales: async (facturable?: boolean | null, fechaBase?: string | null): Promise<ApiResponse<VentasDiarias>> =>
+    invoke("reporte_ventas_anuales", { facturable: facturable ?? null, fechaBase: fechaBase ?? null }),
 
-  obtenerEstadisticas: async (): Promise<ApiResponse<any>> =>
-    invoke("obtener_estadisticas"),
+  obtenerEstadisticas: async (facturable?: boolean | null, fechaBase?: string | null): Promise<ApiResponse<any>> =>
+    invoke("obtener_estadisticas", { facturable: facturable ?? null, fechaBase: fechaBase ?? null }),
 
   // ── Sistema / Backups ────────────────────────────────────
   crearRespaldo: async (

@@ -14,4 +14,3 @@ pub mod graficas;
 
 pub use corte::*;
 pub use financiero::*;
-pub use graficas::*;
