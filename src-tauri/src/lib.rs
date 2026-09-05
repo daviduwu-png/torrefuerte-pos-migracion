@@ -11,6 +11,12 @@ use commands::impresion::test_page::imprimir_test;
 use commands::impresion::diagnostico::{listar_impresoras, registrar_impresora_cups};
 use commands::impresion::barcode::imprimir_codigos_barras;
 use commands::impresion::barcode::asignar_codigo_barras;
+// Graficas
+use commands::reportes::graficas::diarias::reporte_ventas_diarias;
+use commands::reportes::graficas::semanales::reporte_ventas_semanales;
+use commands::reportes::graficas::mensuales::reporte_ventas_mensuales;
+use commands::reportes::graficas::anuales::reporte_ventas_anuales;
+use commands::reportes::graficas::estadisticas::obtener_estadisticas;
 
 use commands::AppState;
 use db::Database;
@@ -85,11 +91,11 @@ pub fn run() {
             commands::obtener_corte_caja,
             commands::exportar_corte_excel,
             commands::exportar_reporte_financiero,
-            commands::reporte_ventas_diarias,
-            commands::reporte_ventas_semanales,
-            commands::reporte_ventas_mensuales,
-            commands::reporte_ventas_anuales,
-            commands::obtener_estadisticas,
+            reporte_ventas_diarias,
+            reporte_ventas_semanales,
+            reporte_ventas_mensuales,
+            reporte_ventas_anuales,
+            obtener_estadisticas,
 
             // Sistema
             commands::crear_respaldo,

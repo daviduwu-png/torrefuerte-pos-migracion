@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { api } from "../../../../api/tauri";
 import { Estadisticas, ChartData } from "../types";
 
-export function useDashboard() {
+export function useDashboard(facturable: boolean | null, fechaBase: string | null) {
   const [loading, setLoading] = useState(true);
   const [estadisticas, setEstadisticas] = useState<Estadisticas>({
     ventas_hoy: 0,
@@ -24,11 +24,11 @@ export function useDashboard() {
 
         const [statsRes, diariasRes, semanalesRes, mensualesRes, anualesRes] =
           await Promise.all([
-            api.obtenerEstadisticas(),
-            api.reporteVentasDiarias(),
-            api.reporteVentasSemanales(),
-            api.reporteVentasMensuales(),
-            api.reporteVentasAnuales(),
+            api.obtenerEstadisticas(facturable, fechaBase),
+            api.reporteVentasDiarias(facturable, fechaBase),
+            api.reporteVentasSemanales(facturable, fechaBase),
+            api.reporteVentasMensuales(facturable, fechaBase),
+            api.reporteVentasAnuales(facturable, fechaBase),
           ]);
 
         if (statsRes.success && statsRes.data) {
@@ -86,7 +86,7 @@ export function useDashboard() {
     };
 
     cargarDatos();
-  }, []);
+  }, [facturable, fechaBase]);
 
   return {
     loading,
